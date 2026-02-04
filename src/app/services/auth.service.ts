@@ -13,6 +13,7 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  role?: 'user' | 'admin';
   children: Child[];
   quizResults: QuizResult[];
 }
@@ -49,10 +50,14 @@ export class AuthService {
   login(email: string, password: string): boolean {
     // Mock authentication - in production, this would call an API
     if (email && password) {
+      // Admin account: admin@swimxpert.com / admin123
+      const isAdmin = email.toLowerCase() === 'admin@swimxpert.com' && password === 'admin123';
+      
       const user: User = {
-        id: '1',
+        id: isAdmin ? 'admin' : '1',
         email,
         name: email.split('@')[0],
+        role: isAdmin ? 'admin' : 'user',
         children: [],
         quizResults: []
       };
@@ -74,6 +79,7 @@ export class AuthService {
         email,
         name,
         avatar: this.generateAvatar(name),
+        role: 'user',
         children: [],
         quizResults: []
       };
@@ -85,6 +91,71 @@ export class AuthService {
       return true;
     }
     return false;
+  }
+
+  isAdmin(): boolean {
+    const user = this.currentUser();
+    return user?.role === 'admin';
+  }
+
+  getAllClients(): User[] {
+    // Get all users from localStorage (in production, this would be an API call)
+    const allUsers: User[] = [];
+    const keys = Object.keys(localStorage);
+    
+    keys.forEach(key => {
+      if (key.startsWith('swimxpert_user_') || key === 'swimxpert_user') {
+        try {
+          const userData = JSON.parse(localStorage.getItem(key) || '{}');
+          if (userData.role !== 'admin') {
+            allUsers.push(userData);
+          }
+        } catch (e) {
+          console.error('Error parsing user data', e);
+        }
+      }
+    });
+    
+    // Also include mock users for demo
+    const mockUsers: User[] = [
+      {
+        id: '2',
+        email: 'alex@example.com',
+        name: 'Alex',
+        avatar: this.generateAvatar('Alex'),
+        role: 'user',
+        children: [
+          { id: '1', name: 'Emma', age: 5, level: 2, progress: [] },
+          { id: '2', name: 'Lucas', age: 7, level: 3, progress: [] }
+        ],
+        quizResults: []
+      },
+      {
+        id: '3',
+        email: 'sarah@example.com',
+        name: 'Sarah',
+        avatar: this.generateAvatar('Sarah'),
+        role: 'user',
+        children: [
+          { id: '3', name: 'Olivia', age: 6, level: 2, progress: [] }
+        ],
+        quizResults: []
+      },
+      {
+        id: '4',
+        email: 'mike@example.com',
+        name: 'Mike',
+        avatar: this.generateAvatar('Mike'),
+        role: 'user',
+        children: [
+          { id: '4', name: 'Noah', age: 8, level: 4, progress: [] },
+          { id: '5', name: 'Sophia', age: 4, level: 1, progress: [] }
+        ],
+        quizResults: []
+      }
+    ];
+    
+    return [...allUsers, ...mockUsers];
   }
 
   logout(): void {

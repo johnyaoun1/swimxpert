@@ -2,14 +2,25 @@
 
 // Smooth header background transition
 header {
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent);
+  }
 }
 
 // Mobile menu animation
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-30px);
   }
   to {
     opacity: 1;
@@ -18,16 +29,33 @@ header {
 }
 
 .animate-slide-down {
-  animation: slideDown 0.3s ease-out;
+  animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Navigation link hover effect
 nav a {
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:hover {
-    transform: translateX(4px);
+    transform: translateX(3px);
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(to bottom, #3b82f6, #06b6d4);
+    border-radius: 0 2px 2px 0;
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover::before {
+    transform: translateY(-50%) scaleY(1);
   }
 }
 
@@ -35,5 +63,25 @@ nav a {
 button[aria-label="Toggle menu"] {
   span {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Logo animation
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+a[routerLink="/"]:hover {
+  .w-9 {
+    animation: logoFloat 2s ease-in-out infinite;
   }
 }

@@ -13,7 +13,9 @@ import { CertificatesComponent } from './pages/certificates/certificates.compone
 import { QuizzesComponent } from './pages/quizzes/quizzes.component';
 import { LeaderboardComponent } from './pages/leaderboard/leaderboard.component';
 import { Strokes3dComponent } from './pages/strokes-3d/strokes-3d.component';
+import { AdminDashboardComponent } from './pages/admin-dashboard/admin-dashboard.component';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent, title: 'Home - SwimXpert' },
@@ -30,5 +32,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Login - SwimXpert' },
   { path: 'signup', component: SignupComponent, title: 'Sign Up - SwimXpert' },
   { path: 'dashboard', component: DashboardComponent, title: 'Dashboard - SwimXpert', canActivate: [authGuard] },
+  { path: 'admin', component: AdminDashboardComponent, title: 'Admin Dashboard - SwimXpert', canActivate: [adminGuard] },
   { path: '**', redirectTo: '' }
 ];
