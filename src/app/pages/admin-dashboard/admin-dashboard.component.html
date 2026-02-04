@@ -1,0 +1,511 @@
+<div class="hero-gradient text-white py-16 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto px-4 relative z-10">
+    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Admin Dashboard</h1>
+    <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">Manage clients, sessions, attendance, and revenue</p>
+  </div>
+</div>
+
+<section class="section-padding bg-gray-50">
+  <div class="container mx-auto">
+    <!-- Statistics Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="premium-container">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Total Clients</p>
+            <p class="text-3xl font-bold text-gray-800">{{ clients().length }}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="premium-container">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Total Sessions</p>
+            <p class="text-3xl font-bold text-gray-800">{{ getSessionStats().total }}</p>
+            <p class="text-xs text-gray-500 mt-1">
+              {{ getSessionStats().completed }} completed, {{ getSessionStats().scheduled }} scheduled
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="premium-container">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Total Revenue</p>
+            <p class="text-3xl font-bold text-gray-800">${{ revenueData()?.totalRevenue || 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">From completed sessions</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="premium-container">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Attendance Rate</p>
+            <p class="text-3xl font-bold text-gray-800">{{ getAttendanceRate() }}%</p>
+            <p class="text-xs text-gray-500 mt-1">{{ getAttendanceStats().present }} present / {{ getAttendanceStats().total }} total</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Visualization -->
+    <div class="premium-container mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Revenue Overview</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
+          <p class="text-sm text-gray-600 mb-2">Completed Sessions</p>
+          <p class="text-3xl font-bold text-green-700">${{ revenueData()?.completedSessionsRevenue || 0 }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border-2 border-red-200">
+          <p class="text-sm text-gray-600 mb-2">Canceled Sessions</p>
+          <p class="text-3xl font-bold text-red-700">${{ revenueData()?.canceledSessionsRevenue || 0 }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
+          <p class="text-sm text-gray-600 mb-2">Scheduled (Potential)</p>
+          <p class="text-3xl font-bold text-blue-700">${{ revenueData()?.scheduledSessionsRevenue || 0 }}</p>
+        </div>
+      </div>
+
+      <!-- Revenue by Client -->
+      <div class="mt-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Top Clients by Revenue</h3>
+        <div class="space-y-3">
+          @for (client of revenueData()?.clientRevenue?.slice(0, 5) || []; track client.clientId) {
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <p class="font-semibold text-gray-800">{{ client.clientName }}</p>
+                <p class="text-sm text-gray-600">{{ client.sessions }} sessions</p>
+              </div>
+              <p class="text-xl font-bold text-primary-600">${{ client.revenue }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Clients Section -->
+    <div class="premium-container mb-8">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">All Clients</h2>
+        <button (click)="selectedClientId.set(null)" class="btn-secondary text-sm">
+          Clear Selection
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Clients List -->
+        <div class="lg:col-span-1">
+          <div class="space-y-3 max-h-[600px] overflow-y-auto">
+            @for (client of clients(); track client.id) {
+              <div 
+                (click)="selectedClientId.set(client.id)"
+                [class.bg-primary-50]="selectedClientId() === client.id"
+                [class.border-primary-500]="selectedClientId() === client.id"
+                class="p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md"
+                [class.border-gray-200]="selectedClientId() !== client.id"
+              >
+                <div class="flex items-center gap-3">
+                  @if (client.avatar) {
+                    <img [src]="client.avatar" [alt]="client.name" class="w-12 h-12 rounded-full">
+                  } @else {
+                    <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                      <span class="text-lg font-bold text-primary-600">{{ client.name.charAt(0) }}</span>
+                    </div>
+                  }
+                  <div class="flex-1">
+                    <p class="font-semibold text-gray-800">{{ client.name }}</p>
+                    <p class="text-sm text-gray-600">{{ client.email }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ client.children.length }} child(ren)</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Client Details -->
+        @if (selectedClientId()) {
+          <div class="lg:col-span-2">
+            @if (getSelectedClient(); as client) {
+              <div class="premium-container">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">{{ client.name }}'s Details</h3>
+                
+                <!-- Children -->
+                <div class="mb-6">
+                  <h4 class="text-lg font-semibold text-gray-700 mb-3">Enrolled Children</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @for (child of client.children; track child.id) {
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                          <p class="font-semibold text-gray-800">{{ child.name }}</p>
+                          <span class="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm font-semibold">
+                            Level {{ child.level }}
+                          </span>
+                        </div>
+                        <p class="text-sm text-gray-600">Age: {{ child.age }}</p>
+                        <button 
+                          (click)="openSessionForm(client.id, child.id)"
+                          class="mt-3 w-full btn-secondary text-sm py-2"
+                        >
+                          Schedule Session
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Sessions -->
+                <div class="mb-6">
+                  <h4 class="text-lg font-semibold text-gray-700 mb-3">Sessions</h4>
+                  <div class="space-y-2 max-h-64 overflow-y-auto">
+                    @for (session of getClientSessions(client.id); track session.id) {
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                          <div>
+                            <p class="font-semibold text-gray-800">{{ session.childName }}</p>
+                            <p class="text-sm text-gray-600">{{ session.date }} at {{ session.time }}</p>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' + getStatusColor(session.status)">
+                              {{ session.status }}
+                            </span>
+                            <select 
+                              [value]="session.status"
+                              (change)="updateSessionStatus(session.id, $any($event.target).value)"
+                              class="text-xs border border-gray-300 rounded px-2 py-1"
+                            >
+                              <option value="scheduled">Scheduled</option>
+                              <option value="completed">Completed</option>
+                              <option value="canceled">Canceled</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                          <span class="text-gray-600">Level {{ session.level }} • ${{ session.price }}</span>
+                          @if (session.status === 'scheduled') {
+                            <button 
+                              (click)="openAttendanceForm(session.id)"
+                              class="text-primary-600 hover:text-primary-700 font-semibold"
+                            >
+                              Record Attendance
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                    @if (getClientSessions(client.id).length === 0) {
+                      <p class="text-gray-500 text-center py-4">No sessions for this client</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Revenue -->
+                <div>
+                  <h4 class="text-lg font-semibold text-gray-700 mb-3">Client Revenue</h4>
+                  <div class="bg-gradient-to-r from-primary-50 to-accent-50 rounded-lg p-4">
+                    <p class="text-2xl font-bold text-primary-700">
+                      ${{ getClientRevenue(client.id) }}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                      {{ getClientSessionsCount(client.id) }} completed sessions
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="lg:col-span-2 premium-container flex items-center justify-center min-h-[400px]">
+            <div class="text-center">
+              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+              <p class="text-gray-600">Select a client to view details</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- All Sessions -->
+    <div class="premium-container mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">All Sessions</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Date & Time</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Level</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Price</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (session of sessions(); track session.id) {
+              <tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-3 px-4">{{ session.clientName }}</td>
+                <td class="py-3 px-4">{{ session.childName }}</td>
+                <td class="py-3 px-4">{{ session.date }} {{ session.time }}</td>
+                <td class="py-3 px-4">Level {{ session.level }}</td>
+                <td class="py-3 px-4">
+                  <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' + getStatusColor(session.status)">
+                    {{ session.status }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 font-semibold">${{ session.price }}</td>
+                <td class="py-3 px-4">
+                  @if (session.status === 'scheduled') {
+                    <button 
+                      (click)="openAttendanceForm(session.id)"
+                      class="text-primary-600 hover:text-primary-700 text-sm font-semibold"
+                    >
+                      Record Attendance
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Attendance History -->
+    <div class="premium-container">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Attendance History</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Check-in Time</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of attendance(); track record.id) {
+              <tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-3 px-4">{{ record.date }}</td>
+                <td class="py-3 px-4">{{ record.clientName }}</td>
+                <td class="py-3 px-4">{{ record.childName }}</td>
+                <td class="py-3 px-4">
+                  <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' + getStatusColor(record.status)">
+                    {{ record.status }}
+                  </span>
+                </td>
+                <td class="py-3 px-4">{{ record.checkInTime || '-' }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600">{{ record.notes || '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Session Form Modal -->
+@if (showSessionForm()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Schedule New Session</h2>
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Client</label>
+            <select 
+              [(ngModel)]="newSession.clientId"
+              (ngModelChange)="onClientChange($event)"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Select Client</option>
+              @for (client of clients(); track client.id) {
+                <option [value]="client.id">{{ client.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Child</label>
+            <select 
+              [(ngModel)]="newSession.childId"
+              (ngModelChange)="onChildChange($event)"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            >
+              <option value="">Select Child</option>
+              @for (child of getClientChildren(newSession.clientId || ''); track child.id) {
+                <option [value]="child.id">{{ child.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+            <input 
+              type="date" 
+              [(ngModel)]="newSession.date"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Time</label>
+            <input 
+              type="time" 
+              [(ngModel)]="newSession.time"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Level</label>
+            <input 
+              type="number" 
+              [(ngModel)]="newSession.level"
+              min="1"
+              max="6"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="newSession.price"
+              min="0"
+              step="0.01"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Instructor</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newSession.instructor"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            placeholder="Instructor name"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+          <select 
+            [(ngModel)]="newSession.status"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+          >
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="canceled">Canceled</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+          <textarea 
+            [(ngModel)]="newSession.notes"
+            rows="3"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            placeholder="Optional notes"
+          ></textarea>
+        </div>
+        <div class="flex gap-4">
+          <button (click)="saveSession()" class="btn-primary flex-1">Save Session</button>
+          <button (click)="closeSessionForm()" class="btn-secondary flex-1">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Attendance Form Modal -->
+@if (showAttendanceForm()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Record Attendance</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Child</label>
+          <input 
+            type="text" 
+            [value]="newAttendance.childName"
+            disabled
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+          <input 
+            type="date" 
+            [(ngModel)]="newAttendance.date"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+          <select 
+            [(ngModel)]="newAttendance.status"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+          >
+            <option value="present">Present</option>
+            <option value="absent">Absent</option>
+            <option value="late">Late</option>
+            <option value="excused">Excused</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Check-in Time</label>
+          <input 
+            type="time" 
+            [(ngModel)]="newAttendance.checkInTime"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+          <textarea 
+            [(ngModel)]="newAttendance.notes"
+            rows="3"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            placeholder="Optional notes"
+          ></textarea>
+        </div>
+        <div class="flex gap-4">
+          <button (click)="saveAttendance()" class="btn-primary flex-1">Save Attendance</button>
+          <button (click)="closeAttendanceForm()" class="btn-secondary flex-1">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
