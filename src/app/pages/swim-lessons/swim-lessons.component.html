@@ -1,0 +1,88 @@
+<div class="hero-gradient text-white py-20 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-10 right-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-10 left-10 w-80 h-80 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto px-4 text-center relative z-10">
+    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Swim Lessons</h1>
+    <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">Our comprehensive 6-level program takes students from beginner to advanced</p>
+  </div>
+</div>
+
+<section class="section-padding bg-white">
+  <div class="container mx-auto">
+    <div class="text-center mb-12">
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+        Our structured curriculum is designed to build skills progressively. Each level builds upon the previous one, ensuring students develop confidence and competence at every stage.
+      </p>
+      <a routerLink="/level-finder" class="btn-primary">Find Your Level</a>
+    </div>
+
+    <div class="space-y-10">
+      @for (level of levels; track level.level) {
+        <div class="premium-container interactive-card group animate-slide-up" style="animation-delay: {{ (level.level - 1) * 0.1 }}s;">
+          <div class="flex flex-col md:flex-row md:items-start gap-8">
+            <div class="flex-shrink-0 relative">
+              <div class="w-28 h-28 bg-gradient-to-br from-primary-600 via-accent-500 to-primary-700 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element relative">
+                <span class="relative z-10">{{ level.level }}</span>
+                <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl"></div>
+              </div>
+              <div class="absolute -top-2 -right-2 w-6 h-6 bg-accent-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+            </div>
+            <div class="flex-1 relative z-10">
+              <div class="flex items-start justify-between mb-3">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 group-hover:text-gradient transition-all duration-300">{{ level.title }}</h2>
+                <div class="hidden md:block w-12 h-1 bg-gradient-to-r from-primary-600 to-accent-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+              <p class="text-xl text-gradient mb-6 font-bold">Goal: {{ level.goal }}</p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div class="bg-gradient-to-br from-primary-50 to-transparent rounded-xl p-4 border border-primary-100">
+                  <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Requirements:
+                  </h3>
+                  <ul class="list-disc list-inside text-gray-700 space-y-2">
+                    @for (req of level.requirements; track req) {
+                      <li class="text-sm">{{ req }}</li>
+                    }
+                  </ul>
+                </div>
+                <div class="bg-gradient-to-br from-accent-50 to-transparent rounded-xl p-4 border border-accent-100">
+                  <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Skill Focus:
+                  </h3>
+                  <ul class="list-disc list-inside text-gray-700 space-y-2">
+                    @for (skill of level.skillFocus; track skill) {
+                      <li class="text-sm">{{ skill }}</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+              
+              <div class="mt-6 pt-6 border-t-2 border-gradient-to-r from-primary-200 to-accent-200">
+                <span class="inline-flex items-center gap-2 bg-gradient-to-r from-primary-100 to-accent-100 text-primary-700 px-6 py-3 rounded-full font-bold text-sm shadow-lg">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Session Duration: {{ level.duration }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="mt-12 text-center">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">Not Sure Which Level?</h2>
+      <p class="text-lg text-gray-600 mb-6">Use our Level Finder to determine the perfect starting point for your child.</p>
+      <a routerLink="/level-finder" class="btn-primary">Take Level Finder Quiz</a>
+    </div>
+  </div>
+</section>

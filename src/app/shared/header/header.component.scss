@@ -1,0 +1,39 @@
+// Header component styles
+
+// Smooth header background transition
+header {
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+// Mobile menu animation
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+// Navigation link hover effect
+nav a {
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateX(4px);
+  }
+}
+
+// Hamburger menu button animation
+button[aria-label="Toggle menu"] {
+  span {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

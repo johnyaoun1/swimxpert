@@ -1,0 +1,167 @@
+<div class="hero-gradient text-white py-20 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto px-4 text-center relative z-10">
+    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Contact Us</h1>
+    <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">We'd love to hear from you. Get in touch with any questions or inquiries.</p>
+  </div>
+</div>
+
+<section class="section-padding bg-white">
+  <div class="container mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div class="premium-container animate-slide-right">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800">Send us a Message</h2>
+        </div>
+        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
+            <input 
+              type="text" 
+              formControlName="name"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Your name"
+            />
+            @if (contactForm.get('name')?.invalid && contactForm.get('name')?.touched) {
+              <p class="text-red-600 mt-1 text-sm">Name is required</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+            <input 
+              type="email" 
+              formControlName="email"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="your.email@example.com"
+            />
+            @if (contactForm.get('email')?.invalid && contactForm.get('email')?.touched) {
+              <p class="text-red-600 mt-1 text-sm">Valid email is required</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Message *</label>
+            <textarea 
+              formControlName="message"
+              rows="6"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Your message..."
+            ></textarea>
+            @if (contactForm.get('message')?.invalid && contactForm.get('message')?.touched) {
+              <p class="text-red-600 mt-1 text-sm">Message is required</p>
+            }
+          </div>
+
+          <button 
+            type="submit" 
+            [disabled]="contactForm.invalid || submitting"
+            class="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (submitting) {
+              Sending...
+            } @else {
+              Send Message
+            }
+          </button>
+
+          @if (submitted) {
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+              Thank you! Your message has been sent. We'll get back to you soon.
+            </div>
+          }
+        </form>
+      </div>
+
+      <div class="premium-container animate-slide-left">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 bg-gradient-to-br from-accent-500 to-primary-500 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+            </svg>
+          </div>
+          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800">Get in Touch</h2>
+        </div>
+        <div class="space-y-6 mb-8">
+          <div class="flex items-start">
+            <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="font-semibold text-gray-800 mb-1">Phone</h3>
+              <p class="text-gray-600">(555) 123-4567</p>
+            </div>
+          </div>
+
+          <div class="flex items-start">
+            <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="font-semibold text-gray-800 mb-1">Email</h3>
+              <p class="text-gray-600">info&#64;swimxpert.com</p>
+            </div>
+          </div>
+
+          <div class="flex items-start">
+            <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="font-semibold text-gray-800 mb-1">Address</h3>
+              <p class="text-gray-600">123 Main Street<br>Downtown District<br>City, State 12345</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-100 rounded-lg p-6">
+          <h3 class="font-semibold text-gray-800 mb-4">Business Hours</h3>
+          <ul class="space-y-2 text-gray-700">
+            <li class="flex justify-between">
+              <span>Monday - Friday</span>
+              <span>9:00 AM - 7:00 PM</span>
+            </li>
+            <li class="flex justify-between">
+              <span>Saturday</span>
+              <span>8:00 AM - 6:00 PM</span>
+            </li>
+            <li class="flex justify-between">
+              <span>Sunday</span>
+              <span>9:00 AM - 5:00 PM</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12 bg-gray-100 rounded-xl p-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Find Us on the Map</h2>
+      <div class="bg-white rounded-lg overflow-hidden shadow-lg" style="height: 400px;">
+        <iframe 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1841333886687!2d-73.98811768459398!3d40.75889597932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes%20Square!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus"
+          width="100%" 
+          height="100%" 
+          style="border:0;" 
+          allowfullscreen="" 
+          loading="lazy" 
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>

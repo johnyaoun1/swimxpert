@@ -1,0 +1,170 @@
+<div class="hero-gradient text-white py-20 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto px-4 text-center relative z-10">
+    <h1 class="text-5xl md:text-7xl font-extrabold mb-6 animate-slide-down">
+      <span class="inline-block hover:scale-110 transition-transform duration-300">Swimming</span>
+      <span class="inline-block mx-2 hover:scale-110 transition-transform duration-300" style="animation-delay: 0.1s;">Quiz</span>
+    </h1>
+    <p class="text-xl md:text-2xl mb-8 text-blue-100 animate-slide-up leading-relaxed">Test your swimming knowledge and learn new facts!</p>
+  </div>
+</div>
+
+<section class="premium-section section-padding">
+  <div class="section-container max-w-4xl relative z-10">
+    @if (!quizCompleted) {
+      <div class="premium-container interactive-card animate-scale-in">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-semibold text-gray-700">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
+            <span class="text-sm font-semibold text-primary-600">{{ getProgressPercentage() }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div 
+              class="bg-gradient-to-r from-primary-500 to-accent-500 h-3 rounded-full transition-all duration-500"
+              [style.width.%]="((currentQuestionIndex + 1) / questions.length) * 100"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Question -->
+        <div class="mb-8">
+          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-6 text-gradient">
+            {{ getCurrentQuestion().question }}
+          </h2>
+
+          <!-- Answer Options -->
+          <div class="space-y-4">
+            @for (option of getCurrentQuestion().options; track $index) {
+              <button
+                (click)="selectAnswer($index)"
+                [class.bg-primary-100]="selectedAnswer === $index"
+                [class.border-primary-600]="selectedAnswer === $index"
+                [class.bg-green-100]="showResult && $index === getCurrentQuestion().correctAnswer"
+                [class.border-green-600]="showResult && $index === getCurrentQuestion().correctAnswer"
+                [class.bg-red-100]="showResult && selectedAnswer === $index && selectedAnswer !== getCurrentQuestion().correctAnswer"
+                [class.border-red-600]="showResult && selectedAnswer === $index && selectedAnswer !== getCurrentQuestion().correctAnswer"
+                class="w-full text-left p-6 rounded-xl border-2 border-gray-200 hover:border-primary-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                [disabled]="showResult"
+              >
+                <div class="flex items-center">
+                  <div class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold mr-4 flex-shrink-0">
+                    {{ getOptionLetter($index) }}
+                  </div>
+                  <span class="text-lg font-semibold text-gray-800">{{ option }}</span>
+                  @if (showResult && $index === getCurrentQuestion().correctAnswer) {
+                    <svg class="w-6 h-6 text-green-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  }
+                  @if (showResult && selectedAnswer === $index && selectedAnswer !== getCurrentQuestion().correctAnswer) {
+                    <svg class="w-6 h-6 text-red-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Explanation -->
+        @if (showResult) {
+          <div class="mb-8 p-6 rounded-xl animate-fade-in"
+               [class.bg-green-50]="isCorrectAnswer()"
+               [class.bg-blue-50]="!isCorrectAnswer()"
+               [class.border-green-200]="isCorrectAnswer()"
+               [class.border-blue-200]="!isCorrectAnswer()"
+               [class.border-2]="true">
+            <div class="flex items-start">
+              @if (isCorrectAnswer()) {
+                <svg class="w-8 h-8 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              } @else {
+                <svg class="w-8 h-8 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              }
+              <div>
+                <h3 class="font-bold text-lg mb-2"
+                    [class.text-green-800]="isCorrectAnswer()"
+                    [class.text-blue-800]="!isCorrectAnswer()">
+                  @if (isCorrectAnswer()) {
+                    Correct!
+                  } @else {
+                    Not quite right
+                  }
+                </h3>
+                <p class="text-gray-700 leading-relaxed">{{ getCurrentQuestion().explanation }}</p>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 justify-center">
+          @if (!showResult) {
+            <button
+              (click)="submitAnswer()"
+              [disabled]="selectedAnswer === null"
+              class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Submit Answer
+            </button>
+          } @else {
+            <button
+              (click)="nextQuestion()"
+              class="btn-primary"
+            >
+              @if (currentQuestionIndex < questions.length - 1) {
+                Next Question
+              } @else {
+                Finish Quiz
+              }
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- Quiz Results -->
+      <div class="premium-container text-center animate-scale-in">
+        <div class="mb-8">
+          <div class="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center shadow-2xl floating-element">
+            <span class="text-6xl font-black text-white">{{ quizResult?.percentage }}%</span>
+          </div>
+          <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 text-gradient">Quiz Complete!</h2>
+          <p class="text-2xl text-gray-600 mb-2">You scored {{ quizResult?.score }} out of {{ quizResult?.totalQuestions }}</p>
+          <p class="text-xl text-primary-600 font-bold mb-6">{{ getScoreMessage() }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border-2 border-primary-200">
+            <div class="text-4xl font-black text-primary-600 mb-2">{{ quizResult?.score }}</div>
+            <div class="text-gray-700 font-semibold">Correct Answers</div>
+          </div>
+          <div class="bg-gradient-to-br from-accent-50 to-accent-100 rounded-xl p-6 border-2 border-accent-200">
+            <div class="text-4xl font-black text-accent-600 mb-2">{{ quizResult?.percentage }}%</div>
+            <div class="text-gray-700 font-semibold">Score</div>
+          </div>
+          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
+            <div class="text-4xl font-black text-green-600 mb-2">{{ questions.length }}</div>
+            <div class="text-gray-700 font-semibold">Total Questions</div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a routerLink="/leaderboard" class="btn-primary">
+            View Leaderboard
+          </a>
+          <button (click)="resetQuiz()" class="btn-secondary">
+            Take Quiz Again
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</section>

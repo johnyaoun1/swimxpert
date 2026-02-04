@@ -1,0 +1,63 @@
+<div class="hero-gradient text-white py-20 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-10 left-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-10 right-10 w-80 h-80 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto px-4 text-center relative z-10">
+    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Gallery</h1>
+    <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">See our students in action and our amazing facilities</p>
+  </div>
+</div>
+
+<section class="section-padding bg-white">
+  <div class="container mx-auto">
+    @if (!selectedImage()) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (image of images; track image.id) {
+          <div 
+            class="card p-0 overflow-hidden cursor-pointer group animate-scale-in"
+            style="animation-delay: {{ (image.id - 1) * 0.1 }}s;"
+            (click)="selectImage(image)"
+          >
+            <div class="aspect-w-16 aspect-h-9 bg-gray-200 relative overflow-hidden">
+              <div class="w-full h-64 bg-gradient-to-br from-primary-400 via-accent-500 to-primary-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                <div class="text-center text-white relative z-10">
+                  <svg class="w-16 h-16 mx-auto mb-2 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <p class="font-semibold text-lg">{{ image.title }}</p>
+                </div>
+                <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold text-gray-800">{{ image.title }}</h3>
+              <p class="text-sm text-gray-600 mt-1">{{ image.alt }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="max-w-4xl mx-auto">
+        <div class="card">
+          <button 
+            (click)="closeImage()"
+            class="mb-4 text-primary-600 hover:text-primary-700 font-semibold flex items-center"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to Gallery
+          </button>
+          <div class="bg-gradient-to-br from-primary-400 to-accent-500 rounded-lg p-12 text-center text-white mb-4">
+            <svg class="w-32 h-32 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <h2 class="text-3xl font-bold mb-2">{{ selectedImage()!.title }}</h2>
+            <p class="text-lg">{{ selectedImage()!.alt }}</p>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</section>

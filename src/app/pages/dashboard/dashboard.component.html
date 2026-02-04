@@ -1,0 +1,249 @@
+<div class="hero-gradient text-white py-20 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="flex items-center gap-4 justify-center mb-4">
+      @if (user()?.avatar) {
+        <img 
+          [src]="user()!.avatar" 
+          [alt]="user()!.name"
+          class="w-16 h-16 rounded-full border-4 border-white shadow-lg object-cover"
+        />
+      } @else {
+        <div class="w-16 h-16 rounded-full bg-white bg-opacity-20 backdrop-blur-sm flex items-center justify-center border-4 border-white shadow-lg">
+          <span class="text-3xl font-bold text-white">{{ user()?.name?.charAt(0) }}</span>
+        </div>
+      }
+      <div>
+        <h1 class="text-5xl md:text-6xl font-extrabold mb-2 animate-slide-down">Welcome, {{ user()?.name }}!</h1>
+        <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">Manage your children's swimming progress</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="section-padding bg-white">
+  <div class="container mx-auto">
+    @if (showAddChildForm()) {
+      <div class="card mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Add a Child</h2>
+        <form [formGroup]="childForm" (ngSubmit)="addChild()" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Child's Name *</label>
+              <input 
+                type="text" 
+                formControlName="name"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Child's name"
+              />
+              @if (childForm.get('name')?.invalid && childForm.get('name')?.touched) {
+                <p class="text-red-600 mt-1 text-sm">Name is required</p>
+              }
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Age *</label>
+              <input 
+                type="number" 
+                formControlName="age"
+                min="3"
+                max="18"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Age"
+              />
+              @if (childForm.get('age')?.invalid && childForm.get('age')?.touched) {
+                <p class="text-red-600 mt-1 text-sm">Valid age is required (3-18)</p>
+              }
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Current Level *</label>
+            <select 
+              formControlName="level"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              @for (level of levels; track level.level) {
+                <option [value]="level.level">Level {{ level.level }} - {{ level.title }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Profile Picture URL (optional)</label>
+            <input 
+              type="url" 
+              formControlName="profilePicture"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+          <div class="flex gap-4">
+            <button 
+              type="submit" 
+              [disabled]="childForm.invalid"
+              class="btn-primary disabled:opacity-50"
+            >
+              Add Child
+            </button>
+            <button 
+              type="button" 
+              (click)="toggleAddChildForm()"
+              class="btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800">Your Children</h2>
+      @if (!showAddChildForm()) {
+        <button (click)="toggleAddChildForm()" class="btn-primary">
+          + Add Child
+        </button>
+      }
+    </div>
+
+    @if (user()?.children && user()!.children.length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (child of user()!.children; track child.id) {
+          <div class="card">
+            <div class="text-center mb-4">
+              @if (child.profilePicture) {
+                <img 
+                  [src]="child.profilePicture" 
+                  [alt]="child.name"
+                  class="w-24 h-24 rounded-full mx-auto object-cover mb-4"
+                  (error)="handleImageError($event, child.name)"
+                />
+              } @else {
+                <div class="w-24 h-24 rounded-full mx-auto bg-primary-100 flex items-center justify-center mb-4">
+                  <span class="text-4xl font-bold text-primary-600">{{ child.name.charAt(0) }}</span>
+                </div>
+              }
+              <h3 class="text-2xl font-bold text-gray-800">{{ child.name }}</h3>
+              <p class="text-gray-600">Age: {{ child.age }}</p>
+              <div class="mt-2">
+                <span class="inline-block bg-primary-100 text-primary-700 px-4 py-2 rounded-full font-semibold">
+                  Level {{ child.level }}
+                </span>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4 mt-4">
+              <h4 class="font-semibold text-gray-800 mb-3">Progress History</h4>
+              @if (child.progress && child.progress.length > 0) {
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                  @for (entry of child.progress; track entry.date) {
+                    <div class="bg-gray-50 rounded-lg p-3">
+                      <div class="flex justify-between items-start mb-1">
+                        <span class="text-sm font-semibold text-gray-700">Level {{ entry.level }}</span>
+                        <span class="text-xs text-gray-500">{{ entry.date }}</span>
+                      </div>
+                      <p class="text-sm text-gray-600">{{ entry.notes }}</p>
+                      @if (entry.skills && entry.skills.length > 0) {
+                        <div class="mt-2 flex flex-wrap gap-1">
+                          @for (skill of entry.skills; track skill) {
+                            <span class="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded">{{ skill }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="text-sm text-gray-500 italic">No progress entries yet</p>
+              }
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <button 
+                (click)="showAddProgress(child.id)"
+                class="w-full btn-secondary text-sm py-2"
+              >
+                Add Progress Entry
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="card text-center py-12">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No children added yet</h3>
+        <p class="text-gray-600 mb-6">Add your first child to start tracking their swimming progress</p>
+        <button (click)="toggleAddChildForm()" class="btn-primary">
+          Add Your First Child
+        </button>
+      </div>
+    }
+  </div>
+</section>
+
+@if (showProgressForm()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Add Progress Entry</h2>
+      <form [formGroup]="progressForm" (ngSubmit)="addProgress()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Level *</label>
+          <select 
+            formControlName="level"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            @for (level of levels; track level.level) {
+              <option [value]="level.level">Level {{ level.level }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Date *</label>
+          <input 
+            type="date" 
+            formControlName="date"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Notes *</label>
+          <textarea 
+            formControlName="notes"
+            rows="4"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Progress notes..."
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Skills (comma-separated)</label>
+          <input 
+            type="text" 
+            formControlName="skills"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="e.g., Freestyle, Backstroke, Treading water"
+          />
+        </div>
+        <div class="flex gap-4">
+          <button 
+            type="submit" 
+            [disabled]="progressForm.invalid"
+            class="btn-primary flex-1 disabled:opacity-50"
+          >
+            Add Progress
+          </button>
+          <button 
+            type="button" 
+            (click)="closeProgressForm()"
+            class="btn-secondary flex-1"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

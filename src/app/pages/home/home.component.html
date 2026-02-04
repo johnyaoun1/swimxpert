@@ -1,0 +1,139 @@
+<div class="hero-gradient text-white relative overflow-hidden">
+  <!-- Animated background elements -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-300 opacity-5 rounded-full blur-3xl animate-pulse-slow"></div>
+  </div>
+  
+  <!-- Floating water waves -->
+  <div class="absolute bottom-0 left-0 right-0 h-32 overflow-hidden">
+    <svg class="absolute bottom-0 w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path d="M0,60 C300,100 600,20 900,60 C1050,80 1150,40 1200,60 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.1)" class="animate-wave"></path>
+      <path d="M0,80 C300,120 600,40 900,80 C1050,100 1150,60 1200,80 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.05)" class="animate-wave" style="animation-delay: 1s;"></path>
+    </svg>
+  </div>
+  
+  <div class="container mx-auto px-4 py-24 md:py-32 relative z-10">
+    <div class="max-w-3xl mx-auto text-center animate-fade-in">
+      <div class="inline-block mb-4 animate-scale-in">
+        <div class="w-20 h-20 mx-auto bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm floating-element">
+          <svg class="w-10 h-10 text-white animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </div>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-extrabold mb-6 animate-slide-down">
+        <span class="inline-block hover:scale-110 transition-transform duration-300">Dive</span>
+        <span class="inline-block mx-2 hover:scale-110 transition-transform duration-300" style="animation-delay: 0.1s;">Into</span>
+        <span class="inline-block hover:scale-110 transition-transform duration-300" style="animation-delay: 0.2s;">Excellence</span>
+      </h1>
+      <p class="text-xl md:text-2xl mb-8 text-blue-100 animate-slide-up leading-relaxed">Professional swimming lessons for all ages. Build confidence, learn skills, and have fun in the water!</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in" style="animation-delay: 0.3s;">
+        <a routerLink="/level-finder" class="btn-primary group relative overflow-hidden">
+          <span class="relative z-10">Find Your Level</span>
+        </a>
+        <a routerLink="/swim-lessons" class="btn-secondary bg-white bg-opacity-10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-primary-600">
+          View Lessons
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="premium-section section-padding">
+  <div class="section-container relative z-10">
+    <div class="text-center mb-16 animate-slide-down">
+      <div class="inline-block mb-4">
+        <span class="inline-block px-4 py-2 bg-gradient-to-r from-primary-100 to-accent-100 rounded-full text-primary-700 font-bold text-sm uppercase tracking-wide">
+          Why Choose Us
+        </span>
+      </div>
+      <h2 class="text-5xl md:text-6xl font-extrabold text-gray-800 mb-6">
+        <span class="text-gradient">Why Choose</span> SwimXpert?
+      </h2>
+      <p class="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">Expert instructors, proven curriculum, and a safe learning environment for swimmers of all levels.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+      <div class="interactive-card premium-container text-center animate-slide-up group">
+        <div class="relative z-10">
+          <div class="w-24 h-24 bg-gradient-to-br from-primary-500 via-accent-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-extrabold mb-3 text-gray-800 group-hover:text-gradient transition-all duration-300">Safe & Secure</h3>
+          <p class="text-gray-600 leading-relaxed text-lg">Certified instructors and safety-first approach ensure a secure learning environment.</p>
+        </div>
+        <div class="absolute top-4 right-4 w-2 h-2 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+      </div>
+      
+      <div class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.1s;">
+        <div class="relative z-10">
+          <div class="w-24 h-24 bg-gradient-to-br from-accent-500 via-primary-500 to-accent-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element-delayed">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-extrabold mb-3 text-gray-800 group-hover:text-gradient transition-all duration-300">Proven Curriculum</h3>
+          <p class="text-gray-600 leading-relaxed text-lg">Structured 6-level program designed to build skills progressively from beginner to advanced.</p>
+        </div>
+        <div class="absolute top-4 right-4 w-2 h-2 bg-accent-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+      </div>
+      
+      <div class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.2s;">
+        <div class="relative z-10">
+          <div class="w-24 h-24 bg-gradient-to-br from-primary-500 via-accent-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-extrabold mb-3 text-gray-800 group-hover:text-gradient transition-all duration-300">Expert Instructors</h3>
+          <p class="text-gray-600 leading-relaxed text-lg">Certified, experienced teachers dedicated to helping every student succeed.</p>
+        </div>
+        <div class="absolute top-4 right-4 w-2 h-2 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-padding bg-gray-50">
+  <div class="container mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div>
+        <h2 class="text-4xl font-bold text-gray-800 mb-6">Ready to Start Your Swimming Journey?</h2>
+        <p class="text-lg text-gray-600 mb-6">Our Level Finder helps you determine the perfect starting point for your child's swimming education. Answer a few simple questions and we'll recommend the ideal level.</p>
+        <a routerLink="/level-finder" class="btn-primary inline-block">Find Your Level Now</a>
+      </div>
+      <div class="premium-container interactive-card text-center group">
+        <div class="relative z-10">
+          <div class="inline-block mb-6">
+            <div class="text-9xl font-black text-gradient mb-4 floating-element inline-block relative">
+              <span class="relative z-10">6</span>
+              <div class="absolute inset-0 bg-gradient-to-br from-primary-400 to-accent-400 blur-3xl opacity-30 -z-10"></div>
+            </div>
+          </div>
+          <h3 class="text-3xl font-extrabold mb-3 text-gray-800 group-hover:text-gradient transition-all duration-300">Swim Levels</h3>
+          <p class="text-gray-700 font-semibold text-lg">From early swim lessons to advanced competitive preparation</p>
+        </div>
+        <!-- Decorative elements -->
+        <div class="absolute top-6 right-6 w-20 h-20 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-20 floating-element blur-xl"></div>
+        <div class="absolute bottom-6 left-6 w-16 h-16 bg-gradient-to-br from-accent-300 to-primary-300 rounded-full opacity-20 floating-element-delayed blur-xl"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary-200 rounded-full opacity-10 blur-2xl animate-pulse-slow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-padding bg-gradient-to-br from-primary-50 via-white to-accent-50 relative overflow-hidden">
+  <div class="absolute inset-0">
+    <div class="absolute top-10 right-10 w-64 h-64 bg-primary-200 opacity-20 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-10 left-10 w-80 h-80 bg-accent-200 opacity-20 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  <div class="container mx-auto text-center relative z-10">
+    <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 animate-slide-down">Join Hundreds of Happy Swimmers</h2>
+    <p class="text-xl md:text-2xl text-gray-600 mb-8 animate-slide-up">Start your swimming journey today</p>
+    <a routerLink="/signup" class="btn-primary inline-block animate-scale-in" style="animation-delay: 0.2s;">Get Started</a>
+  </div>
+</section>

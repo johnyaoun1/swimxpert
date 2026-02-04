@@ -1,0 +1,130 @@
+<div class="hero-gradient text-white py-20 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-300 opacity-5 rounded-full blur-3xl animate-pulse-slow"></div>
+  </div>
+  
+  <div class="absolute bottom-0 left-0 right-0 h-32 overflow-hidden">
+    <svg class="absolute bottom-0 w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path d="M0,60 C300,100 600,20 900,60 C1050,80 1150,40 1200,60 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.1)" class="animate-wave"></path>
+      <path d="M0,80 C300,120 600,40 900,80 C1050,100 1150,60 1200,80 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.05)" class="animate-wave" style="animation-delay: 1s;"></path>
+    </svg>
+  </div>
+  
+  <div class="container mx-auto px-4 py-24 md:py-32 relative z-10">
+    <div class="max-w-3xl mx-auto text-center animate-fade-in">
+      <div class="inline-block mb-4 animate-scale-in">
+        <div class="w-20 h-20 mx-auto bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm floating-element">
+          <svg class="w-10 h-10 text-white animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+          </svg>
+        </div>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-extrabold mb-6 animate-slide-down">
+        <span class="inline-block hover:scale-110 transition-transform duration-300">Our</span>
+        <span class="inline-block mx-2 hover:scale-110 transition-transform duration-300" style="animation-delay: 0.1s;">Certifications</span>
+      </h1>
+      <p class="text-xl md:text-2xl mb-8 text-blue-100 animate-slide-up leading-relaxed">View our professional certifications and credentials</p>
+    </div>
+  </div>
+</div>
+
+<section class="section-padding bg-gradient-to-br from-gray-50 via-white to-primary-50 relative overflow-hidden">
+  <div class="absolute inset-0">
+    <div class="absolute top-10 right-10 w-64 h-64 bg-primary-100 opacity-30 rounded-full blur-3xl floating-element"></div>
+    <div class="absolute bottom-10 left-10 w-80 h-80 bg-accent-100 opacity-30 rounded-full blur-3xl floating-element-delayed"></div>
+  </div>
+  
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="text-center mb-16 animate-slide-down">
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4">Professional Certifications</h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our team holds the highest industry certifications ensuring the best instruction and safety standards.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      @for (certificate of certificates; track certificate.id) {
+        <div 
+          class="certificate-card group cursor-pointer"
+          (click)="viewCertificate(certificate)"
+        >
+          <div class="certificate-header">
+            <div class="certificate-icon">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <div class="certificate-badge">
+              <span class="text-xs font-bold">CERTIFIED</span>
+            </div>
+          </div>
+          
+          <div class="certificate-content">
+            <h3 class="certificate-title">{{ certificate.title }}</h3>
+            <p class="certificate-description">{{ certificate.description }}</p>
+          </div>
+          
+          <div class="certificate-footer">
+            <button 
+              (click)="viewCertificate(certificate); $event.stopPropagation()"
+              class="certificate-btn-view"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+              View Certificate
+            </button>
+            <button 
+              (click)="downloadCertificate(certificate, $event)"
+              class="certificate-btn-download"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="certificate-glow"></div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+@if (showPdfViewer && selectedCertificate) {
+  <div class="pdf-viewer-overlay" (click)="closePdfViewer()">
+    <div class="pdf-viewer-container" (click)="$event.stopPropagation()">
+      <div class="pdf-viewer-header">
+        <h3 class="pdf-viewer-title">{{ selectedCertificate.title }}</h3>
+        <div class="pdf-viewer-actions">
+          <button 
+            (click)="downloadCertificate(selectedCertificate, $event)"
+            class="pdf-viewer-btn"
+            title="Download"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+          </button>
+          <button 
+            (click)="closePdfViewer()"
+            class="pdf-viewer-btn"
+            title="Close"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="pdf-viewer-content">
+        <iframe 
+          [src]="selectedCertificate.pdfPath | safeUrl" 
+          class="pdf-iframe"
+          title="Certificate PDF"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+}
