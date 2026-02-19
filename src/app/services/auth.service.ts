@@ -1,5 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { ApiService } from './api.service';
 
 export interface QuizResult {
   score: number;
@@ -16,6 +19,14 @@ export interface User {
   role?: 'user' | 'admin';
   children: Child[];
   quizResults: QuizResult[];
+}
+
+export interface AuthApiResponse {
+  id: number;
+  email: string;
+  fullName: string;
+  role: string;
+  token: string;
 }
 
 export interface Child {
@@ -43,63 +54,55 @@ export class AuthService {
   
   currentUser = signal<User | null>(null);
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private apiService: ApiService
+  ) {
     this.loadUserFromStorage();
+    this.validateToken().subscribe();
   }
 
-  login(email: string, password: string): boolean {
-    // Mock authentication - in production, this would call an API
-    if (email && password) {
-      // Admin account: admin@swimxpert.com / admin123
-      const isAdmin = email.toLowerCase() === 'admin@swimxpert.com' && password === 'admin123';
-      
-      const user: User = {
-        id: isAdmin ? 'admin' : '1',
-        email,
-        name: email.split('@')[0],
-        role: isAdmin ? 'admin' : 'user',
-        children: [],
-        quizResults: []
-      };
-      
-      const token = 'mock_jwt_token_' + Date.now();
-      localStorage.setItem(this.TOKEN_KEY, token);
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      this.currentUser.set(user);
-      return true;
-    }
-    return false;
+  login(email: string, password: string): Observable<AuthApiResponse> {
+    return this.apiService.login(email, password).pipe(
+      tap((response: AuthApiResponse) => {
+        this.persistAuthResponse(response);
+      })
+    );
   }
 
-  signup(email: string, password: string, name: string): boolean {
-    // Mock signup - in production, this would call an API
-    if (email && password && name) {
-      const user: User = {
-        id: Date.now().toString(),
-        email,
-        name,
-        avatar: this.generateAvatar(name),
-        role: 'user',
-        children: [],
-        quizResults: []
-      };
-      
-      const token = 'mock_jwt_token_' + Date.now();
-      localStorage.setItem(this.TOKEN_KEY, token);
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      this.currentUser.set(user);
-      return true;
+  register(email: string, password: string, fullName: string, phone?: string, birthDate?: string): Observable<AuthApiResponse> {
+    return this.apiService.register(email, password, fullName, phone, birthDate).pipe(
+      tap((response: AuthApiResponse) => {
+        this.persistAuthResponse(response);
+      })
+    );
+  }
+
+  signup(email: string, password: string, name: string): Observable<AuthApiResponse> {
+    return this.register(email, password, name);
+  }
+
+  validateToken(): Observable<boolean> {
+    if (!this.getToken()) {
+      this.clearAuthState(false);
+      return of(false);
     }
-    return false;
+
+    return this.apiService.validateToken().pipe(
+      map(() => true),
+      catchError(() => {
+        this.clearAuthState(false);
+        return of(false);
+      })
+    );
   }
 
   isAdmin(): boolean {
     const user = this.currentUser();
-    return user?.role === 'admin';
+    return user?.role?.toLowerCase() === 'admin';
   }
 
   getAllClients(): User[] {
-    // Get all users from localStorage (in production, this would be an API call)
     const allUsers: User[] = [];
     const keys = Object.keys(localStorage);
     
@@ -116,56 +119,22 @@ export class AuthService {
       }
     });
     
-    // Also include mock users for demo
-    const mockUsers: User[] = [
-      {
-        id: '2',
-        email: 'alex@example.com',
-        name: 'Alex',
-        avatar: this.generateAvatar('Alex'),
-        role: 'user',
-        children: [
-          { id: '1', name: 'Emma', age: 5, level: 2, progress: [] },
-          { id: '2', name: 'Lucas', age: 7, level: 3, progress: [] }
-        ],
-        quizResults: []
-      },
-      {
-        id: '3',
-        email: 'sarah@example.com',
-        name: 'Sarah',
-        avatar: this.generateAvatar('Sarah'),
-        role: 'user',
-        children: [
-          { id: '3', name: 'Olivia', age: 6, level: 2, progress: [] }
-        ],
-        quizResults: []
-      },
-      {
-        id: '4',
-        email: 'mike@example.com',
-        name: 'Mike',
-        avatar: this.generateAvatar('Mike'),
-        role: 'user',
-        children: [
-          { id: '4', name: 'Noah', age: 8, level: 4, progress: [] },
-          { id: '5', name: 'Sophia', age: 4, level: 1, progress: [] }
-        ],
-        quizResults: []
-      }
-    ];
-    
-    return [...allUsers, ...mockUsers];
+    return allUsers;
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    this.currentUser.set(null);
-    this.router.navigate(['/']);
+    this.clearAuthState(true);
   }
 
-  isAuthenticated(): boolean {
+  isAuthenticated(): Observable<boolean> {
+    if (!this.getToken()) {
+      return of(false);
+    }
+
+    return this.validateToken();
+  }
+
+  isAuthenticatedSync(): boolean {
     return !!localStorage.getItem(this.TOKEN_KEY);
   }
 
@@ -182,6 +151,44 @@ export class AuthService {
         console.error('Error loading user from storage', e);
       }
     }
+  }
+
+  getCurrentUser(): User | null {
+    const current = this.currentUser();
+    if (current) return current;
+
+    const raw = localStorage.getItem(this.USER_KEY);
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(raw) as User;
+    } catch {
+      return null;
+    }
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  private persistAuthResponse(response: any): void {
+    const role = (response?.role ?? 'Parent').toString().toLowerCase() === 'admin' ? 'admin' : 'user';
+    const name = response?.fullName || response?.name || response?.email?.split('@')?.[0] || 'User';
+
+    const user: User = {
+      id: String(response?.id ?? ''),
+      email: response?.email ?? '',
+      name,
+      avatar: this.generateAvatar(name),
+      role,
+      children: [],
+      quizResults: []
+    };
+
+    const token = response?.token ?? '';
+    localStorage.setItem(this.TOKEN_KEY, token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    this.currentUser.set(user);
   }
 
   generateAvatar(name: string): string {
@@ -218,40 +225,11 @@ export class AuthService {
   }
 
   getAllUsers(): User[] {
-    // For leaderboard - in production, this would come from an API
-    // For now, we'll return the current user and some mock users
     const currentUser = this.currentUser();
-    const mockUsers: User[] = [
-      {
-        id: '2',
-        email: 'alex@example.com',
-        name: 'Alex',
-        avatar: this.generateAvatar('Alex'),
-        children: [],
-        quizResults: [{ score: 9, totalQuestions: 10, percentage: 90, timestamp: new Date() }]
-      },
-      {
-        id: '3',
-        email: 'sarah@example.com',
-        name: 'Sarah',
-        avatar: this.generateAvatar('Sarah'),
-        children: [],
-        quizResults: [{ score: 8, totalQuestions: 10, percentage: 80, timestamp: new Date() }]
-      },
-      {
-        id: '4',
-        email: 'mike@example.com',
-        name: 'Mike',
-        avatar: this.generateAvatar('Mike'),
-        children: [],
-        quizResults: [{ score: 10, totalQuestions: 10, percentage: 100, timestamp: new Date() }]
-      }
-    ];
-    
     if (currentUser) {
-      return [currentUser, ...mockUsers];
+      return [currentUser];
     }
-    return mockUsers;
+    return [];
   }
 
   addChild(child: Omit<Child, 'id'>): void {
@@ -288,6 +266,15 @@ export class AuthService {
         localStorage.setItem(this.USER_KEY, JSON.stringify(user));
         this.currentUser.set({ ...user });
       }
+    }
+  }
+
+  private clearAuthState(redirectToLogin: boolean): void {
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+    this.currentUser.set(null);
+    if (redirectToLogin) {
+      this.router.navigate(['/login']);
     }
   }
 }

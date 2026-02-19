@@ -1,0 +1,26 @@
+<section class="section-padding bg-gray-50 min-h-screen">
+  <div class="container mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Coach Dashboard</h1>
+      <a routerLink="/sessions/create" class="btn-primary">Create Session</a>
+    </div>
+
+    @if (loading) {
+      <div class="premium-container">Loading...</div>
+    } @else if (errorMessage) {
+      <div class="premium-container text-red-600">{{ errorMessage }}</div>
+    } @else {
+      <div class="space-y-3">
+        @for (s of sessions; track s.id) {
+          <div class="premium-container flex items-center justify-between">
+            <div>
+              <p class="font-semibold">{{ s.childName || 'Open Session' }}</p>
+              <p class="text-sm text-gray-600">{{ s.date }} • {{ s.time }}</p>
+            </div>
+            <button class="btn-secondary" (click)="markAttendance(s.id)">Mark All Present</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

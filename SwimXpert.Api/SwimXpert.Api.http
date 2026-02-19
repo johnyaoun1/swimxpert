@@ -1,0 +1,6 @@
+@SwimXpert.Api_HostAddress = http://localhost:0
+
+GET {{SwimXpert.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

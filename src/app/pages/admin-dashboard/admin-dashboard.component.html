@@ -17,7 +17,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Total Clients</p>
-            <p class="text-3xl font-bold text-gray-800">{{ clients().length }}</p>
+            <p class="text-3xl font-bold text-gray-800">{{ dashboardOverview().totalClients }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,9 +31,9 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Total Sessions</p>
-            <p class="text-3xl font-bold text-gray-800">{{ getSessionStats().total }}</p>
+            <p class="text-3xl font-bold text-gray-800">{{ dashboardOverview().totalSessions }}</p>
             <p class="text-xs text-gray-500 mt-1">
-              {{ getSessionStats().completed }} completed, {{ getSessionStats().scheduled }} scheduled
+              {{ dashboardOverview().completedSessions }} completed, {{ dashboardOverview().cancelledSessions }} cancelled
             </p>
           </div>
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -63,8 +63,8 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Attendance Rate</p>
-            <p class="text-3xl font-bold text-gray-800">{{ getAttendanceRate() }}%</p>
-            <p class="text-xs text-gray-500 mt-1">{{ getAttendanceStats().present }} present / {{ getAttendanceStats().total }} total</p>
+            <p class="text-3xl font-bold text-gray-800">{{ dashboardOverview().attendanceRate }}%</p>
+            <p class="text-xs text-gray-500 mt-1">Live from backend records</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,12 +84,12 @@
           <p class="text-3xl font-bold text-green-700">${{ revenueData()?.completedSessionsRevenue || 0 }}</p>
         </div>
         <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border-2 border-red-200">
-          <p class="text-sm text-gray-600 mb-2">Canceled Sessions</p>
-          <p class="text-3xl font-bold text-red-700">${{ revenueData()?.canceledSessionsRevenue || 0 }}</p>
+          <p class="text-sm text-gray-600 mb-2">Cancelled Sessions</p>
+          <p class="text-3xl font-bold text-red-700">{{ revenueData()?.canceledSessionsRevenue || 0 }}</p>
         </div>
         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
           <p class="text-sm text-gray-600 mb-2">Scheduled (Potential)</p>
-          <p class="text-3xl font-bold text-blue-700">${{ revenueData()?.scheduledSessionsRevenue || 0 }}</p>
+          <p class="text-3xl font-bold text-blue-700">{{ revenueData()?.scheduledSessionsRevenue || 0 }}</p>
         </div>
       </div>
 

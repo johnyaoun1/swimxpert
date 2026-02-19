@@ -17,3 +17,7 @@ yarn-error.log*
 .vscode/
 .idea/
 .DS_Store
+
+# .NET build artifacts
+**/bin/
+**/obj/

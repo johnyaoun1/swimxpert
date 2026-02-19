@@ -1,4 +1,7 @@
 import { Injectable, signal } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 export type SessionStatus = 'scheduled' | 'completed' | 'canceled';
 
@@ -18,121 +21,94 @@ export interface Session {
   createdAt: string;
 }
 
+interface ApiSession {
+  id: number;
+  title: string;
+  startTime: string;
+  endTime: string;
+  capacity: number;
+  status: string;
+  createdAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class SessionService {
-  private readonly SESSIONS_KEY = 'swimxpert_sessions';
+  private readonly apiUrl = 'http://localhost:5002/api/sessions';
   sessions = signal<Session[]>([]);
 
-  constructor() {
-    this.loadSessions();
-    // Initialize with some mock data if empty
-    if (this.sessions().length === 0) {
-      this.initializeMockData();
-    }
+  constructor(private http: HttpClient) {
+    this.getSessions().subscribe();
   }
 
-  private loadSessions(): void {
-    const sessionsStr = localStorage.getItem(this.SESSIONS_KEY);
-    if (sessionsStr) {
-      try {
-        this.sessions.set(JSON.parse(sessionsStr));
-      } catch (e) {
-        console.error('Error loading sessions', e);
-        this.sessions.set([]);
-      }
-    }
-  }
+  getSessions(filters?: { status?: string; from?: string; to?: string }): Observable<Session[]> {
+    let params = new HttpParams();
+    if (filters?.status) params = params.set('status', this.toApiStatus(filters.status));
+    if (filters?.from) params = params.set('from', filters.from);
+    if (filters?.to) params = params.set('to', filters.to);
 
-  private saveSessions(): void {
-    localStorage.setItem(this.SESSIONS_KEY, JSON.stringify(this.sessions()));
-  }
-
-  private initializeMockData(): void {
-    const mockSessions: Session[] = [
-      {
-        id: '1',
-        childId: '1',
-        childName: 'Emma',
-        clientId: '2',
-        clientName: 'Alex',
-        date: new Date().toISOString().split('T')[0],
-        time: '10:00',
-        level: 2,
-        status: 'completed',
-        instructor: 'John Smith',
-        price: 50,
-        createdAt: new Date(Date.now() - 86400000).toISOString()
-      },
-      {
-        id: '2',
-        childId: '1',
-        childName: 'Emma',
-        clientId: '2',
-        clientName: 'Alex',
-        date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        time: '10:00',
-        level: 2,
-        status: 'scheduled',
-        instructor: 'John Smith',
-        price: 50,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: '3',
-        childId: '3',
-        childName: 'Olivia',
-        clientId: '3',
-        clientName: 'Sarah',
-        date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-        time: '14:00',
-        level: 2,
-        status: 'canceled',
-        instructor: 'Jane Doe',
-        price: 50,
-        createdAt: new Date(Date.now() - 259200000).toISOString()
-      },
-      {
-        id: '4',
-        childId: '4',
-        childName: 'Noah',
-        clientId: '4',
-        clientName: 'Mike',
-        date: new Date().toISOString().split('T')[0],
-        time: '16:00',
-        level: 4,
-        status: 'scheduled',
-        instructor: 'John Smith',
-        price: 60,
-        createdAt: new Date(Date.now() - 43200000).toISOString()
-      }
-    ];
-    this.sessions.set(mockSessions);
-    this.saveSessions();
-  }
-
-  createSession(session: Omit<Session, 'id' | 'createdAt'>): Session {
-    const newSession: Session = {
-      ...session,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    this.sessions.update(sessions => [...sessions, newSession]);
-    this.saveSessions();
-    return newSession;
-  }
-
-  updateSession(sessionId: string, updates: Partial<Session>): void {
-    this.sessions.update(sessions =>
-      sessions.map(s => s.id === sessionId ? { ...s, ...updates } : s)
+    return this.http.get<ApiSession[]>(this.apiUrl, { params }).pipe(
+      map((sessions) => sessions.map((s) => this.fromApiSession(s))),
+      tap((sessions) => this.sessions.set(sessions))
     );
-    this.saveSessions();
   }
 
-  deleteSession(sessionId: string): void {
-    this.sessions.update(sessions => sessions.filter(s => s.id !== sessionId));
-    this.saveSessions();
+  getUpcomingSessions(): Observable<Session[]> {
+    return this.http.get<ApiSession[]>(`${this.apiUrl}/upcoming`).pipe(
+      map((sessions) => sessions.map((s) => this.fromApiSession(s))),
+      tap((sessions) => this.sessions.set(sessions))
+    );
+  }
+
+  getSessionById(id: string | number): Observable<Session> {
+    return this.http.get<ApiSession>(`${this.apiUrl}/${id}`).pipe(
+      map((session) => this.fromApiSession(session))
+    );
+  }
+
+  createSession(session: Omit<Session, 'id' | 'createdAt'>): Observable<Session> {
+    const payload = {
+      title: session.childName ? `${session.childName} Session` : 'Training Session',
+      startTime: this.toIsoDateTime(session.date, session.time),
+      endTime: this.toIsoDateTime(session.date, session.time, 60),
+      capacity: 10,
+      status: this.toApiStatus(session.status)
+    };
+
+    return this.http.post<ApiSession>(this.apiUrl, payload).pipe(
+      map((created) => this.fromApiSession(created, session)),
+      tap((created) => this.sessions.update((sessions) => [...sessions, created]))
+    );
+  }
+
+  updateSession(sessionId: string, updates: Partial<Session>): Observable<Session> {
+    const existing = this.sessions().find((s) => s.id === sessionId);
+    if (!existing) {
+      return throwError(() => new Error('Session not found in local state.'));
+    }
+
+    const merged = { ...existing, ...updates };
+    const payload = {
+      title: merged.childName ? `${merged.childName} Session` : 'Training Session',
+      startTime: this.toIsoDateTime(merged.date, merged.time),
+      endTime: this.toIsoDateTime(merged.date, merged.time, 60),
+      capacity: 10,
+      status: this.toApiStatus(merged.status)
+    };
+
+    return this.http.put<ApiSession>(`${this.apiUrl}/${sessionId}`, payload).pipe(
+      map((updated) => this.fromApiSession(updated, merged)),
+      tap((updated) =>
+        this.sessions.update((sessions) => sessions.map((s) => (s.id === sessionId ? updated : s)))
+      )
+    );
+  }
+
+  deleteSession(sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${sessionId}`).pipe(
+      tap(() => this.sessions.update((sessions) => sessions.filter((s) => s.id !== sessionId)))
+    );
   }
 
   getSessionsByClient(clientId: string): Session[] {
@@ -166,5 +142,46 @@ export class SessionService {
 
   getScheduledSessionsCount(): number {
     return this.sessions().filter(s => s.status === 'scheduled').length;
+  }
+
+  private fromApiSession(api: ApiSession, fallback?: Partial<Session>): Session {
+    const start = new Date(api.startTime);
+    return {
+      id: String(api.id),
+      childId: fallback?.childId || '',
+      childName: fallback?.childName || '',
+      clientId: fallback?.clientId || '',
+      clientName: fallback?.clientName || '',
+      date: start.toISOString().split('T')[0],
+      time: start.toTimeString().slice(0, 5),
+      level: fallback?.level || 1,
+      status: this.fromApiStatus(api.status),
+      instructor: fallback?.instructor,
+      notes: fallback?.notes,
+      price: fallback?.price || 0,
+      createdAt: api.createdAt
+    };
+  }
+
+  private toApiStatus(status: string): string {
+    const s = status.toLowerCase();
+    if (s === 'completed') return 'Completed';
+    if (s === 'canceled') return 'Cancelled';
+    return 'Scheduled';
+  }
+
+  private fromApiStatus(status: string): SessionStatus {
+    const s = status.toLowerCase();
+    if (s === 'completed') return 'completed';
+    if (s === 'cancelled' || s === 'canceled') return 'canceled';
+    return 'scheduled';
+  }
+
+  private toIsoDateTime(date: string, time: string, plusMinutes = 0): string {
+    const dt = new Date(`${date}T${time}:00`);
+    if (!Number.isNaN(dt.getTime()) && plusMinutes > 0) {
+      dt.setMinutes(dt.getMinutes() + plusMinutes);
+    }
+    return dt.toISOString();
   }
 }

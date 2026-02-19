@@ -45,12 +45,20 @@ export class SignupComponent {
       this.errorMessage = '';
       
       const { name, email, password } = this.signupForm.value;
-      if (this.authService.signup(email, password, name)) {
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.errorMessage = 'Error creating account. Please try again.';
-      }
-      this.loading = false;
+      this.authService.signup(email, password, name).subscribe({
+        next: (response) => {
+          if (response?.token) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.errorMessage = 'Error creating account. Please try again.';
+          }
+          this.loading = false;
+        },
+        error: () => {
+          this.errorMessage = 'Signup failed. Please try again.';
+          this.loading = false;
+        }
+      });
     }
   }
 }

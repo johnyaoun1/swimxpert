@@ -1,4 +1,7 @@
 import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 
@@ -16,109 +19,79 @@ export interface Attendance {
   createdAt: string;
 }
 
+interface ApiRegistration {
+  id: number;
+  swimmerId: number;
+  trainingSessionId: number;
+  sessionDate: string;
+  isPresent: boolean;
+  createdAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AttendanceService {
-  private readonly ATTENDANCE_KEY = 'swimxpert_attendance';
+  private readonly apiUrl = 'http://localhost:5002/api/registrations';
   attendance = signal<Attendance[]>([]);
 
-  constructor() {
-    this.loadAttendance();
-    // Initialize with some mock data if empty
-    if (this.attendance().length === 0) {
-      this.initializeMockData();
-    }
-  }
+  constructor(private http: HttpClient) {}
 
-  private loadAttendance(): void {
-    const attendanceStr = localStorage.getItem(this.ATTENDANCE_KEY);
-    if (attendanceStr) {
-      try {
-        this.attendance.set(JSON.parse(attendanceStr));
-      } catch (e) {
-        console.error('Error loading attendance', e);
-        this.attendance.set([]);
-      }
-    }
-  }
-
-  private saveAttendance(): void {
-    localStorage.setItem(this.ATTENDANCE_KEY, JSON.stringify(this.attendance()));
-  }
-
-  private initializeMockData(): void {
-    const mockAttendance: Attendance[] = [
-      {
-        id: '1',
-        sessionId: '1',
-        childId: '1',
-        childName: 'Emma',
-        clientId: '2',
-        clientName: 'Alex',
-        date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-        status: 'present',
-        checkInTime: '09:55',
-        createdAt: new Date(Date.now() - 86400000).toISOString()
-      },
-      {
-        id: '2',
-        sessionId: '2',
-        childId: '1',
-        childName: 'Emma',
-        clientId: '2',
-        clientName: 'Alex',
-        date: new Date().toISOString().split('T')[0],
-        status: 'present',
-        checkInTime: '09:58',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: '3',
-        sessionId: '3',
-        childId: '3',
-        childName: 'Olivia',
-        clientId: '3',
-        clientName: 'Sarah',
-        date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-        status: 'absent',
-        notes: 'Client canceled',
-        createdAt: new Date(Date.now() - 172800000).toISOString()
-      },
-      {
-        id: '4',
-        sessionId: '4',
-        childId: '4',
-        childName: 'Noah',
-        clientId: '4',
-        clientName: 'Mike',
-        date: new Date().toISOString().split('T')[0],
-        status: 'late',
-        checkInTime: '16:15',
-        notes: 'Arrived 15 minutes late',
-        createdAt: new Date().toISOString()
-      }
-    ];
-    this.attendance.set(mockAttendance);
-    this.saveAttendance();
-  }
-
-  recordAttendance(attendance: Omit<Attendance, 'id' | 'createdAt'>): Attendance {
-    const newAttendance: Attendance = {
-      ...attendance,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    this.attendance.update(records => [...records, newAttendance]);
-    this.saveAttendance();
-    return newAttendance;
-  }
-
-  updateAttendance(attendanceId: string, updates: Partial<Attendance>): void {
-    this.attendance.update(records =>
-      records.map(a => a.id === attendanceId ? { ...a, ...updates } : a)
+  registerForSession(sessionId: string | number, swimmerId: string | number): Observable<Attendance> {
+    return this.http.post<ApiRegistration>(this.apiUrl, {
+      swimmerId: Number(swimmerId),
+      trainingSessionId: Number(sessionId)
+    }).pipe(
+      map((registration) => this.fromApiRegistration(registration)),
+      tap((registration) => this.attendance.update((records) => [...records, registration]))
     );
-    this.saveAttendance();
+  }
+
+  getSessionAttendees(sessionId: string | number): Observable<Attendance[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/session/${sessionId}`).pipe(
+      map((rows) => rows.map((row) => this.fromSessionRow(row))),
+      tap((rows) => this.attendance.set(rows))
+    );
+  }
+
+  getMySessions(swimmerId: string | number): Observable<Attendance[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/swimmer/${swimmerId}`).pipe(
+      map((rows) => rows.map((row) => this.fromSwimmerRow(row, swimmerId))),
+      tap((rows) => this.attendance.set(rows))
+    );
+  }
+
+  markAttendance(registrationId: string | number, attended: boolean): Observable<Attendance> {
+    return this.http.put<ApiRegistration>(`${this.apiUrl}/${registrationId}/attendance`, {
+      isPresent: attended
+    }).pipe(
+      map((registration) => this.fromApiRegistration(registration)),
+      tap((updated) =>
+        this.attendance.update((records) => records.map((r) => (r.id === String(registrationId) ? updated : r)))
+      )
+    );
+  }
+
+  cancelRegistration(id: string | number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => this.attendance.update((records) => records.filter((a) => a.id !== String(id))))
+    );
+  }
+
+  recordAttendance(attendance: Omit<Attendance, 'id' | 'createdAt'>): Observable<Attendance> {
+    if (!attendance.childId || !attendance.sessionId) {
+      return throwError(() => new Error('childId and sessionId are required.'));
+    }
+    return this.registerForSession(attendance.sessionId, attendance.childId).pipe(
+      map((created) => ({ ...created, ...attendance }))
+    );
+  }
+
+  updateAttendance(attendanceId: string, updates: Partial<Attendance>): Observable<Attendance> {
+    const attended = updates.status ? updates.status !== 'absent' : true;
+    return this.markAttendance(attendanceId, attended).pipe(
+      map((updated) => ({ ...updated, ...updates }))
+    );
   }
 
   getAttendanceByClient(clientId: string): Attendance[] {
@@ -159,5 +132,48 @@ export class AttendanceService {
     const stats = this.getAttendanceStats();
     if (stats.total === 0) return 0;
     return ((stats.present + stats.excused) / stats.total) * 100;
+  }
+
+  private fromApiRegistration(api: ApiRegistration): Attendance {
+    return {
+      id: String(api.id),
+      sessionId: String(api.trainingSessionId),
+      childId: String(api.swimmerId),
+      childName: '',
+      clientId: '',
+      clientName: '',
+      date: new Date(api.sessionDate).toISOString().split('T')[0],
+      status: api.isPresent ? 'present' : 'absent',
+      createdAt: api.createdAt
+    };
+  }
+
+  private fromSessionRow(row: any): Attendance {
+    return {
+      id: String(row.id),
+      sessionId: String(row.trainingSessionId || row.sessionId || ''),
+      childId: String(row.swimmerId || ''),
+      childName: row.swimmerName || '',
+      clientId: '',
+      clientName: '',
+      date: row.sessionDate ? new Date(row.sessionDate).toISOString().split('T')[0] : '',
+      status: row.isPresent ? 'present' : 'absent',
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  private fromSwimmerRow(row: any, swimmerId: string | number): Attendance {
+    return {
+      id: String(row.id),
+      sessionId: String(row.trainingSessionId || ''),
+      childId: String(swimmerId),
+      childName: '',
+      clientId: '',
+      clientName: '',
+      date: row.sessionDate ? new Date(row.sessionDate).toISOString().split('T')[0] : '',
+      status: row.isPresent ? 'present' : 'absent',
+      createdAt: new Date().toISOString(),
+      notes: row.sessionTitle
+    };
   }
 }

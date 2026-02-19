@@ -1,0 +1,28 @@
+<section class="section-padding bg-gray-50 min-h-screen">
+  <div class="container mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Swimmer Dashboard</h1>
+      <a routerLink="/sessions" class="btn-secondary">Browse Sessions</a>
+    </div>
+
+    @if (loading) {
+      <div class="premium-container">Loading...</div>
+    } @else {
+      <div class="space-y-3">
+        @for (r of registrations; track r.id) {
+          <div class="premium-container flex items-center justify-between">
+            <div>
+              <p class="font-semibold">Session #{{ r.sessionId }}</p>
+              <p class="text-sm text-gray-600">{{ r.date }} • status: {{ r.status }}</p>
+            </div>
+            <button class="btn-secondary" (click)="cancelRegistration(r.id)">Cancel</button>
+          </div>
+        }
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="premium-container text-red-600 mt-4">{{ errorMessage }}</div>
+    }
+  </div>
+</section>

@@ -1,0 +1,37 @@
+<section class="section-padding bg-gray-50 min-h-screen">
+  <div class="container mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Sessions</h1>
+      <a routerLink="/sessions/create" class="btn-primary">Create Session</a>
+    </div>
+
+    <div class="premium-container mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <input [(ngModel)]="filters.date" (ngModelChange)="applyFilters()" type="date" class="px-4 py-3 border rounded-lg" />
+        <input [(ngModel)]="filters.pool" (ngModelChange)="applyFilters()" type="text" placeholder="Filter by pool" class="px-4 py-3 border rounded-lg" />
+        <input [(ngModel)]="filters.coach" (ngModelChange)="applyFilters()" type="text" placeholder="Filter by coach" class="px-4 py-3 border rounded-lg" />
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="premium-container text-center py-10">Loading sessions...</div>
+    } @else if (errorMessage) {
+      <div class="premium-container text-red-600">{{ errorMessage }}</div>
+    } @else {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        @for (session of filteredSessions; track session.id) {
+          <button class="premium-container text-left hover:shadow-lg transition" (click)="openSession(session.id)">
+            <p class="text-lg font-semibold text-gray-800">{{ session.childName || 'Training Session' }}</p>
+            <p class="text-sm text-gray-600">{{ session.date }} • {{ session.time }}</p>
+            <p class="text-sm text-gray-600">Coach: {{ session.instructor || '-' }}</p>
+            <p class="text-sm text-gray-600">Status: {{ session.status }}</p>
+          </button>
+        }
+      </div>
+
+      @if (filteredSessions.length === 0) {
+        <div class="premium-container mt-4 text-center text-gray-600">No sessions found.</div>
+      }
+    }
+  </div>
+</section>

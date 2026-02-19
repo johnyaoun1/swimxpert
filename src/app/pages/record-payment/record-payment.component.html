@@ -1,0 +1,24 @@
+<section class="section-padding bg-gray-50 min-h-screen">
+  <div class="container mx-auto max-w-xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Record Payment</h1>
+
+    <div class="premium-container space-y-4">
+      <input [(ngModel)]="form.userId" type="number" placeholder="Swimmer/User ID" class="w-full px-4 py-3 border rounded-lg" />
+      <input [(ngModel)]="form.amount" type="number" step="0.01" placeholder="Amount" class="w-full px-4 py-3 border rounded-lg" />
+      <input [(ngModel)]="form.date" type="date" class="w-full px-4 py-3 border rounded-lg" />
+      <select [(ngModel)]="form.method" class="w-full px-4 py-3 border rounded-lg">
+        <option>Cash</option>
+        <option>Check</option>
+        <option>Bank</option>
+      </select>
+      <input [(ngModel)]="form.reference" type="text" placeholder="Reference (optional)" class="w-full px-4 py-3 border rounded-lg" />
+
+      <button class="btn-primary" [disabled]="loading" (click)="submit()">
+        {{ loading ? 'Saving...' : 'Record Payment' }}
+      </button>
+
+      @if (successMessage) { <p class="text-green-600">{{ successMessage }}</p> }
+      @if (errorMessage) { <p class="text-red-600">{{ errorMessage }}</p> }
+    </div>
+  </div>
+</section>

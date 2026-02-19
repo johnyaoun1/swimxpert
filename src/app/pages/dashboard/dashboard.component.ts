@@ -44,9 +44,11 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
-    }
+    this.authService.isAuthenticated().subscribe((isAuthenticated) => {
+      if (!isAuthenticated) {
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
   toggleAddChildForm(): void {

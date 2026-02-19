@@ -26,13 +26,18 @@
            class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition-all duration-300">Gallery</a>
         <a routerLink="/contact" routerLinkActive="text-primary-600 bg-primary-50"
            class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition-all duration-300">Contact</a>
-        @if (authService.isAuthenticated()) {
+        @if (authService.isAuthenticatedSync()) {
           <a routerLink="/dashboard" routerLinkActive="text-primary-600 bg-primary-50"
              class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition-all duration-300">Dashboard</a>
           @if (authService.isAdmin()) {
             <a routerLink="/admin" routerLinkActive="text-primary-600 bg-primary-50"
                class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition-all duration-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100">Admin</a>
           }
+          <button
+            (click)="logout()"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-300">
+            Logout
+          </button>
         } @else {
           <a routerLink="/login" 
              class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition-all duration-300">Login</a>
@@ -201,7 +206,7 @@
               </div>
             </div>
             
-            @if (authService.isAuthenticated()) {
+            @if (authService.isAuthenticatedSync()) {
               <a 
                 routerLink="/dashboard" 
                 routerLinkActive="bg-gradient-to-r from-primary-100 to-accent-100 text-primary-700 border-l-2 border-primary-500"

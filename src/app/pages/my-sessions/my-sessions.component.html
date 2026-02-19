@@ -1,0 +1,38 @@
+<section class="section-padding bg-gray-50 min-h-screen">
+  <div class="container mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">My Sessions</h1>
+
+    @if (loading) {
+      <div class="premium-container">Loading...</div>
+    } @else {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="premium-container">
+          <h2 class="text-xl font-bold mb-4">Upcoming</h2>
+          @for (s of futureSessions; track s.id) {
+            <div class="p-3 bg-gray-50 rounded-lg mb-2 flex items-center justify-between">
+              <div>
+                <p class="font-semibold">Session #{{ s.sessionId }}</p>
+                <p class="text-sm text-gray-600">{{ s.date }}</p>
+              </div>
+              <button class="btn-secondary" (click)="cancel(s.id)">Cancel</button>
+            </div>
+          }
+        </div>
+
+        <div class="premium-container">
+          <h2 class="text-xl font-bold mb-4">Past Sessions</h2>
+          @for (s of pastSessions; track s.id) {
+            <div class="p-3 bg-gray-50 rounded-lg mb-2">
+              <p class="font-semibold">Session #{{ s.sessionId }}</p>
+              <p class="text-sm text-gray-600">{{ s.date }} • {{ s.status }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="premium-container text-red-600 mt-4">{{ errorMessage }}</div>
+    }
+  </div>
+</section>

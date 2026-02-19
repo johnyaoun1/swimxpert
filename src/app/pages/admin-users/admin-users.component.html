@@ -1,0 +1,51 @@
+<section class="section-padding bg-gray-50 min-h-screen">
+  <div class="container mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Users</h1>
+
+    @if (loading) {
+      <div class="premium-container">Loading users...</div>
+    } @else {
+      <div class="premium-container overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b">
+              <th class="text-left p-3">Email</th>
+              <th class="text-left p-3">Name</th>
+              <th class="text-left p-3">Role</th>
+              <th class="text-left p-3">Active</th>
+              <th class="text-left p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users; track u.id) {
+              <tr class="border-b">
+                <td class="p-3">{{ u.email }}</td>
+                <td class="p-3">{{ u.fullName }}</td>
+                <td class="p-3">
+                  <select class="border rounded px-2 py-1" [ngModel]="u.role" (ngModelChange)="updateRole(u, $event)">
+                    <option>Parent</option>
+                    <option>Coach</option>
+                    <option>Admin</option>
+                  </select>
+                </td>
+                <td class="p-3">
+                  <label class="inline-flex items-center gap-2">
+                    <input type="checkbox" [checked]="u.isActive" (change)="toggleActive(u)">
+                    <span>{{ u.isActive ? 'Enabled' : 'Disabled' }}</span>
+                  </label>
+                </td>
+                <td class="p-3">
+                  <button class="btn-secondary text-sm" (click)="softDelete(u)">Soft Delete</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="premium-container text-red-600 mt-4">{{ errorMessage }}</div>
+    }
+  </div>
+</section>

@@ -1,5 +1,8 @@
 import { Injectable, signal } from '@angular/core';
-import { SessionService, Session } from './session.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 export interface RevenueData {
   totalRevenue: number;
@@ -14,115 +17,91 @@ export interface RevenueData {
   providedIn: 'root'
 })
 export class RevenueService {
+  private readonly paymentsApi = 'http://localhost:5002/api/payments';
   revenueData = signal<RevenueData | null>(null);
 
-  constructor(private sessionService: SessionService) {
-    this.calculateRevenue();
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
+    this.revenueData.set({
+      totalRevenue: 0,
+      completedSessionsRevenue: 0,
+      canceledSessionsRevenue: 0,
+      scheduledSessionsRevenue: 0,
+      periodRevenue: [],
+      clientRevenue: []
+    });
+  }
+
+  processPayment(amount: number, method: string, userId?: string, paymentDate?: string, reference?: string): Observable<any> {
+    const currentUser = this.authService.getCurrentUser();
+    const resolvedUserId = userId || currentUser?.id;
+    if (!resolvedUserId) {
+      return of({ message: 'No user selected for payment.' });
+    }
+
+    return this.http.post(this.paymentsApi, {
+      userId: Number(resolvedUserId),
+      amount,
+      method,
+      status: 'Completed',
+      paymentDate: paymentDate || null,
+      reference: reference || null
+    });
+  }
+
+  getMyPayments(userId?: string): Observable<any[]> {
+    const currentUser = this.authService.getCurrentUser();
+    const resolvedUserId = userId || currentUser?.id;
+    if (!resolvedUserId) {
+      return of([]);
+    }
+
+    return this.http.get<any[]>(`${this.paymentsApi}/user/${resolvedUserId}`);
+  }
+
+  getRevenueReport(from?: string, to?: string): Observable<RevenueData> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+
+    return this.http.get<any>(`${this.paymentsApi}/revenue`, { params }).pipe(
+      map((response) => ({
+        totalRevenue: Number(response?.totalRevenue || 0),
+        completedSessionsRevenue: Number(response?.totalRevenue || 0),
+        canceledSessionsRevenue: 0,
+        scheduledSessionsRevenue: 0,
+        periodRevenue: [],
+        clientRevenue: []
+      })),
+      tap((data) => this.revenueData.set(data))
+    );
   }
 
   calculateRevenue(): RevenueData {
-    const sessions = this.sessionService.sessions();
-    
-    const totalRevenue = sessions
-      .filter(s => s.status === 'completed')
-      .reduce((sum, s) => sum + s.price, 0);
-
-    const completedSessionsRevenue = sessions
-      .filter(s => s.status === 'completed')
-      .reduce((sum, s) => sum + s.price, 0);
-
-    const canceledSessionsRevenue = sessions
-      .filter(s => s.status === 'canceled')
-      .reduce((sum, s) => sum + s.price, 0);
-
-    const scheduledSessionsRevenue = sessions
-      .filter(s => s.status === 'scheduled')
-      .reduce((sum, s) => sum + s.price, 0);
-
-    // Calculate revenue by date (last 30 days)
-    const periodRevenue: { date: string; revenue: number }[] = [];
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return date.toISOString().split('T')[0];
-    });
-
-    last30Days.forEach(date => {
-      const dayRevenue = sessions
-        .filter(s => s.date === date && s.status === 'completed')
-        .reduce((sum, s) => sum + s.price, 0);
-      periodRevenue.push({ date, revenue: dayRevenue });
-    });
-
-    // Calculate revenue by client
-    const clientRevenueMap = new Map<string, { clientName: string; revenue: number; sessions: number }>();
-    
-    sessions
-      .filter(s => s.status === 'completed')
-      .forEach(session => {
-        const existing = clientRevenueMap.get(session.clientId) || {
-          clientName: session.clientName,
-          revenue: 0,
-          sessions: 0
-        };
-        existing.revenue += session.price;
-        existing.sessions += 1;
-        clientRevenueMap.set(session.clientId, existing);
-      });
-
-    const clientRevenue = Array.from(clientRevenueMap.entries()).map(([clientId, data]) => ({
-      clientId,
-      ...data
-    })).sort((a, b) => b.revenue - a.revenue);
-
-    const revenueData: RevenueData = {
-      totalRevenue,
-      completedSessionsRevenue,
-      canceledSessionsRevenue,
-      scheduledSessionsRevenue,
-      periodRevenue,
-      clientRevenue
+    return this.revenueData() || {
+      totalRevenue: 0,
+      completedSessionsRevenue: 0,
+      canceledSessionsRevenue: 0,
+      scheduledSessionsRevenue: 0,
+      periodRevenue: [],
+      clientRevenue: []
     };
-
-    this.revenueData.set(revenueData);
-    return revenueData;
   }
 
   getRevenueByDateRange(startDate: string, endDate: string): number {
-    const sessions = this.sessionService.sessions();
-    return sessions
-      .filter(s => {
-        const sessionDate = new Date(s.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        return sessionDate >= start && sessionDate <= end && s.status === 'completed';
-      })
-      .reduce((sum, s) => sum + s.price, 0);
+    const current = this.revenueData();
+    return current?.totalRevenue || 0;
   }
 
   getRevenueByClient(clientId: string): number {
-    const sessions = this.sessionService.sessions();
-    return sessions
-      .filter(s => s.clientId === clientId && s.status === 'completed')
-      .reduce((sum, s) => sum + s.price, 0);
+    const current = this.revenueData();
+    const row = current?.clientRevenue.find((c) => c.clientId === clientId);
+    return row?.revenue || 0;
   }
 
   getMonthlyRevenue(): { month: string; revenue: number }[] {
-    const sessions = this.sessionService.sessions();
-    const monthlyRevenue = new Map<string, number>();
-
-    sessions
-      .filter(s => s.status === 'completed')
-      .forEach(session => {
-        const date = new Date(session.date);
-        const month = date.getMonth() + 1;
-        const monthKey = `${date.getFullYear()}-${month < 10 ? '0' + month : month}`;
-        const existing = monthlyRevenue.get(monthKey) || 0;
-        monthlyRevenue.set(monthKey, existing + session.price);
-      });
-
-    return Array.from(monthlyRevenue.entries())
-      .map(([month, revenue]) => ({ month, revenue }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+    return [];
   }
 }
