@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 
 export type SessionStatus = 'scheduled' | 'completed' | 'canceled';
 
@@ -83,25 +83,29 @@ export class SessionService {
   }
 
   updateSession(sessionId: string, updates: Partial<Session>): Observable<Session> {
-    const existing = this.sessions().find((s) => s.id === sessionId);
-    if (!existing) {
-      return throwError(() => new Error('Session not found in local state.'));
-    }
+    return this.getSessionById(sessionId).pipe(
+      switchMap((existing) => {
+        const merged = { ...existing, ...updates };
+        const payload = {
+          title: merged.childName ? `${merged.childName} Session` : 'Training Session',
+          startTime: this.toIsoDateTime(merged.date, merged.time),
+          endTime: this.toIsoDateTime(merged.date, merged.time, 60),
+          capacity: 10,
+          status: this.toApiStatus(merged.status)
+        };
 
-    const merged = { ...existing, ...updates };
-    const payload = {
-      title: merged.childName ? `${merged.childName} Session` : 'Training Session',
-      startTime: this.toIsoDateTime(merged.date, merged.time),
-      endTime: this.toIsoDateTime(merged.date, merged.time, 60),
-      capacity: 10,
-      status: this.toApiStatus(merged.status)
-    };
-
-    return this.http.put<ApiSession>(`${this.apiUrl}/${sessionId}`, payload).pipe(
-      map((updated) => this.fromApiSession(updated, merged)),
-      tap((updated) =>
-        this.sessions.update((sessions) => sessions.map((s) => (s.id === sessionId ? updated : s)))
-      )
+        return this.http.put<ApiSession>(`${this.apiUrl}/${sessionId}`, payload).pipe(
+          map((updated) => this.fromApiSession(updated, merged)),
+          tap((updated) =>
+            this.sessions.update((sessions) => {
+              const hasExisting = sessions.some((s) => s.id === sessionId);
+              return hasExisting
+                ? sessions.map((s) => (s.id === sessionId ? updated : s))
+                : [...sessions, updated];
+            })
+          )
+        );
+      })
     );
   }
 
@@ -149,7 +153,7 @@ export class SessionService {
     return {
       id: String(api.id),
       childId: fallback?.childId || '',
-      childName: fallback?.childName || '',
+      childName: fallback?.childName || api.title || '',
       clientId: fallback?.clientId || '',
       clientName: fallback?.clientName || '',
       date: start.toISOString().split('T')[0],
@@ -157,7 +161,7 @@ export class SessionService {
       level: fallback?.level || 1,
       status: this.fromApiStatus(api.status),
       instructor: fallback?.instructor,
-      notes: fallback?.notes,
+      notes: fallback?.notes || api.title,
       price: fallback?.price || 0,
       createdAt: api.createdAt
     };

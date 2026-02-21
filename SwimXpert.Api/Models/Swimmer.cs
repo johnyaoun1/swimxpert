@@ -19,6 +19,11 @@ public class Swimmer
     [Range(1, 10)]
     public int Level { get; set; } = 1;
 
+    [MaxLength(500)]
+    public string? ProfilePictureUrl { get; set; }
+
+    public string SkillProgressJson { get; set; } = "{}";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Attendance> Attendances { get; set; } = [];

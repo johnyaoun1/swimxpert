@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 export interface QuizResult {
@@ -35,6 +35,7 @@ export interface Child {
   age: number;
   level: number;
   profilePicture?: string;
+  skillLevels?: { level: number; completionPercent: number; skills: { name: string; isUnlocked: boolean }[] }[];
   progress: ProgressEntry[];
 }
 
@@ -89,7 +90,12 @@ export class AuthService {
     }
 
     return this.apiService.validateToken().pipe(
-      map(() => true),
+      switchMap(() =>
+        this.syncChildrenFromApi().pipe(
+          map(() => true),
+          catchError(() => of(true))
+        )
+      ),
       catchError(() => {
         this.clearAuthState(false);
         return of(false);
@@ -232,17 +238,38 @@ export class AuthService {
     return [];
   }
 
-  addChild(child: Omit<Child, 'id'>): void {
+  addChild(child: Omit<Child, 'id'>): Observable<Child> {
     const user = this.currentUser();
-    if (user) {
-      const newChild: Child = {
+    if (!user) {
+      return of({
         ...child,
-        id: Date.now().toString()
-      };
-      user.children.push(newChild);
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      this.currentUser.set({ ...user });
+        id: ''
+      });
     }
+
+    return this.apiService.createSwimmer({
+      name: child.name,
+      age: child.age,
+      level: child.level,
+      profilePictureUrl: child.profilePicture || null
+    }).pipe(
+      map((created: any) => ({
+        id: String(created?.id ?? ''),
+        name: created?.name || child.name,
+        age: Number(created?.age ?? child.age),
+        level: Number(created?.level ?? child.level),
+        profilePicture: created?.profilePictureUrl || child.profilePicture,
+        skillLevels: created?.levels || [],
+        progress: []
+      } as Child)),
+      tap((newChild) => {
+        const current = this.currentUser();
+        if (!current) return;
+        current.children = [...(current.children || []), newChild];
+        localStorage.setItem(this.USER_KEY, JSON.stringify(current));
+        this.currentUser.set({ ...current });
+      })
+    );
   }
 
   updateChild(childId: string, updates: Partial<Child>): void {
@@ -276,5 +303,34 @@ export class AuthService {
     if (redirectToLogin) {
       this.router.navigate(['/login']);
     }
+  }
+
+  syncChildrenFromApi(): Observable<void> {
+    const user = this.currentUser();
+    if (!user) {
+      return of(void 0);
+    }
+
+    return this.apiService.getMySwimmers().pipe(
+      tap((swimmers) => {
+        const mappedChildren: Child[] = (swimmers || []).map((s: any) => ({
+          id: String(s.id),
+          name: s.name || 'Swimmer',
+          age: Number(s.age || 0),
+          level: Number(s.level || 1),
+          profilePicture: s.profilePictureUrl || undefined,
+          skillLevels: s.levels || [],
+          progress: []
+        }));
+
+        const nextUser: User = {
+          ...user,
+          children: mappedChildren
+        };
+        localStorage.setItem(this.USER_KEY, JSON.stringify(nextUser));
+        this.currentUser.set(nextUser);
+      }),
+      map(() => void 0)
+    );
   }
 }

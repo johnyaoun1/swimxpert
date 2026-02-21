@@ -20,6 +20,7 @@ public class AdminUsersController(ApplicationDbContext dbContext) : ControllerBa
     public async Task<IActionResult> GetUsers()
     {
         var users = await dbContext.Users
+            .Include(u => u.Swimmers)
             .OrderByDescending(u => u.CreatedAt)
             .Select(u => new
             {
@@ -28,7 +29,19 @@ public class AdminUsersController(ApplicationDbContext dbContext) : ControllerBa
                 fullName = u.FullName,
                 u.Role,
                 u.IsActive,
-                u.CreatedAt
+                u.CreatedAt,
+                swimmers = u.Swimmers
+                    .OrderBy(s => s.Name)
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.Name,
+                        s.Age,
+                        s.Level,
+                        s.ProfilePictureUrl,
+                        s.SkillProgressJson,
+                        s.CreatedAt
+                    })
             })
             .ToListAsync();
 

@@ -70,6 +70,25 @@ export class ApiService {
     }).pipe(catchError(this.handleError));
   }
 
+  getLeads(params?: { search?: string; isContacted?: boolean | null; from?: string; to?: string }): Observable<any[]> {
+    const query = new URLSearchParams();
+    if (params?.search) query.set('search', params.search);
+    if (params?.isContacted !== undefined && params?.isContacted !== null) query.set('isContacted', String(params.isContacted));
+    if (params?.from) query.set('from', params.from);
+    if (params?.to) query.set('to', params.to);
+
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    return this.http.get<any[]>(`${this.apiUrl}/leads${suffix}`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  updateLeadStatus(leadId: number, isContacted: boolean): Observable<any> {
+    return this.http.put(`${this.apiUrl}/leads/${leadId}/status`, { isContacted }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
   // ========== ADMIN USERS ENDPOINTS ==========
 
   getAdminUsers(): Observable<any[]> {
@@ -86,6 +105,20 @@ export class ApiService {
 
   deleteAdminUser(userId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/users/${userId}`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  // ========== SWIMMERS / SKILLS ENDPOINTS ==========
+
+  getMySwimmers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/swimmerskills/my`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  createSwimmer(payload: { name: string; age: number; level: number; profilePictureUrl?: string | null; parentUserId?: number }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/swimmerskills`, payload, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
   }

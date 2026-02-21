@@ -1,0 +1,43 @@
+@if (isOpen) {
+  <div class="lead-overlay" (click)="onClose()"></div>
+  <div class="lead-modal" role="dialog" aria-modal="true" aria-label="Contact details capture">
+    <div class="lead-modal-header">
+      <h3>Stay Connected</h3>
+      <button type="button" class="close-btn" (click)="onClose()">×</button>
+    </div>
+
+    <p class="lead-subtitle">
+      Leave your contact details and we will reach out with class options and pricing.
+    </p>
+
+    <form [formGroup]="leadForm" (ngSubmit)="onSubmit()" class="lead-form">
+      <label>
+        Full name
+        <input type="text" formControlName="name" placeholder="Your name" />
+      </label>
+
+      <label>
+        Email (optional if phone provided)
+        <input type="email" formControlName="email" placeholder="you@email.com" />
+      </label>
+
+      <label>
+        Phone (optional if email provided)
+        <input type="text" formControlName="phone" placeholder="+1 555 000 0000" />
+      </label>
+
+      <label class="consent-row">
+        <input type="checkbox" formControlName="consent" />
+        <span>I agree to be contacted by SwimXpert.</span>
+      </label>
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" class="submit-btn" [disabled]="loading">
+        @if (loading) { Saving... } @else { Continue }
+      </button>
+    </form>
+  </div>
+}

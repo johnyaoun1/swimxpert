@@ -1,0 +1,35 @@
+@if (routerLink) {
+  <a
+    [routerLink]="routerLink"
+    [attr.aria-label]="ariaLabel"
+    [class.ui-btn--primary]="variant === 'primary'"
+    [class.ui-btn--secondary]="variant === 'secondary'"
+    [class.w-full]="fullWidth"
+    class="ui-btn inline-flex items-center justify-center text-center"
+  >
+    <ng-content />
+  </a>
+} @else if (href) {
+  <a
+    [href]="href"
+    [attr.aria-label]="ariaLabel"
+    [class.ui-btn--primary]="variant === 'primary'"
+    [class.ui-btn--secondary]="variant === 'secondary'"
+    [class.w-full]="fullWidth"
+    class="ui-btn inline-flex items-center justify-center text-center"
+  >
+    <ng-content />
+  </a>
+} @else {
+  <button
+    [type]="type"
+    [disabled]="disabled"
+    [attr.aria-label]="ariaLabel"
+    [class.ui-btn--primary]="variant === 'primary'"
+    [class.ui-btn--secondary]="variant === 'secondary'"
+    [class.w-full]="fullWidth"
+    class="ui-btn inline-flex items-center justify-center text-center disabled:opacity-60 disabled:cursor-not-allowed"
+  >
+    <ng-content />
+  </button>
+}

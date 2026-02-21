@@ -54,6 +54,13 @@ export class AttendanceService {
     );
   }
 
+  getAllRegistrations(): Observable<Attendance[]> {
+    return this.http.get<any[]>(this.apiUrl).pipe(
+      map((rows) => rows.map((row) => this.fromAdminRow(row))),
+      tap((rows) => this.attendance.set(rows))
+    );
+  }
+
   getMySessions(swimmerId: string | number): Observable<Attendance[]> {
     return this.http.get<any[]>(`${this.apiUrl}/swimmer/${swimmerId}`).pipe(
       map((rows) => rows.map((row) => this.fromSwimmerRow(row, swimmerId))),
@@ -174,6 +181,22 @@ export class AttendanceService {
       status: row.isPresent ? 'present' : 'absent',
       createdAt: new Date().toISOString(),
       notes: row.sessionTitle
+    };
+  }
+
+  private fromAdminRow(row: any): Attendance {
+    return {
+      id: String(row.id),
+      sessionId: String(row.trainingSessionId || ''),
+      childId: String(row.swimmerId || ''),
+      childName: row.swimmerName || '',
+      clientId: String(row.parentUserId || ''),
+      clientName: row.parentName || '',
+      date: row.sessionDate ? new Date(row.sessionDate).toISOString().split('T')[0] : '',
+      status: row.isPresent ? 'present' : 'absent',
+      createdAt: row.createdAt || new Date().toISOString(),
+      notes: row.sessionTitle || '',
+      checkInTime: row.startTime ? new Date(row.startTime).toISOString().slice(11, 16) : ''
     };
   }
 }

@@ -7,6 +7,7 @@ import { SessionService, Session, SessionStatus } from '../../services/session.s
 import { AttendanceService, Attendance, AttendanceStatus } from '../../services/attendance.service';
 import { RevenueService } from '../../services/revenue.service';
 import { ApiService } from '../../services/api.service';
+import { SwimmerSkillCard, SwimmerSkillsService } from '../../services/swimmer-skills.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -18,6 +19,14 @@ import { catchError } from 'rxjs/operators';
   styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
+  leads = signal<Array<{ id: number; name: string; email?: string | null; phone?: string | null; sourcePage?: string | null; sourceAction?: string | null; isContacted: boolean; contactedAt?: string | null; createdAt: string }>>([]);
+  leadSearch = signal('');
+  leadStatusFilter = signal<'all' | 'new' | 'contacted'>('all');
+  leadFromDate = signal('');
+  leadToDate = signal('');
+  updatingLeadId = signal<number | null>(null);
+  clientSearch = signal('');
+  sessionSearch = signal('');
   clients = signal<User[]>([]);
   sessions = signal<Session[]>([]);
   attendance = signal<Attendance[]>([]);
@@ -62,6 +71,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   };
 
   isLoading = signal(false);
+  skillSaving = signal<Record<string, boolean>>({});
   private refreshTimerId: ReturnType<typeof setInterval> | null = null;
 
   constructor(
@@ -70,6 +80,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     private attendanceService: AttendanceService,
     private revenueService: RevenueService,
     private apiService: ApiService,
+    private swimmerSkillsService: SwimmerSkillsService,
     private router: Router
   ) {}
 
@@ -100,9 +111,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       overview: this.apiService.getAdminOverview(),
       users: this.apiService.getAdminUsers().pipe(catchError(() => of([]))),
       sessions: this.sessionService.getSessions().pipe(catchError(() => of([]))),
-      revenue: this.revenueService.getRevenueReport().pipe(catchError(() => of(null)))
+      attendance: this.attendanceService.getAllRegistrations().pipe(catchError(() => of([]))),
+      revenue: this.revenueService.getRevenueReport().pipe(catchError(() => of(null))),
+      swimmerSkills: this.swimmerSkillsService.getMySwimmers().pipe(catchError(() => of([]))),
+      leads: this.apiService.getLeads(this.buildLeadQuery()).pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ overview, users, sessions, revenue }) => {
+      next: ({ overview, users, sessions, attendance, revenue, swimmerSkills, leads }) => {
         const totalSessions = Number(overview?.totalSessions || 0);
         const completedSessions = Number(overview?.completedSessions || 0);
         const cancelledSessions = Number(overview?.cancelledSessions || 0);
@@ -117,8 +131,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           totalRevenue: Number(overview?.totalRevenue || 0)
         });
 
-        this.clients.set(this.transformAdminUsers(users));
+        const clients = this.transformAdminUsers(users);
+        this.clients.set(this.mergeSkillCardsIntoClients(clients, swimmerSkills));
         this.sessions.set(sessions);
+        this.attendance.set(attendance);
+        this.leads.set(leads || []);
 
         this.revenueData.set({
           totalRevenue: Number(overview?.totalRevenue || 0),
@@ -150,9 +167,34 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         email: u.email || '',
         name: u.fullName || u.email || 'Client',
         role: 'user' as const,
-        children: [],
+        children: (u.swimmers || []).map((s: any) => ({
+          id: String(s.id),
+          name: s.name,
+          age: Number(s.age ?? 0),
+          level: Number(s.level ?? 1),
+          profilePicture: s.profilePictureUrl || undefined,
+          progress: [],
+          skillLevels: []
+        })),
         quizResults: []
       }));
+  }
+
+  private mergeSkillCardsIntoClients(clients: User[], swimmerSkills: SwimmerSkillCard[]): User[] {
+    const skillsById = new Map(swimmerSkills.map((s) => [String(s.id), s]));
+    return clients.map((client) => ({
+      ...client,
+      children: client.children.map((child) => {
+        const card = skillsById.get(child.id);
+        if (!card) return child;
+        return {
+          ...child,
+          level: card.level,
+          profilePicture: card.profilePictureUrl || child.profilePicture,
+          skillLevels: card.levels
+        };
+      })
+    }));
   }
 
 
@@ -225,10 +267,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.attendance.set(this.attendanceService.attendance());
   }
 
+  selectClient(clientId: string | number): void {
+    this.selectedClientId.set(clientId == null ? null : String(clientId));
+  }
+
+  isClientSelected(clientId: string | number): boolean {
+    const id = clientId == null ? '' : String(clientId);
+    return this.selectedClientId() === id;
+  }
+
   getSelectedClient(): User | null {
     const clientId = this.selectedClientId();
-    if (!clientId) return null;
-    return this.clients().find(c => c.id === clientId) || null;
+    if (clientId == null || clientId === '') return null;
+    const id = String(clientId);
+    return this.clients().find(c => String(c.id) === id) || null;
   }
 
   getClientSessions(clientId: string): Session[] {
@@ -238,6 +290,48 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   getClientChildren(clientId: string) {
     const client = this.clients().find(c => c.id === clientId);
     return client?.children || [];
+  }
+
+  getChildInitial(childName: string): string {
+    return (childName || '?').charAt(0).toUpperCase();
+  }
+
+  isSkillUnlocked(child: { skillLevels?: { level: number; skills: { name: string; isUnlocked: boolean }[] }[] }, level: number, skillName: string): boolean {
+    const levelBlock = (child.skillLevels || []).find((x) => x.level === level);
+    const skill = levelBlock?.skills?.find((s) => s.name === skillName);
+    return !!skill?.isUnlocked;
+  }
+
+  isSkillSaving(childId: string, level: number, skillName: string): boolean {
+    return !!this.skillSaving()[`${childId}-${level}-${skillName}`];
+  }
+
+  toggleChildSkill(child: { id: string; skillLevels?: { level: number; skills: { name: string; isUnlocked: boolean }[] }[] }, level: number, skillName: string): void {
+    const swimmerId = Number(child.id);
+    if (!swimmerId) return;
+    const currentlyUnlocked = this.isSkillUnlocked(child, level, skillName);
+    const key = `${child.id}-${level}-${skillName}`;
+    this.skillSaving.update((state) => ({ ...state, [key]: true }));
+    this.swimmerSkillsService.toggleSkill(swimmerId, level, skillName, !currentlyUnlocked).subscribe({
+      next: (updated) => {
+        this.clients.update((clients) =>
+          clients.map((c) => ({
+            ...c,
+            children: c.children.map((ch: any) =>
+              ch.id === String(updated.id)
+                ? { ...ch, level: updated.level, profilePicture: updated.profilePictureUrl || ch.profilePicture, skillLevels: updated.levels }
+                : ch
+            )
+          }))
+        );
+        this.loadDataFromApi(false);
+        this.skillSaving.update((state) => ({ ...state, [key]: false }));
+      },
+      error: (err) => {
+        console.error('Failed to update skill:', err);
+        this.skillSaving.update((state) => ({ ...state, [key]: false }));
+      }
+    });
   }
 
   getSessionStats() {
@@ -438,5 +532,93 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   getClientSessionsCount(clientId: string): number {
     const revenue = this.revenueData()?.clientRevenue?.find(c => c.clientId === clientId);
     return revenue?.sessions || 0;
+  }
+
+  buildLeadQuery(): { search?: string; isContacted?: boolean | null; from?: string; to?: string } {
+    const q: { search?: string; isContacted?: boolean | null; from?: string; to?: string } = {};
+    if (this.leadSearch().trim()) q.search = this.leadSearch().trim();
+    if (this.leadStatusFilter() === 'new') q.isContacted = false;
+    if (this.leadStatusFilter() === 'contacted') q.isContacted = true;
+    if (this.leadFromDate()) q.from = this.leadFromDate();
+    if (this.leadToDate()) q.to = this.leadToDate();
+    return q;
+  }
+
+  onLeadFiltersChanged(): void {
+    this.apiService.getLeads(this.buildLeadQuery()).pipe(catchError(() => of([]))).subscribe((leads) => this.leads.set(leads));
+  }
+
+  clearLeadFilters(): void {
+    this.leadSearch.set('');
+    this.leadStatusFilter.set('all');
+    this.leadFromDate.set('');
+    this.leadToDate.set('');
+    this.onLeadFiltersChanged();
+  }
+
+  formatLeadDate(createdAt: string): string {
+    if (!createdAt) return '-';
+    const d = new Date(createdAt);
+    return isNaN(d.getTime()) ? createdAt : d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  isUpdatingLead(leadId: number): boolean {
+    return this.updatingLeadId() === leadId;
+  }
+
+  toggleLeadContacted(leadId: number, isContacted: boolean): void {
+    this.updatingLeadId.set(leadId);
+    this.apiService.updateLeadStatus(leadId, isContacted).subscribe({
+      next: () => {
+        this.leads.update((items) => items.map((l) => (l.id === leadId ? { ...l, isContacted } : l)));
+        this.updatingLeadId.set(null);
+      },
+      error: (err) => {
+        console.error('Failed to update lead status', err);
+        this.updatingLeadId.set(null);
+      }
+    });
+  }
+
+  exportLeadsCsv(): void {
+    const rows = this.leads();
+    if (rows.length === 0) return;
+    const headers = ['Name', 'Email', 'Phone', 'Source Page', 'Source Action', 'Status', 'Created At'];
+    const lines = [headers.join(',')];
+    for (const r of rows) {
+      const status = r.isContacted ? 'Contacted' : 'New';
+      const createdAt = this.formatLeadDate(r.createdAt).replace(/,/g, ' ');
+      lines.push([r.name, r.email ?? '', r.phone ?? '', r.sourcePage ?? '', r.sourceAction ?? '', status, createdAt].map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `swimxpert-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  getFilteredClients(): User[] {
+    const q = this.clientSearch().toLowerCase().trim();
+    if (!q) return this.clients();
+    return this.clients().filter((c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q));
+  }
+
+  getFilteredSessions(): Session[] {
+    const q = this.sessionSearch().toLowerCase().trim();
+    if (!q) return this.sessions();
+    return this.sessions().filter((s) => s.clientName?.toLowerCase().includes(q) || s.childName?.toLowerCase().includes(q) || s.status?.toLowerCase().includes(q));
+  }
+
+  getLevelFocus(level: number): string {
+    const focus: Record<number, string> = {
+      1: 'Water comfort and confidence',
+      2: 'Independent buoyancy and simple movement',
+      3: 'COMFORT',
+      4: 'Coordinated strokes and stamina',
+      5: 'Refine strokes and increase endurance',
+      6: 'Master strokes and prepare for competitive'
+    };
+    return focus[level] || '';
   }
 }

@@ -17,6 +17,7 @@ export class DashboardComponent implements OnInit {
   showAddChildForm = signal(false);
   showProgressForm = signal(false);
   selectedChildId = signal<string | null>(null);
+  selectedChildForProfile = signal<Child | null>(null);
   levels = this.swimLevelsService.getLevels();
 
   childForm: FormGroup;
@@ -47,7 +48,9 @@ export class DashboardComponent implements OnInit {
     this.authService.isAuthenticated().subscribe((isAuthenticated) => {
       if (!isAuthenticated) {
         this.router.navigate(['/login']);
+        return;
       }
+      this.authService.syncChildrenFromApi().subscribe();
     });
   }
 
@@ -58,19 +61,28 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  addChildError = signal<string | null>(null);
+
   addChild(): void {
-    if (this.childForm.valid) {
-      const formValue = this.childForm.value;
-      this.authService.addChild({
-        name: formValue.name,
-        age: formValue.age,
-        level: formValue.level,
-        profilePicture: formValue.profilePicture || undefined,
-        progress: []
-      });
-      this.childForm.reset({ level: 1 });
-      this.showAddChildForm.set(false);
-    }
+    this.addChildError.set(null);
+    if (!this.childForm.valid) return;
+    const formValue = this.childForm.value;
+    this.authService.addChild({
+      name: formValue.name,
+      age: formValue.age,
+      level: formValue.level,
+      profilePicture: formValue.profilePicture || undefined,
+      progress: []
+    }).subscribe({
+      next: () => {
+        this.childForm.reset({ level: 1 });
+        this.showAddChildForm.set(false);
+        this.authService.syncChildrenFromApi().subscribe();
+      },
+      error: (err) => {
+        this.addChildError.set(err?.message || 'Failed to add child. Please try again.');
+      }
+    });
   }
 
   showAddProgress(childId: string): void {
@@ -121,5 +133,29 @@ export class DashboardComponent implements OnInit {
     const firstLetter = childName.charAt(0).toUpperCase();
     const svgData = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23e5e7eb' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='40'%3E${firstLetter}%3C/text%3E%3C/svg%3E`;
     img.src = svgData;
+  }
+
+  openChildProfile(child: Child): void {
+    this.selectedChildForProfile.set(child);
+  }
+
+  closeChildProfile(): void {
+    this.selectedChildForProfile.set(null);
+  }
+
+  getLevelFocus(level: number): string {
+    const focus: Record<number, string> = {
+      1: 'Water comfort and confidence',
+      2: 'Independent buoyancy and simple movement',
+      3: 'COMFORT',
+      4: 'Coordinated strokes and stamina',
+      5: 'Refine strokes and increase endurance',
+      6: 'Master strokes and prepare for competitive'
+    };
+    return focus[level] || '';
+  }
+
+  getChildInitial(name: string): string {
+    return (name || '?').charAt(0).toUpperCase();
   }
 }

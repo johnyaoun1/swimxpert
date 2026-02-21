@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TrainingSession> TrainingSessions { get; set; } = null!;
     public DbSet<Attendance> Attendances { get; set; } = null!;
     public DbSet<Payment> Payments { get; set; } = null!;
+    public DbSet<LeadCapture> LeadCaptures { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,5 +48,8 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.Payments)
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeadCapture>()
+            .HasIndex(l => l.CreatedAt);
     }
 }

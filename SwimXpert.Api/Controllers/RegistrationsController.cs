@@ -14,6 +14,38 @@ namespace SwimXpert.Api.Controllers;
 public class RegistrationsController(ApplicationDbContext dbContext) : ControllerBase
 {
     /// <summary>
+    /// Returns all registrations with swimmer and session details. Admin/Coach only.
+    /// </summary>
+    [HttpGet]
+    [Authorize(Roles = "Coach,Admin")]
+    public async Task<IActionResult> GetAll()
+    {
+        var registrations = await dbContext.Attendances
+            .Include(a => a.Swimmer)
+                .ThenInclude(s => s.ParentUser)
+            .Include(a => a.TrainingSession)
+            .OrderByDescending(a => a.SessionDate)
+            .Select(a => new
+            {
+                a.Id,
+                a.SwimmerId,
+                swimmerName = a.Swimmer.Name,
+                parentUserId = a.Swimmer.ParentUserId,
+                parentName = a.Swimmer.ParentUser.FullName,
+                a.TrainingSessionId,
+                sessionTitle = a.TrainingSession.Title,
+                startTime = a.TrainingSession.StartTime,
+                endTime = a.TrainingSession.EndTime,
+                a.IsPresent,
+                a.SessionDate,
+                a.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(registrations);
+    }
+
+    /// <summary>
     /// Registers a swimmer to a session.
     /// </summary>
     [HttpPost]

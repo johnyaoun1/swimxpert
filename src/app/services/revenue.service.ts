@@ -41,12 +41,17 @@ export class RevenueService {
       return of({ message: 'No user selected for payment.' });
     }
 
+    const normalizedPaymentDate =
+      paymentDate && paymentDate.trim().length > 0
+        ? new Date(`${paymentDate}T00:00:00Z`).toISOString()
+        : null;
+
     return this.http.post(this.paymentsApi, {
       userId: Number(resolvedUserId),
       amount,
       method,
       status: 'Completed',
-      paymentDate: paymentDate || null,
+      paymentDate: normalizedPaymentDate,
       reference: reference || null
     });
   }

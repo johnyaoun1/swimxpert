@@ -26,13 +26,31 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
             return NotFound(new { message = "User not found." });
         }
 
+        DateTime paymentDateUtc;
+        if (!request.PaymentDate.HasValue)
+        {
+            paymentDateUtc = DateTime.UtcNow;
+        }
+        else if (request.PaymentDate.Value.Kind == DateTimeKind.Utc)
+        {
+            paymentDateUtc = request.PaymentDate.Value;
+        }
+        else if (request.PaymentDate.Value.Kind == DateTimeKind.Local)
+        {
+            paymentDateUtc = request.PaymentDate.Value.ToUniversalTime();
+        }
+        else
+        {
+            paymentDateUtc = DateTime.SpecifyKind(request.PaymentDate.Value, DateTimeKind.Utc);
+        }
+
         var payment = new Payment
         {
             UserId = request.UserId,
             Amount = request.Amount,
             Method = request.Method,
             Status = string.IsNullOrWhiteSpace(request.Status) ? "Completed" : request.Status,
-            PaymentDate = request.PaymentDate ?? DateTime.UtcNow,
+            PaymentDate = paymentDateUtc,
             Reference = request.Reference
         };
 
