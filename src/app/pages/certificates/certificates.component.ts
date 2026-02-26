@@ -22,34 +22,12 @@ export class CertificatesComponent {
   showPdfViewer = false;
 
   certificates: Certificate[] = [
-    {
-      id: 1,
-      title: 'Swimming Instructor Certification',
-      description: 'Certified swimming instructor with advanced training in water safety and stroke technique.',
-      pdfPath: '/assets/certificates/certificate-1.pdf',
-      thumbnail: '/assets/certificates/thumb-1.jpg'
-    },
-    {
-      id: 2,
-      title: 'Lifeguard Certification',
-      description: 'Professional lifeguard certification ensuring the highest standards of water safety.',
-      pdfPath: '/assets/certificates/certificate-2.pdf',
-      thumbnail: '/assets/certificates/thumb-2.jpg'
-    },
-    {
-      id: 3,
-      title: 'Water Safety Instructor',
-      description: 'Advanced certification in teaching water safety and survival skills to all age groups.',
-      pdfPath: '/assets/certificates/certificate-3.pdf',
-      thumbnail: '/assets/certificates/thumb-3.jpg'
-    },
-    {
-      id: 4,
-      title: 'Competitive Swimming Coach',
-      description: 'Elite level coaching certification for competitive swimming programs.',
-      pdfPath: '/assets/certificates/certificate-4.pdf',
-      thumbnail: '/assets/certificates/thumb-4.jpg'
-    }
+    { id: 1, title: 'Beginner — Girl', description: 'SwimXpert Beginner certificate for girls. Water comfort, basic floats, and introductory skills.', pdfPath: '/assets/certificates/beginner-girl.pdf', thumbnail: '/assets/certificates/thumb-beginner-girl.jpg' },
+    { id: 2, title: 'Beginner — Boy', description: 'SwimXpert Beginner certificate for boys. Water comfort, basic floats, and introductory skills.', pdfPath: '/assets/certificates/beginner-boy.pdf', thumbnail: '/assets/certificates/thumb-beginner-boy.jpg' },
+    { id: 3, title: 'Intermediate — Girl', description: 'SwimXpert Intermediate certificate for girls. Independent buoyancy, glides, and simple strokes.', pdfPath: '/assets/certificates/intermediate-girl.pdf', thumbnail: '/assets/certificates/thumb-intermediate-girl.jpg' },
+    { id: 4, title: 'Intermediate — Boy', description: 'SwimXpert Intermediate certificate for boys. Independent buoyancy, glides, and simple strokes.', pdfPath: '/assets/certificates/intermediate-boy.pdf', thumbnail: '/assets/certificates/thumb-intermediate-boy.jpg' },
+    { id: 5, title: 'Advanced — Girl', description: 'SwimXpert Advanced certificate for girls. Coordinated strokes, stamina, and refined technique.', pdfPath: '/assets/certificates/advanced-girl.pdf', thumbnail: '/assets/certificates/thumb-advanced-girl.jpg' },
+    { id: 6, title: 'Advanced — Boy', description: 'SwimXpert Advanced certificate for boys. Coordinated strokes, stamina, and refined technique.', pdfPath: '/assets/certificates/advanced-boy.pdf', thumbnail: '/assets/certificates/thumb-advanced-boy.jpg' }
   ];
 
   viewCertificate(certificate: Certificate): void {
