@@ -2,26 +2,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:5002/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('swimxpert_token');
-    let headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-    
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    
-    return headers;
+    return new HttpHeaders({ 'Content-Type': 'application/json' });
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -42,8 +34,9 @@ export class ApiService {
   // ========== AUTH ENDPOINTS ==========
   
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, { email, password })
-      .pipe(catchError(this.handleError));
+    return this.http.post(`${this.apiUrl}/auth/login`, { email, password }).pipe(
+      catchError((err) => throwError(() => err))
+    );
   }
 
   register(email: string, password: string, fullName: string, phone?: string, birthDate?: string): Observable<any> {
@@ -62,10 +55,90 @@ export class ApiService {
     }).pipe(catchError(this.handleError));
   }
 
+  getMe(): Observable<{ id: number; email: string; fullName: string; role: string; twoFactorEnabled?: boolean }> {
+    return this.http.get<{ id: number; email: string; fullName: string; role: string; twoFactorEnabled?: boolean }>(`${this.apiUrl}/auth/me`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  logout(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/logout`, {}, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  resendVerification(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/resend-verification`, { email }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/forgot-password`, { email }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/reset-password`, { token, newPassword }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  verifyEmail(token: string): Observable<{ message: string }> {
+    return this.http.get<{ message: string }>(`${this.apiUrl}/auth/verify-email`, {
+      params: { token },
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  verify2Fa(email: string, code: string): Observable<{ id: number; email: string; fullName: string; role: string }> {
+    return this.http.post<{ id: number; email: string; fullName: string; role: string }>(`${this.apiUrl}/auth/2fa/verify`, { email, code }, {
+      headers: this.getHeaders()
+    }).pipe(catchError((e) => throwError(() => e)));
+  }
+
+  setup2Fa(): Observable<{ secret: string; qrCodeUri: string }> {
+    return this.http.post<{ secret: string; qrCodeUri: string }>(`${this.apiUrl}/auth/2fa/setup`, {}, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  enable2Fa(code: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/2fa/enable`, { code }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  disable2Fa(code: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/2fa/disable`, { code }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  refresh(): Observable<{ id: number; email: string; fullName: string; role: string }> {
+    return this.http.post<{ id: number; email: string; fullName: string; role: string }>(`${this.apiUrl}/auth/refresh`, {}, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
   // ========== ADMIN DASHBOARD ENDPOINTS ==========
   
   getAdminOverview(): Observable<any> {
     return this.http.get(`${this.apiUrl}/admindashboard/overview`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getAuditLogs(params: { page?: number; pageSize?: number; action?: string; from?: string; to?: string }): Observable<{ total: number; page: number; pageSize: number; items: any[] }> {
+    const q = new URLSearchParams();
+    if (params.page != null) q.set('page', String(params.page));
+    if (params.pageSize != null) q.set('pageSize', String(params.pageSize));
+    if (params.action) q.set('action', params.action);
+    if (params.from) q.set('from', params.from);
+    if (params.to) q.set('to', params.to);
+    const suffix = q.toString() ? `?${q.toString()}` : '';
+    return this.http.get<{ total: number; page: number; pageSize: number; items: any[] }>(`${this.apiUrl}/admin/audit-logs${suffix}`, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
   }
@@ -121,5 +194,41 @@ export class ApiService {
     return this.http.post<any>(`${this.apiUrl}/swimmerskills`, payload, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
+  }
+
+  updateSwimmer(swimmerId: number, payload: { name?: string; age?: number; level?: number; profilePictureUrl?: string | null }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/swimmerskills/${swimmerId}`, payload, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getSwimmerProgress(swimmerId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/swimmerskills/${swimmerId}/progress`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  addProgressEntry(swimmerId: number, payload: { date?: string; level: number; notes?: string; skills?: string[] }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/swimmerskills/${swimmerId}/progress`, payload, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getQuizResults(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user/quiz-results`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  addQuizResult(payload: { score: number; totalQuestions: number; percentage: number }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/user/quiz-results`, payload, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  uploadProfilePicture(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}/upload/profile-picture`, formData).pipe(catchError(this.handleError));
   }
 }

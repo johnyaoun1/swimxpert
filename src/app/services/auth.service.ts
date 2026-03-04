@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
@@ -26,7 +26,6 @@ export interface AuthApiResponse {
   email: string;
   fullName: string;
   role: string;
-  token: string;
 }
 
 export interface Child {
@@ -50,9 +49,8 @@ export interface ProgressEntry {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly TOKEN_KEY = 'swimxpert_token';
   private readonly USER_KEY = 'swimxpert_user';
-  
+
   currentUser = signal<User | null>(null);
 
   constructor(
@@ -60,22 +58,18 @@ export class AuthService {
     private apiService: ApiService
   ) {
     this.loadUserFromStorage();
-    this.validateToken().subscribe();
+    this.fetchMe().subscribe();
   }
 
   login(email: string, password: string): Observable<AuthApiResponse> {
     return this.apiService.login(email, password).pipe(
-      tap((response: AuthApiResponse) => {
-        this.persistAuthResponse(response);
-      })
+      tap((response: AuthApiResponse) => this.persistAuthResponse(response))
     );
   }
 
   register(email: string, password: string, fullName: string, phone?: string, birthDate?: string): Observable<AuthApiResponse> {
     return this.apiService.register(email, password, fullName, phone, birthDate).pipe(
-      tap((response: AuthApiResponse) => {
-        this.persistAuthResponse(response);
-      })
+      tap((response: AuthApiResponse) => this.persistAuthResponse(response))
     );
   }
 
@@ -83,18 +77,18 @@ export class AuthService {
     return this.register(email, password, name);
   }
 
-  validateToken(): Observable<boolean> {
-    if (!this.getToken()) {
-      this.clearAuthState(false);
-      return of(false);
-    }
-
-    return this.apiService.validateToken().pipe(
+  fetchMe(): Observable<boolean> {
+    return this.apiService.getMe().pipe(
+      tap((me) => {
+        const user = this.meToUser(me);
+        this.currentUser.set(user);
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      }),
       switchMap(() =>
-        this.syncChildrenFromApi().pipe(
-          map(() => true),
-          catchError(() => of(true))
-        )
+        forkJoin([
+          this.syncChildrenFromApi().pipe(catchError(() => of(void 0))),
+          this.syncQuizResultsFromApi().pipe(catchError(() => of(void 0)))
+        ]).pipe(map(() => true))
       ),
       catchError(() => {
         this.clearAuthState(false);
@@ -103,45 +97,63 @@ export class AuthService {
     );
   }
 
+  validateToken(): Observable<boolean> {
+    return this.apiService.getMe().pipe(
+      map((me) => {
+        const user = this.meToUser(me);
+        this.currentUser.set(user);
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        return true;
+      }),
+      catchError(() => {
+        this.clearAuthState(false);
+        return of(false);
+      })
+    );
+  }
+
+  private meToUser(me: { id: number; email: string; fullName: string; role: string }): User {
+    const role = (me.role ?? 'Parent').toLowerCase() === 'admin' ? 'admin' : 'user';
+    const name = me.fullName || me.email?.split('@')?.[0] || 'User';
+    return {
+      id: String(me.id),
+      email: me.email ?? '',
+      name,
+      avatar: this.generateAvatar(name),
+      role,
+      children: this.currentUser()?.children ?? [],
+      quizResults: this.currentUser()?.quizResults ?? []
+    };
+  }
+
   isAdmin(): boolean {
     const user = this.currentUser();
     return user?.role?.toLowerCase() === 'admin';
   }
 
   getAllClients(): User[] {
-    const allUsers: User[] = [];
-    const keys = Object.keys(localStorage);
-    
-    keys.forEach(key => {
-      if (key.startsWith('swimxpert_user_') || key === 'swimxpert_user') {
-        try {
-          const userData = JSON.parse(localStorage.getItem(key) || '{}');
-          if (userData.role !== 'admin') {
-            allUsers.push(userData);
-          }
-        } catch (e) {
-          console.error('Error parsing user data', e);
-        }
-      }
-    });
-    
-    return allUsers;
+    return [];
   }
 
   logout(): void {
-    this.clearAuthState(true);
+    this.apiService.logout().subscribe({
+      complete: () => this.clearAuthState(true)
+    });
   }
 
   isAuthenticated(): Observable<boolean> {
-    if (!this.getToken()) {
-      return of(false);
-    }
-
-    return this.validateToken();
+    return this.apiService.getMe().pipe(
+      map((me) => {
+        this.currentUser.set(this.meToUser(me));
+        localStorage.setItem(this.USER_KEY, JSON.stringify(this.currentUser()));
+        return true;
+      }),
+      catchError(() => of(false))
+    );
   }
 
   isAuthenticatedSync(): boolean {
-    return !!localStorage.getItem(this.TOKEN_KEY);
+    return this.currentUser() !== null;
   }
 
   private loadUserFromStorage(): void {
@@ -173,14 +185,13 @@ export class AuthService {
     }
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+  persistAuthResponseFromMe(response: AuthApiResponse): void {
+    this.persistAuthResponse(response);
   }
 
-  private persistAuthResponse(response: any): void {
+  private persistAuthResponse(response: AuthApiResponse): void {
     const role = (response?.role ?? 'Parent').toString().toLowerCase() === 'admin' ? 'admin' : 'user';
-    const name = response?.fullName || response?.name || response?.email?.split('@')?.[0] || 'User';
-
+    const name = response?.fullName || response?.email?.split('@')?.[0] || 'User';
     const user: User = {
       id: String(response?.id ?? ''),
       email: response?.email ?? '',
@@ -190,9 +201,6 @@ export class AuthService {
       children: [],
       quizResults: []
     };
-
-    const token = response?.token ?? '';
-    localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
   }
@@ -217,17 +225,14 @@ export class AuthService {
     }
   }
 
-  addQuizResult(result: QuizResult): void {
-    const user = this.currentUser();
-    if (user) {
-      if (!user.quizResults) user.quizResults = [];
-      user.quizResults.push(result);
-      // Keep only top 10 results
-      user.quizResults.sort((a, b) => b.percentage - a.percentage);
-      user.quizResults = user.quizResults.slice(0, 10);
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-      this.currentUser.set({ ...user });
-    }
+  addQuizResult(result: QuizResult): Observable<void> {
+    return this.apiService.addQuizResult({
+      score: result.score,
+      totalQuestions: result.totalQuestions,
+      percentage: result.percentage
+    }).pipe(
+      switchMap(() => this.syncQuizResultsFromApi())
+    );
   }
 
   getAllUsers(): User[] {
@@ -284,20 +289,47 @@ export class AuthService {
     }
   }
 
-  addProgressEntry(childId: string, entry: ProgressEntry): void {
-    const user = this.currentUser();
-    if (user) {
-      const child = user.children.find(c => c.id === childId);
-      if (child) {
-        child.progress.push(entry);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        this.currentUser.set({ ...user });
-      }
+  updateChildApi(childId: string, updates: { name?: string; age?: number; level?: number; profilePicture?: string | null }): Observable<Child> {
+    const id = parseInt(childId, 10);
+    if (isNaN(id)) {
+      return of({} as Child);
     }
+    const payload: Record<string, unknown> = {};
+    if (updates.name !== undefined) payload['name'] = updates.name;
+    if (updates.age !== undefined) payload['age'] = updates.age;
+    if (updates.level !== undefined) payload['level'] = updates.level;
+    if ('profilePicture' in updates) payload['profilePictureUrl'] = updates.profilePicture ?? null;
+
+    return this.apiService.updateSwimmer(id, payload).pipe(
+      map((res: any) => ({
+        id: String(res?.id ?? childId),
+        name: res?.name ?? updates.name ?? '',
+        age: Number(res?.age ?? updates.age ?? 0),
+        level: Number(res?.level ?? updates.level ?? 1),
+        profilePicture: res?.profilePictureUrl ?? updates.profilePicture,
+        skillLevels: res?.levels ?? [],
+        progress: []
+      } as Child)),
+      switchMap((child) => this.syncChildrenFromApi().pipe(map(() => child)))
+    );
+  }
+
+  addProgressEntry(childId: string, entry: ProgressEntry): Observable<void> {
+    const swimmerId = parseInt(childId, 10);
+    if (isNaN(swimmerId)) {
+      return of(void 0);
+    }
+    return this.apiService.addProgressEntry(swimmerId, {
+      date: entry.date,
+      level: entry.level,
+      notes: entry.notes,
+      skills: entry.skills?.length ? entry.skills : undefined
+    }).pipe(
+      switchMap(() => this.syncChildrenFromApi())
+    );
   }
 
   private clearAuthState(redirectToLogin: boolean): void {
-    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUser.set(null);
     if (redirectToLogin) {
@@ -312,21 +344,70 @@ export class AuthService {
     }
 
     return this.apiService.getMySwimmers().pipe(
-      tap((swimmers) => {
-        const mappedChildren: Child[] = (swimmers || []).map((s: any) => ({
-          id: String(s.id),
-          name: s.name || 'Swimmer',
-          age: Number(s.age || 0),
-          level: Number(s.level || 1),
-          profilePicture: s.profilePictureUrl || undefined,
-          skillLevels: s.levels || [],
-          progress: []
-        }));
+      switchMap((swimmers) => {
+        const list = swimmers || [];
+        if (list.length === 0) {
+          return of(list.map((s: any) => ({
+            id: String(s.id),
+            name: s.name || 'Swimmer',
+            age: Number(s.age || 0),
+            level: Number(s.level || 1),
+            profilePicture: s.profilePictureUrl || undefined,
+            skillLevels: s.levels || [],
+            progress: [] as ProgressEntry[]
+          })));
+        }
+        const progressCalls = list.map((s: any) =>
+          this.apiService.getSwimmerProgress(s.id).pipe(
+            map((entries) => ({
+              swimmer: s,
+              entries: entries || []
+            }))
+          )
+        );
+        return forkJoin(progressCalls).pipe(
+          map((results) =>
+            results.map(({ swimmer: s, entries }) => ({
+              id: String(s.id),
+              name: s.name || 'Swimmer',
+              age: Number(s.age || 0),
+              level: Number(s.level || 1),
+              profilePicture: s.profilePictureUrl || undefined,
+              skillLevels: s.levels || [],
+              progress: entries.map((e: any) => ({
+                date: e.date,
+                level: e.level,
+                notes: e.notes || '',
+                skills: Array.isArray(e.skills) ? e.skills : []
+              })) as ProgressEntry[]
+            }))
+          )
+        );
+      }),
+      tap((mappedChildren) => {
+        const nextUser: User = { ...user, children: mappedChildren };
+        localStorage.setItem(this.USER_KEY, JSON.stringify(nextUser));
+        this.currentUser.set(nextUser);
+      }),
+      map(() => void 0)
+    );
+  }
 
-        const nextUser: User = {
-          ...user,
-          children: mappedChildren
-        };
+  syncQuizResultsFromApi(): Observable<void> {
+    const user = this.currentUser();
+    if (!user) {
+      return of(void 0);
+    }
+
+    return this.apiService.getQuizResults().pipe(
+      tap((results) => {
+        const quizResults: QuizResult[] = (results || []).map((r: any) => ({
+          score: r.score,
+          totalQuestions: r.totalQuestions,
+          percentage: r.percentage,
+          timestamp: r.timestamp ? new Date(r.timestamp) : new Date()
+        }));
+        const nextUser: User = { ...user, quizResults };
         localStorage.setItem(this.USER_KEY, JSON.stringify(nextUser));
         this.currentUser.set(nextUser);
       }),
