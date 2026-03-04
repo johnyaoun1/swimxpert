@@ -47,7 +47,7 @@ export class SignupComponent {
       const { name, email, password } = this.signupForm.value;
       this.authService.signup(email, password, name).subscribe({
         next: (response) => {
-          if (response?.token) {
+          if (response?.id != null) {
             this.router.navigate(['/dashboard']);
           } else {
             this.errorMessage = 'Error creating account. Please try again.';
