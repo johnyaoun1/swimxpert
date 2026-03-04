@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
+import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 import { SessionService, Session, SessionStatus } from '../../services/session.service';
 import { AttendanceService, Attendance, AttendanceStatus } from '../../services/attendance.service';
 import { RevenueService } from '../../services/revenue.service';
@@ -14,7 +15,7 @@ import { catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
@@ -152,7 +153,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
-        this.loadData();
         if (showLoader) {
           this.isLoading.set(false);
         }
@@ -198,75 +198,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
 
-  loadData(): void {
-    // Fallback to localStorage data
-    this.clients.set(this.authService.getAllClients());
-    this.loadSessions();
-    this.loadAttendance();
-    this.revenueService.calculateRevenue();
-  }
-
-  transformClients(apiClients: any[]): User[] {
-    return apiClients.map(c => ({
-      id: c.id,
-      email: c.email,
-      name: c.name,
-      avatar: c.avatar,
-      role: 'user' as const,
-      children: (c.children || []).map((child: any) => ({
-        id: child.id,
-        name: child.name,
-        age: child.age,
-        level: child.level,
-        profilePicture: child.profilePicture,
-        progress: []
-      })),
-      quizResults: []
-    }));
-  }
-
-  transformSessions(apiSessions: any[]): Session[] {
-    return apiSessions.map(s => ({
-      id: s.id,
-      clientId: s.clientId,
-      clientName: s.clientName,
-      childId: s.childId,
-      childName: s.childName,
-      date: s.date,
-      time: s.time,
-      level: s.level,
-      status: s.status as SessionStatus,
-      instructor: s.instructor,
-      price: s.price,
-      notes: '',
-      createdAt: s.createdAt || new Date().toISOString()
-    }));
-  }
-
-  transformAttendance(apiAttendance: any[]): Attendance[] {
-    return apiAttendance.map(a => ({
-      id: a.id,
-      sessionId: a.sessionId,
-      clientId: a.clientId,
-      clientName: a.clientName,
-      childId: a.childId,
-      childName: a.childName,
-      date: a.date,
-      status: a.status as AttendanceStatus,
-      checkInTime: a.checkInTime,
-      notes: a.notes || '',
-      createdAt: a.createdAt || new Date().toISOString()
-    }));
-  }
-
-  loadSessions(): void {
-    this.sessions.set(this.sessionService.sessions());
-  }
-
-  loadAttendance(): void {
-    this.attendance.set(this.attendanceService.attendance());
-  }
-
   selectClient(clientId: string | number): void {
     this.selectedClientId.set(clientId == null ? null : String(clientId));
   }
@@ -292,9 +223,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return client?.children || [];
   }
 
-  getChildInitial(childName: string): string {
-    return (childName || '?').charAt(0).toUpperCase();
-  }
+  getChildInitial = getChildInitial;
 
   isSkillUnlocked(child: { skillLevels?: { level: number; skills: { name: string; isUnlocked: boolean }[] }[] }, level: number, skillName: string): boolean {
     const levelBlock = (child.skillLevels || []).find((x) => x.level === level);
@@ -610,15 +539,5 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return this.sessions().filter((s) => s.clientName?.toLowerCase().includes(q) || s.childName?.toLowerCase().includes(q) || s.status?.toLowerCase().includes(q));
   }
 
-  getLevelFocus(level: number): string {
-    const focus: Record<number, string> = {
-      1: 'Water comfort and confidence',
-      2: 'Independent buoyancy and simple movement',
-      3: 'COMFORT',
-      4: 'Coordinated strokes and stamina',
-      5: 'Refine strokes and increase endurance',
-      6: 'Master strokes and prepare for competitive'
-    };
-    return focus[level] || '';
-  }
+  getLevelFocus = getLevelFocus;
 }
