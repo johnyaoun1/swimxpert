@@ -26,16 +26,27 @@ export class ContactComponent {
     });
   }
 
+  submitError = '';
+
   onSubmit(): void {
     if (this.contactForm.valid) {
       this.submitting = true;
-      this.contactService.submitContactForm(this.contactForm.value).then(() => {
-        this.submitting = false;
-        this.submitted = true;
-        this.contactForm.reset();
-        setTimeout(() => {
-          this.submitted = false;
-        }, 5000);
+      this.submitError = '';
+      this.contactService.submitContactForm(this.contactForm.value).subscribe({
+        next: (result) => {
+          this.submitting = false;
+          if (result.success) {
+            this.submitted = true;
+            this.contactForm.reset();
+            setTimeout(() => { this.submitted = false; }, 5000);
+          } else {
+            this.submitError = result.error || 'Failed to send message.';
+          }
+        },
+        error: () => {
+          this.submitting = false;
+          this.submitError = 'Failed to send message. Please try again.';
+        }
       });
     }
   }

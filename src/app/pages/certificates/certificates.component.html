@@ -92,8 +92,8 @@
   </div>
 </section>
 
-@if (showPdfViewer && selectedCertificate) {
-  <div class="pdf-viewer-overlay" (click)="closePdfViewer()">
+@if (showViewer && selectedCertificate) {
+  <div class="pdf-viewer-overlay" (click)="closeViewer()">
     <div class="pdf-viewer-container" (click)="$event.stopPropagation()">
       <div class="pdf-viewer-header">
         <h3 class="pdf-viewer-title">{{ selectedCertificate.title }}</h3>
@@ -108,7 +108,7 @@
             </svg>
           </button>
           <button 
-            (click)="closePdfViewer()"
+            (click)="closeViewer()"
             class="pdf-viewer-btn"
             title="Close"
           >
@@ -119,11 +119,15 @@
         </div>
       </div>
       <div class="pdf-viewer-content">
-        <iframe 
-          [src]="selectedCertificate.pdfPath | safeUrl" 
-          class="pdf-iframe"
-          title="Certificate PDF"
-        ></iframe>
+        @if (selectedCertificate.type === 'image') {
+          <img [src]="selectedCertificate.filePath" [alt]="selectedCertificate.title" class="w-full h-auto max-h-[80vh] object-contain" />
+        } @else {
+          <iframe 
+            [src]="selectedCertificate.filePath | safeUrl" 
+            class="pdf-iframe"
+            [title]="selectedCertificate.title"
+          ></iframe>
+        }
       </div>
     </div>
   </div>

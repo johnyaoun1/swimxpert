@@ -4,11 +4,13 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import { AuthService, Child } from '../../services/auth.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
+import { ProfilePictureUploadComponent } from '../../shared/profile-picture-upload/profile-picture-upload.component';
+import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ProfilePictureUploadComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -16,12 +18,15 @@ export class DashboardComponent implements OnInit {
   user = this.authService.currentUser;
   showAddChildForm = signal(false);
   showProgressForm = signal(false);
+  showEditChildForm = signal(false);
   selectedChildId = signal<string | null>(null);
   selectedChildForProfile = signal<Child | null>(null);
+  selectedChildForEdit = signal<Child | null>(null);
   levels = this.swimLevelsService.getLevels();
 
   childForm: FormGroup;
   progressForm: FormGroup;
+  editChildForm: FormGroup;
 
   constructor(
     private authService: AuthService,
@@ -42,7 +47,16 @@ export class DashboardComponent implements OnInit {
       notes: ['', Validators.required],
       skills: ['']
     });
+
+    this.editChildForm = this.fb.group({
+      name: ['', Validators.required],
+      age: [null, [Validators.required, Validators.min(3), Validators.max(18)]],
+      level: [1, Validators.required],
+      profilePicture: ['']
+    });
   }
+
+  editChildError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.authService.isAuthenticated().subscribe((isAuthenticated) => {
@@ -106,26 +120,21 @@ export class DashboardComponent implements OnInit {
   }
 
   addProgress(): void {
-    if (this.progressForm.valid && this.selectedChildId()) {
-      const formValue = this.progressForm.value;
-      const skills = formValue.skills 
-        ? formValue.skills.split(',').map((s: string) => s.trim()).filter((s: string) => s)
-        : [];
-      
-      this.authService.addProgressEntry(this.selectedChildId()!, {
-        date: formValue.date,
-        level: formValue.level,
-        notes: formValue.notes,
-        skills: skills
-      });
+    if (!this.progressForm.valid || !this.selectedChildId()) return;
+    const formValue = this.progressForm.value;
+    const skills = formValue.skills
+      ? formValue.skills.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+      : [];
 
-      const child = this.user()?.children.find(c => c.id === this.selectedChildId());
-      if (child) {
-        this.authService.updateChild(this.selectedChildId()!, { level: formValue.level });
-      }
-
-      this.closeProgressForm();
-    }
+    this.authService.addProgressEntry(this.selectedChildId()!, {
+      date: formValue.date,
+      level: formValue.level,
+      notes: formValue.notes,
+      skills
+    }).subscribe({
+      next: () => this.closeProgressForm(),
+      error: () => this.closeProgressForm()
+    });
   }
 
   handleImageError(event: Event, childName: string): void {
@@ -143,19 +152,44 @@ export class DashboardComponent implements OnInit {
     this.selectedChildForProfile.set(null);
   }
 
-  getLevelFocus(level: number): string {
-    const focus: Record<number, string> = {
-      1: 'Water comfort and confidence',
-      2: 'Independent buoyancy and simple movement',
-      3: 'COMFORT',
-      4: 'Coordinated strokes and stamina',
-      5: 'Refine strokes and increase endurance',
-      6: 'Master strokes and prepare for competitive'
-    };
-    return focus[level] || '';
+  openEditChildProfile(child: Child): void {
+    this.selectedChildForEdit.set(child);
+    this.editChildForm.patchValue({
+      name: child.name,
+      age: child.age,
+      level: child.level,
+      profilePicture: child.profilePicture || ''
+    });
+    this.editChildError.set(null);
+    this.showEditChildForm.set(true);
   }
 
-  getChildInitial(name: string): string {
-    return (name || '?').charAt(0).toUpperCase();
+  closeEditChildForm(): void {
+    this.showEditChildForm.set(false);
+    this.selectedChildForEdit.set(null);
+    this.editChildError.set(null);
   }
+
+  saveEditChild(): void {
+    const child = this.selectedChildForEdit();
+    if (!child || !this.editChildForm.valid) return;
+    this.editChildError.set(null);
+    const v = this.editChildForm.value;
+    this.authService.updateChildApi(child.id, {
+      name: v.name,
+      age: v.age,
+      level: v.level,
+      profilePicture: v.profilePicture || null
+    }).subscribe({
+      next: () => {
+        this.closeEditChildForm();
+      },
+      error: (err) => {
+        this.editChildError.set(err?.message || 'Failed to update profile.');
+      }
+    });
+  }
+
+  getLevelFocus = getLevelFocus;
+  getChildInitial = getChildInitial;
 }

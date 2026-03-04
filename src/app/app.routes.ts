@@ -17,6 +17,9 @@ export const routes: Routes = [
   { path: 'strokes-3d', loadComponent: () => import('./pages/strokes-3d/strokes-3d.component').then((m) => m.Strokes3dComponent), title: '3D Swimming Strokes - SwimXpert' },
   { path: 'login', loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent), title: 'Login - SwimXpert' },
   { path: 'signup', loadComponent: () => import('./pages/signup/signup.component').then((m) => m.SignupComponent), title: 'Sign Up - SwimXpert' },
+  { path: 'verify-email', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent), title: 'Verify Email - SwimXpert' },
+  { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent), title: 'Forgot Password - SwimXpert' },
+  { path: 'reset-password', loadComponent: () => import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent), title: 'Reset Password - SwimXpert' },
   { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent), title: 'Dashboard - SwimXpert', canActivate: [authGuard] },
   { path: 'admin', loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent), title: 'Admin Dashboard - SwimXpert', canActivate: [adminGuard] },
 
@@ -35,6 +38,8 @@ export const routes: Routes = [
 
   // Admin
   { path: 'admin/users', loadComponent: () => import('./pages/admin-users/admin-users.component').then((m) => m.AdminUsersComponent), title: 'Admin Users - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
+  { path: 'admin/audit', loadComponent: () => import('./pages/admin-audit/admin-audit.component').then((m) => m.AdminAuditComponent), title: 'Audit Log - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
+  { path: 'admin/security', loadComponent: () => import('./pages/admin-security/admin-security.component').then((m) => m.AdminSecurityComponent), title: 'Security & 2FA - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
 
   // Payments
   { path: 'payments/record', loadComponent: () => import('./pages/record-payment/record-payment.component').then((m) => m.RecordPaymentComponent), title: 'Record Payment - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
