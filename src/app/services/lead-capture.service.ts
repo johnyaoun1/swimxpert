@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface CaptureLeadPayload {
   name: string;
@@ -15,7 +16,7 @@ export interface CaptureLeadPayload {
   providedIn: 'root'
 })
 export class LeadCaptureService {
-  private readonly apiUrl = 'http://localhost:5002/api/leads';
+  private readonly apiUrl = `${environment.apiUrl}/leads`;
 
   constructor(private http: HttpClient) {}
 

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export type SessionStatus = 'scheduled' | 'completed' | 'canceled';
 
@@ -35,7 +36,8 @@ interface ApiSession {
   providedIn: 'root'
 })
 export class SessionService {
-  private readonly apiUrl = 'http://localhost:5002/api/sessions';
+  private readonly baseUrl = environment.apiUrl;
+  private readonly apiUrl = `${this.baseUrl}/sessions`;
   sessions = signal<Session[]>([]);
 
   constructor(private http: HttpClient) {

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 
@@ -32,7 +33,7 @@ interface ApiRegistration {
   providedIn: 'root'
 })
 export class AttendanceService {
-  private readonly apiUrl = 'http://localhost:5002/api/registrations';
+  private readonly apiUrl = `${environment.apiUrl}/registrations`;
   attendance = signal<Attendance[]>([]);
 
   constructor(private http: HttpClient) {}

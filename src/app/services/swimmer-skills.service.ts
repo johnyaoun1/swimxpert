@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SkillItem {
   name: string;
@@ -27,7 +28,7 @@ export interface SwimmerSkillCard {
   providedIn: 'root'
 })
 export class SwimmerSkillsService {
-  private readonly apiUrl = 'http://localhost:5002/api/swimmerskills';
+  private readonly apiUrl = `${environment.apiUrl}/swimmerskills`;
 
   constructor(private http: HttpClient) {}
 

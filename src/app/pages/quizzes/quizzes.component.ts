@@ -210,7 +210,6 @@ export class QuizzesComponent implements OnInit {
       timestamp: new Date()
     };
 
-    // Save quiz result to user profile
     const user = this.authService.currentUser();
     if (user) {
       this.authService.addQuizResult({
@@ -218,7 +217,7 @@ export class QuizzesComponent implements OnInit {
         totalQuestions: this.questions.length,
         percentage: percentage,
         timestamp: new Date()
-      });
+      }).subscribe();
     }
   }
 
