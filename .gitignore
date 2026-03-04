@@ -21,3 +21,12 @@ yarn-error.log*
 # .NET build artifacts
 **/bin/
 **/obj/
+
+# Secrets and environment
+.env
+.env.*
+!.env.example
+**/appsettings.Production.json
+**/appsettings.*.Production.json
+**/secrets.json
+**/*.user

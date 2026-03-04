@@ -1,12 +1,14 @@
+# For production: do not expose postgres ports. Use DATABASE_URL from your app host (e.g. Railway).
+# For local dev only: port 5433 is exposed so the API can connect from the host.
 services:
   postgres:
     image: postgres:16-alpine
     container_name: swimxpert_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: swimxpert_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-swimxpert_db}
     ports:
       - "5433:5432"
     volumes:
