@@ -1,0 +1,41 @@
+<div class="profile-picture-upload">
+  @if (currentPreview) {
+    <div class="preview-wrapper">
+      <img [src]="currentPreview" alt="Profile" class="preview-img" />
+      <div class="preview-overlay">
+        <button type="button" class="btn-change" (click)="triggerFileInput(fileInput)" [disabled]="disabled || uploading">
+          {{ uploading ? 'Uploading…' : 'Change photo' }}
+        </button>
+        <button type="button" class="btn-remove" (click)="removePhoto(); $event.stopPropagation()" [disabled]="disabled || uploading">Remove</button>
+      </div>
+    </div>
+  } @else {
+    <div
+      class="drop-zone"
+      [class.disabled]="disabled || uploading"
+      (click)="triggerFileInput(fileInput)"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+    >
+      @if (uploading) {
+        <span class="upload-text">Uploading…</span>
+      } @else {
+        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span class="upload-text">{{ placeholderLabel }}</span>
+        <span class="upload-hint">JPG, PNG, GIF or WebP · max 5 MB</span>
+      }
+    </div>
+  }
+  @if (errorMessage) {
+    <p class="error-text">{{ errorMessage }}</p>
+  }
+  <input
+    #fileInput
+    type="file"
+    accept="image/jpeg,image/png,image/gif,image/webp"
+    class="hidden-input"
+    (change)="onFileSelected($event)"
+  />
+</div>

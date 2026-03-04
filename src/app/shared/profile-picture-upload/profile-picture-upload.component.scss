@@ -1,0 +1,112 @@
+.profile-picture-upload {
+  .hidden-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 140px;
+    padding: 1.5rem;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+
+    &:hover:not(.disabled) {
+      border-color: #0ea5e9;
+      background: #f0f9ff;
+    }
+
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      color: #9ca3af;
+    }
+
+    .upload-text {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .upload-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+  }
+
+  .preview-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #e5e7eb;
+
+    .preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      button {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      }
+
+      .btn-change {
+        background: white;
+        color: #1f2937;
+      }
+
+      .btn-remove {
+        background: transparent;
+        color: #fecaca;
+      }
+    }
+  }
+
+  .error-text {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #dc2626;
+  }
+}
