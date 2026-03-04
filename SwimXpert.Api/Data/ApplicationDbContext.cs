@@ -16,6 +16,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Attendance> Attendances { get; set; } = null!;
     public DbSet<Payment> Payments { get; set; } = null!;
     public DbSet<LeadCapture> LeadCaptures { get; set; } = null!;
+    public DbSet<ProgressEntry> ProgressEntries { get; set; } = null!;
+    public DbSet<QuizResult> QuizResults { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,5 +55,23 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<LeadCapture>()
             .HasIndex(l => l.CreatedAt);
+
+        modelBuilder.Entity<ProgressEntry>()
+            .HasOne(p => p.Swimmer)
+            .WithMany(s => s.ProgressEntries)
+            .HasForeignKey(p => p.SwimmerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<QuizResult>()
+            .HasOne(q => q.User)
+            .WithMany(u => u.QuizResults)
+            .HasForeignKey(q => q.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

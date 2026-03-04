@@ -27,4 +27,5 @@ public class Swimmer
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Attendance> Attendances { get; set; } = [];
+    public List<ProgressEntry> ProgressEntries { get; set; } = [];
 }
