@@ -3,15 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SwimXpert.Api.Data;
 using SwimXpert.Api.Models;
+using SwimXpert.Api.Services;
 
 namespace SwimXpert.Api.Controllers;
 
-/// <summary>
-/// Manages swim training sessions.
-/// </summary>
 [ApiController]
 [Route("api/sessions")]
-public class SessionsController(ApplicationDbContext dbContext) : ControllerBase
+public class SessionsController(ApplicationDbContext dbContext, IAuditLogService auditLog) : ControllerBase
 {
     /// <summary>
     /// Creates a new training session. Requires Coach or Admin role.
@@ -37,6 +35,7 @@ public class SessionsController(ApplicationDbContext dbContext) : ControllerBase
 
         dbContext.TrainingSessions.Add(session);
         await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("SessionCreated", "TrainingSession", session.Id.ToString(), new { session.Title });
         return CreatedAtAction(nameof(GetSessionById), new { id = session.Id }, session);
     }
 
@@ -128,12 +127,10 @@ public class SessionsController(ApplicationDbContext dbContext) : ControllerBase
         session.Status = request.Status;
 
         await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("SessionUpdated", "TrainingSession", id.ToString(), new { request.Title });
         return Ok(session);
     }
 
-    /// <summary>
-    /// Deletes a session. Requires Admin role.
-    /// </summary>
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteSession(int id)
@@ -146,6 +143,7 @@ public class SessionsController(ApplicationDbContext dbContext) : ControllerBase
 
         dbContext.TrainingSessions.Remove(session);
         await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("SessionDeleted", "TrainingSession", id.ToString());
         return NoContent();
     }
 }

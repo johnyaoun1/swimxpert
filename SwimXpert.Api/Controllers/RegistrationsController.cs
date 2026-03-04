@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,11 +53,17 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
     [Authorize]
     public async Task<IActionResult> Register([FromBody] CreateRegistrationRequest request)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
         var swimmer = await dbContext.Swimmers.FindAsync(request.SwimmerId);
         if (swimmer is null)
-        {
             return NotFound(new { message = "Swimmer not found." });
-        }
+
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+            return Forbid();
 
         var session = await dbContext.TrainingSessions.FindAsync(request.TrainingSessionId);
         if (session is null)
@@ -130,6 +137,18 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
     [Authorize]
     public async Task<IActionResult> GetBySwimmer(int swimmerId)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var swimmer = await dbContext.Swimmers.FindAsync(swimmerId);
+        if (swimmer is null)
+            return NotFound(new { message = "Swimmer not found." });
+
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+            return Forbid();
+
         var registrations = await dbContext.Attendances
             .Where(a => a.SwimmerId == swimmerId)
             .Include(a => a.TrainingSession)
@@ -181,11 +200,19 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
     [Authorize]
     public async Task<IActionResult> CancelRegistration(int id)
     {
-        var registration = await dbContext.Attendances.FindAsync(id);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var registration = await dbContext.Attendances
+            .Include(a => a.Swimmer)
+            .FirstOrDefaultAsync(a => a.Id == id);
         if (registration is null)
-        {
             return NotFound(new { message = "Registration not found." });
-        }
+
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isAdminOrCoach && registration.Swimmer.ParentUserId != currentUserId)
+            return Forbid();
 
         dbContext.Attendances.Remove(registration);
         await dbContext.SaveChangesAsync();
@@ -199,15 +226,21 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
     [Authorize]
     public async Task<IActionResult> GetById(int id)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
         var registration = await dbContext.Attendances
             .Include(a => a.Swimmer)
             .Include(a => a.TrainingSession)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (registration is null)
-        {
             return NotFound(new { message = "Registration not found." });
-        }
+
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isAdminOrCoach && registration.Swimmer.ParentUserId != currentUserId)
+            return Forbid();
 
         return Ok(new
         {

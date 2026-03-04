@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,14 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
     [Authorize]
     public async Task<IActionResult> ProcessPayment([FromBody] CreatePaymentRequest request)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && request.UserId != currentUserId)
+            return Forbid();
+
         var userExists = await dbContext.Users.AnyAsync(u => u.Id == request.UserId);
         if (!userExists)
         {
@@ -67,6 +76,14 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetByUser(int userId)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && userId != currentUserId)
+            return Forbid();
+
         var payments = await dbContext.Payments
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.PaymentDate)

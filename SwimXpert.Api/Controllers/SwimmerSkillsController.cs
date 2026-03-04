@@ -97,6 +97,121 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
         return Ok(swimmers.Select(s => BuildSwimmerCardResponse(s.Id, s.ParentUserId, s.Name, s.Age, s.Level, s.ProfilePictureUrl, s.SkillProgressJson)));
     }
 
+    [HttpPut("{swimmerId:int}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateSwimmer(int swimmerId, [FromBody] UpdateSwimmerRequest request)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var swimmer = await dbContext.Swimmers.FindAsync(swimmerId);
+        if (swimmer is null)
+            return NotFound(new { message = "Swimmer not found." });
+
+        var isAdmin = string.Equals(User.FindFirstValue(ClaimTypes.Role), "Admin", StringComparison.OrdinalIgnoreCase);
+        if (!isAdmin && swimmer.ParentUserId != userId)
+            return Forbid();
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+            swimmer.Name = request.Name.Trim();
+        if (request.Age.HasValue)
+            swimmer.Age = request.Age.Value;
+        if (request.Level.HasValue)
+            swimmer.Level = Math.Clamp(request.Level.Value, 1, 6);
+        if (request.ProfilePictureUrl != null)
+            swimmer.ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim();
+
+        await dbContext.SaveChangesAsync();
+        return Ok(BuildSwimmerCardResponse(swimmer.Id, swimmer.ParentUserId, swimmer.Name, swimmer.Age, swimmer.Level, swimmer.ProfilePictureUrl, swimmer.SkillProgressJson));
+    }
+
+    [HttpGet("{swimmerId:int}/progress")]
+    [Authorize]
+    public async Task<IActionResult> GetProgress(int swimmerId)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var swimmer = await dbContext.Swimmers.FindAsync(swimmerId);
+        if (swimmer is null)
+            return NotFound(new { message = "Swimmer not found." });
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && swimmer.ParentUserId != userId)
+            return Forbid();
+
+        var entries = await dbContext.ProgressEntries
+            .Where(p => p.SwimmerId == swimmerId)
+            .OrderByDescending(p => p.EntryDate)
+            .Select(p => new
+            {
+                p.Id,
+                date = p.EntryDate.ToString("yyyy-MM-dd"),
+                p.Level,
+                p.Notes,
+                skills = p.SkillsJson
+            })
+            .ToListAsync();
+
+        var result = entries.Select(e =>
+        {
+            var skills = ParseSkillsJson(e.skills);
+            return new { e.Id, e.date, e.Level, e.Notes, skills };
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("{swimmerId:int}/progress")]
+    [Authorize]
+    public async Task<IActionResult> AddProgress(int swimmerId, [FromBody] AddProgressRequest request)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var swimmer = await dbContext.Swimmers.FindAsync(swimmerId);
+        if (swimmer is null)
+            return NotFound(new { message = "Swimmer not found." });
+
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && swimmer.ParentUserId != userId)
+            return Forbid();
+
+        DateTime entryDate = DateTime.UtcNow.Date;
+        if (!string.IsNullOrWhiteSpace(request.Date) && DateTime.TryParse(request.Date, out var parsed))
+            entryDate = DateTime.SpecifyKind(parsed.Date, DateTimeKind.Utc);
+
+        var skillsJson = request.Skills != null && request.Skills.Count > 0
+            ? JsonSerializer.Serialize(request.Skills)
+            : "[]";
+
+        var entry = new Models.ProgressEntry
+        {
+            SwimmerId = swimmerId,
+            EntryDate = entryDate,
+            Level = Math.Clamp(request.Level, 1, 6),
+            Notes = request.Notes?.Trim() ?? "",
+            SkillsJson = skillsJson,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.ProgressEntries.Add(entry);
+        swimmer.Level = entry.Level;
+        await dbContext.SaveChangesAsync();
+
+        return Ok(new
+        {
+            entry.Id,
+            date = entry.EntryDate.ToString("yyyy-MM-dd"),
+            entry.Level,
+            entry.Notes,
+            skills = request.Skills ?? []
+        });
+    }
+
     [HttpPut("{swimmerId:int}/skills")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ToggleSkill(int swimmerId, [FromBody] ToggleSkillRequest request)
@@ -165,6 +280,17 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
         }
 
         return currentLevel;
+    }
+
+    private static List<string> ParseSkillsJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<List<string>>(json);
+            return parsed ?? [];
+        }
+        catch { return []; }
     }
 
     private static Dictionary<int, HashSet<string>> ParseSkillProgress(string? skillProgressJson)
@@ -244,4 +370,20 @@ public class CreateSwimmerRequest
     public int Age { get; set; }
     public int Level { get; set; } = 1;
     public string? ProfilePictureUrl { get; set; }
+}
+
+public class UpdateSwimmerRequest
+{
+    public string? Name { get; set; }
+    public int? Age { get; set; }
+    public int? Level { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+}
+
+public class AddProgressRequest
+{
+    public string? Date { get; set; }
+    public int Level { get; set; } = 1;
+    public string? Notes { get; set; }
+    public List<string>? Skills { get; set; }
 }

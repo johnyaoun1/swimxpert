@@ -28,12 +28,12 @@ public class LeadsController(ApplicationDbContext dbContext) : ControllerBase
 
         var lead = new LeadCapture
         {
-            Name = request.Name.Trim(),
-            Email = hasEmail ? request.Email!.Trim().ToLowerInvariant() : null,
-            Phone = hasPhone ? request.Phone!.Trim() : null,
-            SourcePage = string.IsNullOrWhiteSpace(request.SourcePage) ? null : request.SourcePage.Trim(),
-            SourceAction = string.IsNullOrWhiteSpace(request.SourceAction) ? null : request.SourceAction.Trim(),
-            UserAgent = string.IsNullOrWhiteSpace(request.UserAgent) ? null : request.UserAgent.Trim(),
+            Name = request.Name.Trim()[..Math.Min(150, request.Name.Trim().Length)],
+            Email = hasEmail ? request.Email!.Trim().ToLowerInvariant()[..Math.Min(200, request.Email.Trim().Length)] : null,
+            Phone = hasPhone ? request.Phone!.Trim()[..Math.Min(30, request.Phone.Trim().Length)] : null,
+            SourcePage = string.IsNullOrWhiteSpace(request.SourcePage) ? null : request.SourcePage.Trim()[..Math.Min(200, request.SourcePage.Trim().Length)],
+            SourceAction = string.IsNullOrWhiteSpace(request.SourceAction) ? null : request.SourceAction.Trim()[..Math.Min(200, request.SourceAction.Trim().Length)],
+            UserAgent = string.IsNullOrWhiteSpace(request.UserAgent) ? null : request.UserAgent.Trim()[..Math.Min(400, request.UserAgent.Trim().Length)],
             CreatedAt = DateTime.UtcNow
         };
 

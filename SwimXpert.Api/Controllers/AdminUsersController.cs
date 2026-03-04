@@ -2,16 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SwimXpert.Api.Data;
+using SwimXpert.Api.Services;
 
 namespace SwimXpert.Api.Controllers;
 
-/// <summary>
-/// Admin user management endpoints.
-/// </summary>
 [ApiController]
 [Route("api/admin/users")]
 [Authorize(Roles = "Admin")]
-public class AdminUsersController(ApplicationDbContext dbContext) : ControllerBase
+public class AdminUsersController(ApplicationDbContext dbContext, IAuditLogService auditLog) : ControllerBase
 {
     /// <summary>
     /// Returns all users.
@@ -51,26 +49,28 @@ public class AdminUsersController(ApplicationDbContext dbContext) : ControllerBa
     /// <summary>
     /// Updates role and active status.
     /// </summary>
+    private static readonly HashSet<string> AllowedRoles = ["Parent", "Coach", "Admin"];
+
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
     {
         var user = await dbContext.Users.FindAsync(id);
         if (user is null)
-        {
             return NotFound(new { message = "User not found." });
-        }
 
         if (!string.IsNullOrWhiteSpace(request.Role))
         {
-            user.Role = request.Role.Trim();
+            var role = request.Role.Trim();
+            if (!AllowedRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Invalid role. Allowed: Parent, Coach, Admin." });
+            user.Role = role;
         }
 
         if (request.IsActive.HasValue)
-        {
             user.IsActive = request.IsActive.Value;
-        }
 
         await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("UserUpdated", "User", id.ToString(), new { request.Role, request.IsActive });
         return Ok(new { message = "User updated successfully." });
     }
 
@@ -88,6 +88,7 @@ public class AdminUsersController(ApplicationDbContext dbContext) : ControllerBa
 
         user.IsActive = false;
         await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("UserDisabled", "User", id.ToString());
         return Ok(new { message = "User disabled successfully." });
     }
 }
