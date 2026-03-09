@@ -14,10 +14,13 @@ export interface Session {
   clientName: string;
   date: string;
   time: string;
+  endTime?: string;
   level: number;
   status: SessionStatus;
   instructor?: string;
   notes?: string;
+  poolLocation?: string;
+  maxSwimmers?: number;
   price: number;
   createdAt: string;
 }
@@ -27,7 +30,8 @@ interface ApiSession {
   title: string;
   startTime: string;
   endTime: string;
-  capacity: number;
+  maxSwimmers?: number;
+  poolLocation?: string;
   status: string;
   createdAt: string;
 }
@@ -70,11 +74,16 @@ export class SessionService {
   }
 
   createSession(session: Omit<Session, 'id' | 'createdAt'>): Observable<Session> {
+    const endTime = session.endTime
+      ? this.toIsoDateTime(session.date, session.endTime)
+      : this.toIsoDateTime(session.date, session.time, 60);
+
     const payload = {
       title: session.childName ? `${session.childName} Session` : 'Training Session',
       startTime: this.toIsoDateTime(session.date, session.time),
-      endTime: this.toIsoDateTime(session.date, session.time, 60),
-      capacity: 10,
+      endTime,
+      maxSwimmers: session.maxSwimmers ?? 10,
+      poolLocation: session.poolLocation ?? null,
       status: this.toApiStatus(session.status)
     };
 
@@ -88,11 +97,16 @@ export class SessionService {
     return this.getSessionById(sessionId).pipe(
       switchMap((existing) => {
         const merged = { ...existing, ...updates };
+        const endTime = merged.endTime
+          ? this.toIsoDateTime(merged.date, merged.endTime)
+          : this.toIsoDateTime(merged.date, merged.time, 60);
+
         const payload = {
           title: merged.childName ? `${merged.childName} Session` : 'Training Session',
           startTime: this.toIsoDateTime(merged.date, merged.time),
-          endTime: this.toIsoDateTime(merged.date, merged.time, 60),
-          capacity: 10,
+          endTime,
+          maxSwimmers: merged.maxSwimmers ?? 10,
+          poolLocation: merged.poolLocation ?? null,
           status: this.toApiStatus(merged.status)
         };
 
@@ -152,6 +166,7 @@ export class SessionService {
 
   private fromApiSession(api: ApiSession, fallback?: Partial<Session>): Session {
     const start = new Date(api.startTime);
+    const end = new Date(api.endTime);
     return {
       id: String(api.id),
       childId: fallback?.childId || '',
@@ -160,10 +175,13 @@ export class SessionService {
       clientName: fallback?.clientName || '',
       date: start.toISOString().split('T')[0],
       time: start.toTimeString().slice(0, 5),
+      endTime: end.toTimeString().slice(0, 5),
       level: fallback?.level || 1,
       status: this.fromApiStatus(api.status),
       instructor: fallback?.instructor,
-      notes: fallback?.notes || api.title,
+      notes: fallback?.notes,
+      poolLocation: api.poolLocation ?? fallback?.poolLocation,
+      maxSwimmers: api.maxSwimmers ?? fallback?.maxSwimmers ?? 10,
       price: fallback?.price || 0,
       createdAt: api.createdAt
     };

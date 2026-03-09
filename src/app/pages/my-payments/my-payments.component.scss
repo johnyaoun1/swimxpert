@@ -1,1 +1,36 @@
 :host { display: block; }
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+  h1 { font-size: 1.5rem !important; margin-bottom: 1rem; }
+
+  .premium-container {
+    padding: 0.75rem !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { min-width: 380px; }
+  th, td {
+    padding: 0.5rem 0.375rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .container { padding-left: 1rem; padding-right: 1rem; }
+  .premium-container {
+    padding: 1rem !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { min-width: 380px; }
+  th, td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.875rem;
+  }
+}

@@ -15,6 +15,9 @@ public class TrainingSession
 
     public int Capacity { get; set; } = 10;
 
+    [MaxLength(200)]
+    public string? PoolLocation { get; set; }
+
     [MaxLength(30)]
     public string Status { get; set; } = "Scheduled"; // Scheduled | Completed | Cancelled
 

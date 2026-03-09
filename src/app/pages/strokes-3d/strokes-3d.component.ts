@@ -65,16 +65,12 @@ export class Strokes3dComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     try {
-      console.log('Initializing Three.js...');
-      
       // Three.js is now imported at the top, so it's available directly
       if (!THREE || !THREE.Scene) {
         console.error('Three.js not available');
         this.showFallbackMessage();
         return;
       }
-      
-      console.log('Three.js is available!', { Scene: THREE.Scene, WebGLRenderer: THREE.WebGLRenderer });
 
       const container = this.canvasContainer.nativeElement;
       const width = container.clientWidth || 800;
@@ -166,9 +162,7 @@ export class Strokes3dComponent implements OnInit, AfterViewInit, OnDestroy {
       window.addEventListener('resize', () => this.onWindowResize());
 
       // Start animation
-      console.log('Starting animation loop...');
       this.animate();
-      console.log('3D scene initialized successfully!');
     } catch (error) {
       console.error('Error initializing Three.js:', error);
       this.showFallbackMessage();

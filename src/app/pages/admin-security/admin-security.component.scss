@@ -1,3 +1,39 @@
-:host {
-  display: block;
+:host { display: block; }
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 639px) {
+  .container { padding-left: 1rem; padding-right: 1rem; }
+
+  h1 { font-size: 1.625rem !important; margin-bottom: 1.25rem; }
+
+  .premium-container, .card {
+    padding: 1.25rem !important;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  // Button rows
+  .flex.gap-4, .flex.gap-3 {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    button { flex: 1 1 auto; min-height: 44px; }
+  }
+
+  // QR code image: constrain width
+  img[alt*="QR"], canvas {
+    max-width: 180px;
+    height: auto;
+  }
+}
+
+@media (max-width: 389px) {
+  .premium-container, .card { padding: 1rem !important; }
+  h1 { font-size: 1.375rem !important; }
 }

@@ -1,1 +1,41 @@
 // Leaderboard component styles
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  .hero-gradient .container {
+    padding: 2.5rem 1rem;
+  }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+  // Leaderboard row: tighten layout
+  .premium-container,
+  [class*="rounded"] {
+    padding: 0.875rem 1rem !important;
+  }
+
+  // Rank number / score font
+  .text-3xl { font-size: 1.5rem !important; }
+  .text-2xl { font-size: 1.25rem !important; }
+
+  // Avatar
+  .w-16.h-16, .w-14.h-14 {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 { font-size: 2rem; }
+  .hero-gradient p  { font-size: 1rem; }
+  .container { padding-left: 1rem; padding-right: 1rem; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .hero-gradient h1 { font-size: 2.75rem; }
+}

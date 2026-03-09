@@ -1,1 +1,50 @@
 // Swim lessons component styles
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  .hero-gradient .container {
+    padding: 2.5rem 1rem;
+  }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+  // Level card: force column layout always
+  .premium-container.interactive-card {
+    padding: 1.25rem !important;
+
+    // Large level number box
+    .w-28.h-28 {
+      width: 4rem;
+      height: 4rem;
+      font-size: 1.75rem;
+    }
+
+    // Level title
+    h2 { font-size: 1.375rem !important; }
+    // Goal text
+    p.text-xl { font-size: 1rem !important; }
+  }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 { font-size: 2rem; }
+  .hero-gradient p  { font-size: 1rem; }
+
+  .container { padding-left: 1rem; padding-right: 1rem; }
+
+  .premium-container.interactive-card {
+    padding: 1.5rem !important;
+    .w-28.h-28 { width: 5rem; height: 5rem; font-size: 2rem; }
+    h2 { font-size: 1.625rem !important; }
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .hero-gradient h1 { font-size: 2.75rem; }
+  .premium-container.interactive-card { padding: 2rem !important; }
+}

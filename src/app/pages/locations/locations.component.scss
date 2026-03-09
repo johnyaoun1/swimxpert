@@ -1,1 +1,37 @@
 // Locations component styles
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  .hero-gradient .container {
+    padding: 2.5rem 1rem;
+  }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+  .interactive-card.premium-container {
+    padding: 1.25rem !important;
+    h3 { font-size: 1.125rem; }
+    p  { font-size: 0.875rem; }
+  }
+
+  // Map embed
+  div[style*="height: 400px"] { height: 220px !important; }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 { font-size: 2rem; }
+  .hero-gradient p  { font-size: 1rem; }
+  .container { padding-left: 1rem; padding-right: 1rem; }
+  .interactive-card.premium-container { padding: 1.5rem !important; }
+  div[style*="height: 400px"] { height: 260px !important; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .hero-gradient h1 { font-size: 2.75rem; }
+  div[style*="height: 400px"] { height: 320px !important; }
+}

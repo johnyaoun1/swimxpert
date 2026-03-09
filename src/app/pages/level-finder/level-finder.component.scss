@@ -1,1 +1,56 @@
 // Level finder component styles
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  .hero-gradient .container {
+    padding: 2.5rem 1rem;
+  }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+  .premium-container.interactive-card {
+    padding: 1.25rem !important;
+  }
+
+  input[type="number"],
+  input[type="radio"] + label {
+    font-size: 16px;
+  }
+
+  input[type="number"] { min-height: 44px; }
+
+  // Yes/No radio buttons: stack on xs
+  .flex.gap-4 {
+    flex-direction: column;
+    gap: 0.5rem;
+    label { font-size: 0.9375rem; }
+  }
+
+  h3 { font-size: 1.25rem !important; }
+  p.text-lg { font-size: 0.9375rem !important; }
+
+  button[type="submit"] { min-height: 48px; width: 100%; }
+
+  // Result card
+  .text-7xl { font-size: 3.5rem !important; }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 { font-size: 2rem; }
+  .hero-gradient p  { font-size: 1rem; }
+  .container { padding-left: 1rem; padding-right: 1rem; }
+
+  .premium-container.interactive-card { padding: 1.5rem !important; }
+
+  input[type="number"] { font-size: 16px; min-height: 44px; }
+  button[type="submit"] { min-height: 48px; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .hero-gradient h1 { font-size: 2.75rem; }
+}

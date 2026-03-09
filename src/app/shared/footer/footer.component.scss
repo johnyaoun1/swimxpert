@@ -4,7 +4,7 @@ footer {
   a {
     position: relative;
     transition: all 0.3s ease;
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -15,9 +15,64 @@ footer {
       background: white;
       transition: width 0.3s ease;
     }
-    
-    &:hover::before {
-      width: 100%;
+
+    &:hover::before { width: 100%; }
+  }
+}
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+// Extra-small phones
+@media (max-width: 389px) {
+  footer {
+    .container {
+      padding-left: 0.875rem;
+      padding-right: 0.875rem;
+      padding-top: 2rem;
+      padding-bottom: 1.5rem;
     }
+    h3 { font-size: 1.125rem; }
+    h4 { font-size: 0.875rem; }
+    ul {
+      font-size: 0.8125rem;
+      li { line-height: 1.6; }
+    }
+    p { font-size: 0.8125rem; }
+    .border-t {
+      padding-top: 1rem;
+      margin-top: 1.25rem;
+    }
+  }
+}
+
+// Small phones (390 – 639px)
+@media (min-width: 390px) and (max-width: 639px) {
+  footer {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-top: 2.5rem;
+      padding-bottom: 1.5rem;
+    }
+    h3 { font-size: 1.25rem; }
+    h4 { font-size: 0.9375rem; }
+    ul { font-size: 0.875rem; }
+    .border-t {
+      padding-top: 1rem;
+      margin-top: 1.5rem;
+    }
+  }
+}
+
+// Tablet (640 – 1023px)
+@media (min-width: 640px) and (max-width: 1023px) {
+  footer .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  footer .grid {
+    gap: 1.5rem;
   }
 }

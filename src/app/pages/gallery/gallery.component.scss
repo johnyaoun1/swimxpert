@@ -1,28 +1,54 @@
 // Gallery component styles
 
-// Image card hover effect
 .card {
   position: relative;
-  
   &::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(24, 144, 255, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(24,144,255,0.1) 0%, rgba(14,165,233,0.1) 100%);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
-  
-  &:hover::after {
-    opacity: 1;
+  &:hover::after { opacity: 1; }
+}
+
+img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  .hero-gradient .container { padding: 2.5rem 1rem; }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+  // Gallery grid: 2 columns on xs
+  .grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+
+  // Modal overlay
+  .fixed.inset-0 > div {
+    margin: 0.75rem;
+    padding: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 }
 
-// Smooth image transition
-img {
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 { font-size: 2rem; }
+  .hero-gradient p  { font-size: 1rem; }
+  .container { padding-left: 1rem; padding-right: 1rem; }
+
+  .grid { gap: 0.75rem !important; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .hero-gradient h1 { font-size: 2.75rem; }
 }

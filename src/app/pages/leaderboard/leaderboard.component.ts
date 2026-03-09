@@ -1,14 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService, User } from '../../services/auth.service';
-
-interface LeaderboardEntry {
-  user: User;
-  bestScore: number;
-  totalQuizzes: number;
-  averageScore: number;
-}
+import { AuthService, LeaderboardEntry } from '../../services/auth.service';
 
 @Component({
   selector: 'app-leaderboard',
@@ -19,7 +12,8 @@ interface LeaderboardEntry {
 })
 export class LeaderboardComponent implements OnInit {
   leaderboard: LeaderboardEntry[] = [];
-  currentUser = this.authService.currentUser;
+  loading = true;
+  error = '';
 
   constructor(private authService: AuthService) {}
 
@@ -28,33 +22,18 @@ export class LeaderboardComponent implements OnInit {
   }
 
   loadLeaderboard(): void {
-    const users = this.authService.getAllUsers();
-    
-    this.leaderboard = users
-      .map(user => {
-        const quizResults = user.quizResults || [];
-        const bestScore = quizResults.length > 0 
-          ? Math.max(...quizResults.map(r => r.percentage))
-          : 0;
-        const totalQuizzes = quizResults.length;
-        const averageScore = quizResults.length > 0
-          ? Math.round(quizResults.reduce((sum, r) => sum + r.percentage, 0) / quizResults.length)
-          : 0;
-
-        return {
-          user,
-          bestScore,
-          totalQuizzes,
-          averageScore
-        };
-      })
-      .filter(entry => entry.totalQuizzes > 0)
-      .sort((a, b) => {
-        // Sort by best score, then by average score, then by total quizzes
-        if (b.bestScore !== a.bestScore) return b.bestScore - a.bestScore;
-        if (b.averageScore !== a.averageScore) return b.averageScore - a.averageScore;
-        return b.totalQuizzes - a.totalQuizzes;
-      });
+    this.loading = true;
+    this.error = '';
+    this.authService.getLeaderboard().subscribe({
+      next: (entries) => {
+        this.leaderboard = entries;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Failed to load leaderboard. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
   getRankIcon(rank: number): string {
@@ -62,10 +41,6 @@ export class LeaderboardComponent implements OnInit {
     if (rank === 2) return '🥈';
     if (rank === 3) return '🥉';
     return `#${rank}`;
-  }
-
-  isCurrentUser(userId: string): boolean {
-    return this.currentUser()?.id === userId;
   }
 
   getMedalColor(rank: number): string {

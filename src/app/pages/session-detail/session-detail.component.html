@@ -7,12 +7,25 @@
     } @else if (session) {
       <div class="premium-container mt-4">
         <h1 class="text-3xl font-bold text-gray-800 mb-4">Session Detail</h1>
-        <p><strong>Date:</strong> {{ session.date }}</p>
-        <p><strong>Time:</strong> {{ session.time }}</p>
-        <p><strong>Coach:</strong> {{ session.instructor || '-' }}</p>
-        <p><strong>Status:</strong> {{ session.status }}</p>
-        <p><strong>Capacity:</strong> 10</p>
-        <p><strong>Pool:</strong> {{ session.notes || '-' }}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-gray-700">
+          <p><strong>Date:</strong> {{ session.date }}</p>
+          <p><strong>Start Time:</strong> {{ session.time }}</p>
+          <p><strong>End Time:</strong> {{ session.endTime || '-' }}</p>
+          <p><strong>Coach:</strong> {{ session.instructor || '-' }}</p>
+          <p><strong>Status:</strong>
+            <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                  [class.bg-blue-100]="session.status === 'scheduled'"
+                  [class.text-blue-800]="session.status === 'scheduled'"
+                  [class.bg-green-100]="session.status === 'completed'"
+                  [class.text-green-800]="session.status === 'completed'"
+                  [class.bg-red-100]="session.status === 'canceled'"
+                  [class.text-red-800]="session.status === 'canceled'">
+              {{ session.status }}
+            </span>
+          </p>
+          <p><strong>Max Swimmers:</strong> {{ session.maxSwimmers ?? 10 }}</p>
+          <p class="sm:col-span-2"><strong>Pool Location:</strong> {{ session.poolLocation || '-' }}</p>
+        </div>
 
         <div class="mt-4 flex gap-2">
           <button class="btn-primary" (click)="register()">Register</button>

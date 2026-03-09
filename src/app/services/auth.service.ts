@@ -3,6 +3,16 @@ import { Router } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { environment } from '../../environments/environment';
+
+export interface LeaderboardEntry {
+  rank: number;
+  displayName: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  date: string;
+}
 
 export interface QuizResult {
   score: number;
@@ -166,7 +176,7 @@ export class AuthService {
         if (!user.avatar) user.avatar = this.generateAvatar(user.name);
         this.currentUser.set(user);
       } catch (e) {
-        console.error('Error loading user from storage', e);
+        if (!environment.production) { console.error('Error loading user from storage', e); }
       }
     }
   }
@@ -241,6 +251,10 @@ export class AuthService {
       return [currentUser];
     }
     return [];
+  }
+
+  getLeaderboard(): Observable<LeaderboardEntry[]> {
+    return this.apiService.getLeaderboard();
   }
 
   addChild(child: Omit<Child, 'id'>): Observable<Child> {

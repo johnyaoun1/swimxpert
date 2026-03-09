@@ -1,1 +1,33 @@
 :host { display: block; }
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 639px) {
+  .container { padding-left: 1rem; padding-right: 1rem; }
+
+  // Header row: stack title + browse sessions button
+  .flex.items-center.justify-between.mb-6 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  h1 { font-size: 1.625rem !important; }
+
+  // Registration row: stack info + cancel button
+  .premium-container.flex.items-center.justify-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    button { width: 100%; }
+  }
+
+  .premium-container { padding: 1.25rem !important; }
+}
+
+@media (max-width: 389px) {
+  h1 { font-size: 1.375rem !important; }
+  .premium-container { padding: 1rem !important; }
+}

@@ -18,17 +18,51 @@
 
 <section class="premium-section section-padding">
   <div class="section-container max-w-5xl relative z-10">
-    @if (leaderboard.length === 0) {
+
+    <!-- Loading skeleton -->
+    @if (loading) {
+      <div class="space-y-4">
+        @for (n of [1,2,3,4,5]; track n) {
+          <div class="premium-container animate-pulse">
+            <div class="flex items-center gap-6">
+              <div class="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0"></div>
+              <div class="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0"></div>
+              <div class="flex-1 space-y-2">
+                <div class="h-5 bg-gray-200 rounded w-40"></div>
+                <div class="h-4 bg-gray-200 rounded w-28"></div>
+              </div>
+              <div class="w-20 h-10 bg-gray-200 rounded flex-shrink-0"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (!loading && error) {
+      <div class="premium-container text-center py-12 animate-fade-in">
+        <div class="text-5xl mb-4">⚠️</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+        <p class="text-gray-600 mb-6">{{ error }}</p>
+        <button (click)="loadLeaderboard()" class="btn-primary">Try Again</button>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!loading && !error && leaderboard.length === 0) {
       <div class="premium-container text-center py-16 animate-fade-in">
         <div class="text-6xl mb-6">📝</div>
         <h2 class="text-3xl font-bold text-gray-800 mb-4">No Quiz Results Yet</h2>
-        <p class="text-lg text-gray-600 mb-8">Take a quiz to see your name on the leaderboard!</p>
+        <p class="text-lg text-gray-600 mb-8">No quiz results yet — be the first to take the quiz!</p>
         <a routerLink="/quizzes" class="btn-primary">Take Quiz Now</a>
       </div>
-    } @else {
+    }
+
+    <!-- Leaderboard entries -->
+    @if (!loading && !error && leaderboard.length > 0) {
       <div class="space-y-4">
-        @for (entry of leaderboard; track entry.user.id; let i = $index) {
-          <div 
+        @for (entry of leaderboard; track entry.rank; let i = $index) {
+          <div
             class="premium-container interactive-card animate-slide-up"
             [class.bg-gradient-to-r]="i < 3"
             [class.from-yellow-50]="i === 0"
@@ -43,10 +77,11 @@
             [class.border-4]="i < 3"
             [style.animation-delay.ms]="i * 50"
           >
-            <div class="flex items-center gap-6">
-              <!-- Rank -->
+            <div class="flex items-center gap-4 sm:gap-6">
+
+              <!-- Rank badge -->
               <div class="flex-shrink-0">
-                <div class="w-16 h-16 rounded-full flex items-center justify-center font-black text-2xl"
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl"
                      [class.bg-gradient-to-br]="i < 3"
                      [class.from-yellow-400]="i === 0"
                      [class.to-yellow-600]="i === 0"
@@ -57,61 +92,46 @@
                      [class.bg-primary-100]="i >= 3"
                      [class.text-primary-700]="i >= 3"
                      [class.text-white]="i < 3">
-                  {{ getRankIcon(i + 1) }}
+                  {{ getRankIcon(entry.rank) }}
                 </div>
               </div>
 
-              <!-- Avatar -->
+              <!-- Avatar (initial-based — API never returns avatar) -->
               <div class="flex-shrink-0">
-                @if (entry.user.avatar) {
-                  <img 
-                    [src]="entry.user.avatar" 
-                    [alt]="entry.user.name"
-                    class="w-16 h-16 rounded-full border-4 border-white shadow-lg object-cover"
-                  />
-                } @else {
-                  <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center border-4 border-white shadow-lg">
-                    <span class="text-2xl font-bold text-white">{{ entry.user.name.charAt(0) }}</span>
-                  </div>
-                }
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center border-4 border-white shadow-lg">
+                  <span class="text-xl sm:text-2xl font-bold text-white">{{ entry.displayName.charAt(0) }}</span>
+                </div>
               </div>
 
-              <!-- User Info -->
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                  <h3 class="text-2xl font-extrabold text-gray-800">
-                    {{ entry.user.name }}
-                  </h3>
-                  @if (isCurrentUser(entry.user.id)) {
-                    <span class="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-bold">You</span>
-                  }
-                </div>
-                <div class="flex items-center gap-4 text-sm text-gray-600">
+              <!-- Name + meta -->
+              <div class="flex-1 min-w-0">
+                <h3 class="text-lg sm:text-2xl font-extrabold text-gray-800 truncate">{{ entry.displayName }}</h3>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 text-sm text-gray-600">
                   <span class="flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    {{ entry.totalQuizzes }} quiz{{ entry.totalQuizzes !== 1 ? 'zes' : '' }}
+                    {{ entry.score }}/{{ entry.totalQuestions }} correct
                   </span>
                   <span class="flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    Avg: {{ entry.averageScore }}%
+                    {{ entry.date }}
                   </span>
                 </div>
               </div>
 
-              <!-- Score -->
+              <!-- Percentage score -->
               <div class="flex-shrink-0 text-right">
-                <div class="text-4xl font-black mb-1"
+                <div class="text-3xl sm:text-4xl font-black mb-1"
                      [class.text-yellow-600]="i === 0"
                      [class.text-gray-600]="i === 1"
                      [class.text-orange-600]="i === 2"
                      [class.text-primary-600]="i >= 3">
-                  {{ entry.bestScore }}%
+                  {{ entry.percentage }}%
                 </div>
-                <div class="text-sm text-gray-600 font-semibold">Best Score</div>
+                <div class="text-xs sm:text-sm text-gray-500 font-semibold">Best Score</div>
               </div>
             </div>
           </div>
@@ -123,5 +143,6 @@
         <a routerLink="/quizzes" class="btn-primary">Take Quiz Again</a>
       </div>
     }
+
   </div>
 </section>

@@ -108,14 +108,26 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
 
     /// <summary>
     /// Returns attendees for a session.
+    /// Admin/Coach see all attendees; Parent sees only their own children.
     /// </summary>
     [HttpGet("session/{sessionId:int}")]
     [Authorize]
     public async Task<IActionResult> GetBySession(int sessionId)
     {
-        var attendees = await dbContext.Attendances
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+
+        var query = dbContext.Attendances
             .Where(a => a.TrainingSessionId == sessionId)
-            .Include(a => a.Swimmer)
+            .Include(a => a.Swimmer);
+
+        if (!isAdminOrCoach)
+            query = query.Where(a => a.Swimmer.ParentUserId == currentUserId);
+
+        var attendees = await query
             .OrderBy(a => a.Swimmer.Name)
             .Select(a => new
             {

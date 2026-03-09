@@ -93,6 +93,50 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
     }
 
     /// <summary>
+    /// Returns monthly revenue totals for the last N months (default 6).
+    /// Zero-fills months with no completed payments so the chart is always continuous.
+    /// </summary>
+    [HttpGet("revenue/monthly")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetMonthlyRevenue([FromQuery] int months = 6)
+    {
+        if (months < 1 || months > 24) months = 6;
+
+        var cutoff = new DateTime(
+            DateTime.UtcNow.AddMonths(-(months - 1)).Year,
+            DateTime.UtcNow.AddMonths(-(months - 1)).Month,
+            1, 0, 0, 0, DateTimeKind.Utc);
+
+        var payments = await dbContext.Payments
+            .Where(p => p.Status == "Completed" && p.PaymentDate >= cutoff)
+            .Select(p => new { p.PaymentDate, p.Amount })
+            .ToListAsync();
+
+        var grouped = payments
+            .GroupBy(p => new { p.PaymentDate.Year, p.PaymentDate.Month })
+            .ToDictionary(g => (g.Key.Year, g.Key.Month), g => g.Sum(p => p.Amount));
+
+        var result = Enumerable.Range(0, months)
+            .Select(i =>
+            {
+                var date = DateTime.UtcNow.AddMonths(-(months - 1 - i));
+                var year = date.Year;
+                var month = date.Month;
+                grouped.TryGetValue((year, month), out var total);
+                return new
+                {
+                    year,
+                    month,
+                    monthName = new DateTime(year, month, 1).ToString("MMMM"),
+                    total
+                };
+            })
+            .ToList();
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Returns revenue summary and completed payments list. Requires Admin role.
     /// </summary>
     [HttpGet("revenue")]

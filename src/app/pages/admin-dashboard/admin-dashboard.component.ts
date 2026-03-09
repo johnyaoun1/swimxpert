@@ -2,11 +2,12 @@ import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { AuthService, User } from '../../services/auth.service';
 import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 import { SessionService, Session, SessionStatus } from '../../services/session.service';
 import { AttendanceService, Attendance, AttendanceStatus } from '../../services/attendance.service';
-import { RevenueService } from '../../services/revenue.service';
+import { RevenueService, MonthlyRevenue } from '../../services/revenue.service';
 import { ApiService } from '../../services/api.service';
 import { SwimmerSkillCard, SwimmerSkillsService } from '../../services/swimmer-skills.service';
 import { forkJoin, of } from 'rxjs';
@@ -71,6 +72,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     checkInTime: ''
   };
 
+  monthlyRevenue = signal<MonthlyRevenue[]>([]);
+  monthlyRevenueError = signal('');
   isLoading = signal(false);
   skillSaving = signal<Record<string, boolean>>({});
   private refreshTimerId: ReturnType<typeof setInterval> | null = null;
@@ -114,10 +117,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       sessions: this.sessionService.getSessions().pipe(catchError(() => of([]))),
       attendance: this.attendanceService.getAllRegistrations().pipe(catchError(() => of([]))),
       revenue: this.revenueService.getRevenueReport().pipe(catchError(() => of(null))),
+      monthlyRevenue: this.revenueService.getMonthlyRevenue(6).pipe(catchError(() => of([]))),
       swimmerSkills: this.swimmerSkillsService.getMySwimmers().pipe(catchError(() => of([]))),
       leads: this.apiService.getLeads(this.buildLeadQuery()).pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ overview, users, sessions, attendance, revenue, swimmerSkills, leads }) => {
+      next: ({ overview, users, sessions, attendance, revenue, monthlyRevenue, swimmerSkills, leads }) => {
         const totalSessions = Number(overview?.totalSessions || 0);
         const completedSessions = Number(overview?.completedSessions || 0);
         const cancelledSessions = Number(overview?.cancelledSessions || 0);
@@ -137,6 +141,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.sessions.set(sessions);
         this.attendance.set(attendance);
         this.leads.set(leads || []);
+        this.monthlyRevenue.set(monthlyRevenue || []);
 
         this.revenueData.set({
           totalRevenue: Number(overview?.totalRevenue || 0),
@@ -152,7 +157,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Error loading dashboard data:', error);
+        if (!environment.production) { console.error('Error loading dashboard data:', error); }
         if (showLoader) {
           this.isLoading.set(false);
         }
@@ -257,7 +262,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.skillSaving.update((state) => ({ ...state, [key]: false }));
       },
       error: (err) => {
-        console.error('Failed to update skill:', err);
+        if (!environment.production) { console.error('Failed to update skill:', err); }
         this.skillSaving.update((state) => ({ ...state, [key]: false }));
       }
     });
@@ -334,7 +339,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.isLoading.set(false);
         },
         error: (error) => {
-          console.error('Failed to create session:', error);
+          if (!environment.production) { console.error('Failed to create session:', error); }
           this.isLoading.set(false);
         }
       });
@@ -349,7 +354,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Failed to update session status:', error);
+        if (!environment.production) { console.error('Failed to update session status:', error); }
         this.isLoading.set(false);
       }
     });
@@ -397,7 +402,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.isLoading.set(false);
         },
         error: (error) => {
-          console.error('Failed to save attendance:', error);
+          if (!environment.production) { console.error('Failed to save attendance:', error); }
           this.isLoading.set(false);
         }
       });
@@ -503,7 +508,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.updatingLeadId.set(null);
       },
       error: (err) => {
-        console.error('Failed to update lead status', err);
+        if (!environment.production) { console.error('Failed to update lead status', err); }
         this.updatingLeadId.set(null);
       }
     });
@@ -537,6 +542,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     const q = this.sessionSearch().toLowerCase().trim();
     if (!q) return this.sessions();
     return this.sessions().filter((s) => s.clientName?.toLowerCase().includes(q) || s.childName?.toLowerCase().includes(q) || s.status?.toLowerCase().includes(q));
+  }
+
+  getMonthlyRevenueTotal(): number {
+    return this.monthlyRevenue().reduce((sum, e) => sum + e.total, 0);
+  }
+
+  getMonthlyRevenueMax(): number {
+    const entries = this.monthlyRevenue();
+    return Math.max(...entries.map((e) => e.total), 1);
+  }
+
+  getBarPercent(total: number): number {
+    const max = this.getMonthlyRevenueMax();
+    return Math.round((total / max) * 100);
   }
 
   getLevelFocus = getLevelFocus;

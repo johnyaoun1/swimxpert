@@ -5,7 +5,7 @@
 @layer base {
   body {
     @apply font-sans antialiased;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #eaf7fb 0%, #c2e8f3 100%);
     min-height: 100vh;
   }
 }
@@ -33,7 +33,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
     transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
@@ -73,7 +73,7 @@
     left: 0;
     width: 0;
     height: 100%;
-    background: linear-gradient(90deg, rgba(24, 144, 255, 0.1), rgba(14, 165, 233, 0.1));
+    background: linear-gradient(90deg, rgba(13, 148, 178, 0.1), rgba(20, 168, 197, 0.1));
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
@@ -112,8 +112,8 @@
   }
   
   .card:hover {
-    border-color: rgba(24, 144, 255, 0.3);
-    box-shadow: 0 25px 50px -12px rgba(24, 144, 255, 0.25);
+    border-color: rgba(13, 148, 178, 0.3);
+    box-shadow: 0 25px 50px -12px rgba(13, 148, 178, 0.25);
   }
   
   .premium-container {
@@ -130,7 +130,7 @@
     inset: 0;
     border-radius: 3rem;
     padding: 2px;
-    background: linear-gradient(135deg, rgba(24, 144, 255, 0.1), rgba(14, 165, 233, 0.1), rgba(24, 144, 255, 0.1));
+    background: linear-gradient(135deg, rgba(13, 148, 178, 0.1), rgba(20, 168, 197, 0.1), rgba(13, 148, 178, 0.1));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -157,7 +157,7 @@
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(24, 144, 255, 0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(13, 148, 178, 0.15) 0%, transparent 70%);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
     pointer-events: none;
@@ -193,8 +193,8 @@
     right: 0;
     bottom: 0;
     background-image: 
-      radial-gradient(circle at 20% 50%, rgba(24, 144, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
+      radial-gradient(circle at 20% 50%, rgba(13, 148, 178, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(20, 168, 197, 0.05) 0%, transparent 50%);
     pointer-events: none;
   }
   
@@ -231,7 +231,7 @@
   }
   
   .text-gradient {
-    background: linear-gradient(135deg, #1890ff 0%, #0ea5e9 50%, #1890ff 100%);
+    background: linear-gradient(135deg, #0d94b2 0%, #14a8c5 50%, #0d94b2 100%);
     background-size: 200% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -271,12 +271,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1890ff, #0ea5e9);
+  background: linear-gradient(180deg, #0d94b2, #14a8c5);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #096dd9, #0284c7);
+  background: linear-gradient(180deg, #0a7590, #108aaa);
 }
 
 /* Smooth transitions for all interactive elements */
@@ -298,8 +298,117 @@ a, button {
 }
 
 .loading-spinner {
-  border: 3px solid rgba(24, 144, 255, 0.1);
-  border-top-color: #1890ff;
+  border: 3px solid rgba(13, 148, 178, 0.1);
+  border-top-color: #0d94b2;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* ============================================================
+   GLOBAL RESPONSIVE — applies across all components
+   Breakpoints: xs <390px | sm 390–639px | md 640–767px | lg 768–1023px | xl 1024+
+   ============================================================ */
+
+/* --- Touch targets: 44px min on coarse-pointer devices --- */
+@media (pointer: coarse) {
+  button,
+  a,
+  input[type="submit"],
+  input[type="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select {
+    min-height: 44px;
+  }
+}
+
+/* --- All form inputs: prevent iOS zoom (font-size < 16px triggers it) --- */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* --- Hero headings: scale down for small phones --- */
+@media (max-width: 389px) {
+  .hero-gradient h1 {
+    font-size: 1.625rem !important;
+    line-height: 1.2 !important;
+  }
+  .hero-gradient p {
+    font-size: 0.9375rem !important;
+  }
+  .hero-gradient .py-24,
+  .hero-gradient .py-20 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 {
+    font-size: 2rem !important;
+    line-height: 1.15 !important;
+  }
+  .hero-gradient p {
+    font-size: 1rem !important;
+  }
+}
+
+/* --- Cards: reduce padding on small phones --- */
+@media (max-width: 389px) {
+  .card {
+    padding: 1rem !important;
+  }
+  .premium-container {
+    padding: 1rem !important;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .card {
+    padding: 1.25rem !important;
+  }
+  .premium-container {
+    padding: 1.5rem !important;
+  }
+}
+
+/* --- Buttons: full-width stacking on xs screens --- */
+@media (max-width: 389px) {
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8125rem !important;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* --- Section padding: reduce vertical whitespace on mobile --- */
+@media (max-width: 639px) {
+  .section-padding {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+/* --- Table global: horizontal scroll on all tables --- */
+@media (max-width: 767px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-responsive table {
+    min-width: 520px;
+  }
 }

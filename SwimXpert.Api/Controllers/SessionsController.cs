@@ -28,7 +28,8 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
             Title = request.Title.Trim(),
             StartTime = request.StartTime,
             EndTime = request.EndTime,
-            Capacity = request.Capacity,
+            Capacity = request.MaxSwimmers,
+            PoolLocation = request.PoolLocation?.Trim(),
             Status = string.IsNullOrWhiteSpace(request.Status) ? "Scheduled" : request.Status,
             CreatedAt = DateTime.UtcNow
         };
@@ -36,7 +37,7 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
         dbContext.TrainingSessions.Add(session);
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("SessionCreated", "TrainingSession", session.Id.ToString(), new { session.Title });
-        return CreatedAtAction(nameof(GetSessionById), new { id = session.Id }, session);
+        return CreatedAtAction(nameof(GetSessionById), new { id = session.Id }, ToDto(session));
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
             .OrderBy(s => s.StartTime)
             .ToListAsync();
 
-        return Ok(sessions);
+        return Ok(sessions.Select(ToDto));
     }
 
     /// <summary>
@@ -83,7 +84,7 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
             .OrderBy(s => s.StartTime)
             .ToListAsync();
 
-        return Ok(sessions);
+        return Ok(sessions.Select(ToDto));
     }
 
     /// <summary>
@@ -99,7 +100,7 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
             return NotFound(new { message = "Session not found." });
         }
 
-        return Ok(session);
+        return Ok(ToDto(session));
     }
 
     /// <summary>
@@ -123,12 +124,13 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
         session.Title = request.Title.Trim();
         session.StartTime = request.StartTime;
         session.EndTime = request.EndTime;
-        session.Capacity = request.Capacity;
+        session.Capacity = request.MaxSwimmers;
+        session.PoolLocation = request.PoolLocation?.Trim();
         session.Status = request.Status;
 
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("SessionUpdated", "TrainingSession", id.ToString(), new { request.Title });
-        return Ok(session);
+        return Ok(ToDto(session));
     }
 
     [HttpDelete("{id:int}")]
@@ -146,6 +148,18 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
         await auditLog.LogAsync("SessionDeleted", "TrainingSession", id.ToString());
         return NoContent();
     }
+
+    private static object ToDto(TrainingSession s) => new
+    {
+        id = s.Id,
+        title = s.Title,
+        startTime = s.StartTime,
+        endTime = s.EndTime,
+        maxSwimmers = s.Capacity,
+        poolLocation = s.PoolLocation,
+        status = s.Status,
+        createdAt = s.CreatedAt
+    };
 }
 
 public class CreateSessionRequest
@@ -153,7 +167,8 @@ public class CreateSessionRequest
     public string Title { get; set; } = string.Empty;
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
-    public int Capacity { get; set; } = 10;
+    public int MaxSwimmers { get; set; } = 10;
+    public string? PoolLocation { get; set; }
     public string Status { get; set; } = "Scheduled";
 }
 
@@ -162,6 +177,7 @@ public class UpdateSessionRequest
     public string Title { get; set; } = string.Empty;
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
-    public int Capacity { get; set; } = 10;
+    public int MaxSwimmers { get; set; } = 10;
+    public string? PoolLocation { get; set; }
     public string Status { get; set; } = "Scheduled";
 }

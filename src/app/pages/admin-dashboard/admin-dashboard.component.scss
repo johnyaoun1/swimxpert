@@ -20,7 +20,6 @@
     pointer-events: auto;
   }
 
-  // Clickable client rows and table rows
   table tbody tr,
   [class*="cursor-pointer"] {
     position: relative;
@@ -28,8 +27,128 @@
     pointer-events: auto;
   }
 
-  // Star (skill) buttons must be clearly clickable
   button[type="button"] {
     cursor: pointer;
+  }
+}
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+// Extra-small phones
+@media (max-width: 389px) {
+  // Hero
+  .hero-gradient .container {
+    padding: 1.25rem 0.75rem 2rem;
+  }
+  .hero-gradient h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  .hero-gradient p { font-size: 0.875rem; }
+
+  // Admin nav links — wrap them
+  .hero-gradient .flex.flex-wrap.gap-4 {
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  // Stats cards — 1 column, compact
+  .admin-content .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  // All tables: horizontal scroll block
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  thead, tbody, tr { display: table; width: 100%; table-layout: fixed; }
+  th, td {
+    min-width: 80px;
+    padding: 0.5rem 0.375rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  // Form inputs
+  input, select, textarea {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  // Session/filter rows
+  .premium-container.mb-6 .grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  // Revenue breakdown list
+  .premium-container .space-y-2 > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+// Small phones (390 – 639px)
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient .container {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  .admin-content .container,
+  .admin-dashboard-root .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    overflow-x: hidden;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  th, td {
+    min-width: 80px;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  input, select, textarea { font-size: 16px; }
+}
+
+// Tablet (640 – 1023px)
+@media (min-width: 640px) and (max-width: 1023px) {
+  .admin-dashboard-root .container,
+  .admin-content .container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  // Tables: show scrollbar without blocking
+  .premium-container {
+    overflow-x: auto;
+  }
+  table { min-width: 560px; }
+}
+
+// ---- Admin modals (session/attendance forms) ----
+@media (max-width: 767px) {
+  // Any fixed modal in admin
+  .fixed.inset-0.bg-black > div,
+  .fixed.inset-0.bg-gray-900 > div,
+  .fixed.z-50 > div {
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 0.75rem;
+    padding: 1.25rem;
   }
 }

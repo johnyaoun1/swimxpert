@@ -5,11 +5,18 @@ import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
+export interface MonthlyRevenue {
+  year: number;
+  month: number;
+  monthName: string;
+  total: number;
+}
+
 export interface RevenueData {
   totalRevenue: number;
   completedSessionsRevenue: number;
-  canceledSessionsRevenue: number;
-  scheduledSessionsRevenue: number;
+  canceledSessionsRevenue?: number;
+  scheduledSessionsRevenue?: number;
   periodRevenue: { date: string; revenue: number }[];
   clientRevenue: { clientId: string; clientName: string; revenue: number; sessions: number }[];
 }
@@ -72,12 +79,10 @@ export class RevenueService {
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
 
-    return this.http.get<any>(`${this.paymentsApi}/revenue`, { params }).pipe(
+    return this.http.get<any>(`${this.paymentsApi}/revenue`, { params, withCredentials: true }).pipe(
       map((response) => ({
-        totalRevenue: Number(response?.totalRevenue || 0),
-        completedSessionsRevenue: Number(response?.totalRevenue || 0),
-        canceledSessionsRevenue: 0,
-        scheduledSessionsRevenue: 0,
+        totalRevenue: Number(response?.totalRevenue ?? 0),
+        completedSessionsRevenue: Number(response?.totalRevenue ?? 0),
         periodRevenue: [],
         clientRevenue: []
       })),
@@ -89,16 +94,25 @@ export class RevenueService {
     return this.revenueData() || {
       totalRevenue: 0,
       completedSessionsRevenue: 0,
-      canceledSessionsRevenue: 0,
-      scheduledSessionsRevenue: 0,
       periodRevenue: [],
       clientRevenue: []
     };
   }
 
-  getRevenueByDateRange(startDate: string, endDate: string): number {
-    const current = this.revenueData();
-    return current?.totalRevenue || 0;
+  getRevenueByDateRange(from: string, to: string): Observable<RevenueData> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+
+    return this.http.get<any>(`${this.paymentsApi}/revenue`, { params, withCredentials: true }).pipe(
+      map((response) => ({
+        totalRevenue: Number(response?.totalRevenue ?? 0),
+        completedSessionsRevenue: Number(response?.totalRevenue ?? 0),
+        periodRevenue: [],
+        clientRevenue: []
+      })),
+      tap((data) => this.revenueData.set(data))
+    );
   }
 
   getRevenueByClient(clientId: string): number {
@@ -107,7 +121,11 @@ export class RevenueService {
     return row?.revenue || 0;
   }
 
-  getMonthlyRevenue(): { month: string; revenue: number }[] {
-    return [];
+  getMonthlyRevenue(months = 6): Observable<MonthlyRevenue[]> {
+    const params = new HttpParams().set('months', String(months));
+    return this.http.get<MonthlyRevenue[]>(
+      `${this.paymentsApi}/revenue/monthly`,
+      { params, withCredentials: true }
+    );
   }
 }

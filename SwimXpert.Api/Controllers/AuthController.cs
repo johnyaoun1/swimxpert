@@ -370,7 +370,8 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             HttpOnly = true,
             Secure = !isDev,
             SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddHours(1),
+            Expires = DateTimeOffset.UtcNow.AddMinutes(
+                configuration.GetValue<int>("Jwt:ExpiryInMinutes", 60)),
             Path = "/"
         });
     }

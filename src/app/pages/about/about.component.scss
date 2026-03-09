@@ -1,1 +1,49 @@
 // About component styles
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 389px) {
+  // Hero
+  .hero-gradient .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+  .hero-gradient h1 { font-size: 1.75rem; }
+  .hero-gradient p  { font-size: 0.9375rem; }
+
+  // Section headings
+  .text-4xl, .text-5xl {
+    font-size: 1.625rem !important;
+    line-height: 1.2;
+  }
+
+  .premium-container {
+    padding: 1rem !important;
+  }
+
+  // Why Choose cards
+  .interactive-card.premium-container {
+    padding: 1.25rem !important;
+    h3 { font-size: 1rem; }
+    p  { font-size: 0.875rem; }
+  }
+}
+
+@media (min-width: 390px) and (max-width: 639px) {
+  .hero-gradient h1 { font-size: 2rem; }
+  .hero-gradient p  { font-size: 1rem; }
+
+  .text-4xl, .text-5xl {
+    font-size: 1.875rem !important;
+  }
+
+  .premium-container { padding: 1.5rem !important; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .hero-gradient h1 { font-size: 2.75rem; }
+}

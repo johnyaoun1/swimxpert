@@ -2,25 +2,63 @@
   <div class="container mx-auto max-w-2xl">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ isEdit ? 'Edit Session' : 'Create Session' }}</h1>
 
-    <div class="premium-container space-y-4">
-      <input [(ngModel)]="form.poolId" type="text" placeholder="Pool ID" class="w-full px-4 py-3 border rounded-lg" />
+    <div class="premium-container space-y-5">
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input [(ngModel)]="form.date" type="date" class="px-4 py-3 border rounded-lg" />
-        <input [(ngModel)]="form.skillLevel" type="number" min="1" max="10" class="px-4 py-3 border rounded-lg" />
+      <!-- Pool Location -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Pool Location <span class="text-gray-400 font-normal">(optional)</span></label>
+        <input
+          [(ngModel)]="form.poolLocation"
+          type="text"
+          placeholder="e.g. Main Pool, Lane 3"
+          maxlength="200"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
+        />
       </div>
 
+      <!-- Date + Skill Level -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input [(ngModel)]="form.startTime" type="time" class="px-4 py-3 border rounded-lg" />
-        <input [(ngModel)]="form.endTime" type="time" class="px-4 py-3 border rounded-lg" />
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Date</label>
+          <input [(ngModel)]="form.date" type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Skill Level</label>
+          <input [(ngModel)]="form.skillLevel" type="number" min="1" max="10" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400" />
+        </div>
       </div>
 
+      <!-- Start Time + End Time -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input [(ngModel)]="form.maxSwimmers" type="number" min="1" placeholder="Max swimmers" class="px-4 py-3 border rounded-lg" />
-        <input [(ngModel)]="form.coach" type="text" placeholder="Coach name" class="px-4 py-3 border rounded-lg" />
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Start Time</label>
+          <input [(ngModel)]="form.startTime" type="time" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">End Time</label>
+          <input [(ngModel)]="form.endTime" type="time" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400" />
+        </div>
       </div>
 
-      <div class="flex gap-3">
+      <!-- Max Swimmers + Coach -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Max Swimmers</label>
+          <input
+            [(ngModel)]="form.maxSwimmers"
+            type="number"
+            min="1"
+            max="100"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">Coach Name</label>
+          <input [(ngModel)]="form.coach" type="text" placeholder="Coach name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400" />
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-2">
         <button class="btn-primary" [disabled]="loading" (click)="save()">
           {{ loading ? 'Saving...' : 'Save Session' }}
         </button>
@@ -28,7 +66,7 @@
       </div>
 
       @if (errorMessage) {
-        <p class="text-red-600">{{ errorMessage }}</p>
+        <p class="text-red-600 text-sm">{{ errorMessage }}</p>
       }
     </div>
   </div>

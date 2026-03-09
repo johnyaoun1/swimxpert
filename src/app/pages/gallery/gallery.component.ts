@@ -21,56 +21,56 @@ export class GalleryComponent {
   images: GalleryImage[] = [
     {
       id: 1,
-      src: '',
-      alt: 'Students learning basic swimming techniques',
+      src: 'https://placehold.co/600x400/4A8FA8/ffffff?text=SwimXpert',
+      alt: 'Swimming training session',
       title: 'Beginner Lessons'
     },
     {
       id: 2,
-      src: '',
-      alt: 'Advanced swimmers practicing competitive strokes',
+      src: 'https://placehold.co/600x400/2C6478/ffffff?text=SwimXpert',
+      alt: 'Pool training',
       title: 'Advanced Training'
     },
     {
       id: 3,
-      src: '',
-      alt: 'Fun water activities and games',
+      src: 'https://placehold.co/600x400/6DB8CC/ffffff?text=SwimXpert',
+      alt: 'Swim lesson',
       title: 'Fun Activities'
     },
     {
       id: 4,
-      src: '',
-      alt: 'Instructors working one-on-one with students',
+      src: 'https://placehold.co/600x400/4A8FA8/ffffff?text=SwimXpert',
+      alt: 'Coaching session',
       title: 'Personalized Instruction'
     },
     {
       id: 5,
-      src: '',
-      alt: 'Modern pool facilities',
+      src: 'https://placehold.co/600x400/2C6478/ffffff?text=SwimXpert',
+      alt: 'Group class',
       title: 'Our Facilities'
     },
     {
       id: 6,
-      src: '',
-      alt: 'Students celebrating their achievements',
+      src: 'https://placehold.co/600x400/6DB8CC/ffffff?text=SwimXpert',
+      alt: 'Advanced training',
       title: 'Achievement Celebration'
     },
     {
       id: 7,
-      src: '',
-      alt: 'Group lessons in progress',
+      src: 'https://placehold.co/600x400/4A8FA8/ffffff?text=SwimXpert',
+      alt: 'Beginner lesson',
       title: 'Group Lessons'
     },
     {
       id: 8,
-      src: '',
-      alt: 'Water safety training session',
+      src: 'https://placehold.co/600x400/2C6478/ffffff?text=SwimXpert',
+      alt: 'Competition prep',
       title: 'Safety Training'
     },
     {
       id: 9,
-      src: '',
-      alt: 'Students practicing different strokes',
+      src: 'https://placehold.co/600x400/6DB8CC/ffffff?text=SwimXpert',
+      alt: 'Team training',
       title: 'Stroke Practice'
     }
   ];

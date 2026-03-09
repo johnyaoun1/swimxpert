@@ -70,6 +70,12 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddHttpContextAccessor();
 
+// File storage: Cloudinary on Railway (persistent), local disk in development.
+if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")))
+    builder.Services.AddSingleton<IStorageService, CloudinaryStorageService>();
+else
+    builder.Services.AddSingleton<IStorageService, LocalStorageService>();
+
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
     ?? builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key or JWT_KEY environment variable is required.");
@@ -214,6 +220,8 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_AuditLogs_Timestamp" ON "AuditLogs" ("Timestamp");
         CREATE INDEX IF NOT EXISTS "IX_AuditLogs_Action" ON "AuditLogs" ("Action");
     """);
+
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"PoolLocation\" character varying(200);");
 
     var adminEmail = Environment.GetEnvironmentVariable("INITIAL_ADMIN_EMAIL");
     var adminPassword = Environment.GetEnvironmentVariable("INITIAL_ADMIN_PASSWORD");

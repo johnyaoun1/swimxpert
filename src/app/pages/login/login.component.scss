@@ -1,1 +1,62 @@
 // Login component styles
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+// Extra-small phones
+@media (max-width: 389px) {
+  .min-h-screen {
+    padding: 1rem 0.75rem;
+    align-items: flex-start;
+    padding-top: 1.5rem;
+  }
+  .max-w-md {
+    max-width: 100%;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  // Logo
+  .w-16.h-16 { width: 3rem; height: 3rem; }
+  h2 { font-size: 1.5rem !important; }
+
+  input[type="email"],
+  input[type="password"],
+  input[type="text"] {
+    min-height: 48px;
+    font-size: 16px; // prevents iOS zoom
+    padding: 0.75rem 1rem;
+  }
+  button[type="submit"] {
+    min-height: 48px;
+    font-size: 0.9375rem;
+  }
+}
+
+// Small phones (390 – 639px)
+@media (min-width: 390px) and (max-width: 639px) {
+  .min-h-screen {
+    padding: 1.5rem 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  .max-w-md {
+    max-width: 100%;
+    width: 100%;
+  }
+  input[type="email"],
+  input[type="password"],
+  input[type="text"] {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  button[type="submit"] {
+    min-height: 48px;
+  }
+}
+
+// Tablet (640 – 767px)
+@media (min-width: 640px) and (max-width: 767px) {
+  .max-w-md { max-width: 28rem; }
+}

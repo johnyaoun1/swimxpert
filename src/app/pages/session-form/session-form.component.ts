@@ -17,7 +17,7 @@ export class SessionFormComponent implements OnInit {
   errorMessage = '';
 
   form = {
-    poolId: '',
+    poolLocation: '',
     date: new Date().toISOString().split('T')[0],
     startTime: '10:00',
     endTime: '11:00',
@@ -43,9 +43,11 @@ export class SessionFormComponent implements OnInit {
         next: (s) => {
           this.form.date = s.date;
           this.form.startTime = s.time;
+          this.form.endTime = s.endTime || '11:00';
           this.form.coach = s.instructor || '';
           this.form.skillLevel = s.level;
-          this.form.poolId = s.notes || '';
+          this.form.poolLocation = s.poolLocation || '';
+          this.form.maxSwimmers = s.maxSwimmers ?? 10;
         },
         error: (error) => (this.errorMessage = error?.message || 'Failed to load session')
       });
@@ -61,10 +63,12 @@ export class SessionFormComponent implements OnInit {
       clientName: '',
       date: this.form.date,
       time: this.form.startTime,
+      endTime: this.form.endTime,
       level: this.form.skillLevel,
       status: 'scheduled' as const,
       instructor: this.form.coach,
-      notes: `pool:${this.form.poolId};end:${this.form.endTime};max:${this.form.maxSwimmers}`,
+      poolLocation: this.form.poolLocation,
+      maxSwimmers: this.form.maxSwimmers,
       price: 0
     };
 

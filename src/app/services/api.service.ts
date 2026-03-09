@@ -27,7 +27,7 @@ export class ApiService {
       errorMessage = `Error Code: ${error.status}\nMessage: ${error.error?.message || error.message}`;
     }
     
-    console.error(errorMessage);
+    if (!environment.production) { console.error(errorMessage); }
     return throwError(() => new Error(errorMessage));
   }
 
@@ -222,6 +222,12 @@ export class ApiService {
 
   addQuizResult(payload: { score: number; totalQuestions: number; percentage: number }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/user/quiz-results`, payload, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getLeaderboard(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user/leaderboard`, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
   }
