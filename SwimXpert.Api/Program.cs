@@ -9,6 +9,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Allow ALLOWED_HOSTS env var to override appsettings (e.g. "swimxpert.com" in production).
+var allowedHostsEnv = Environment.GetEnvironmentVariable("ALLOWED_HOSTS");
+if (!string.IsNullOrWhiteSpace(allowedHostsEnv))
+    builder.Configuration["AllowedHosts"] = allowedHostsEnv;
+
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 5 * 1024 * 1024; // 5 MB
@@ -79,6 +84,11 @@ else
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
     ?? builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key or JWT_KEY environment variable is required.");
+
+// Refuse to start in production with the well-known dev key.
+const string devKey = "DevKey_ChangeForProduction_Min32CharsRequired";
+if (!builder.Environment.IsDevelopment() && jwtKey == devKey)
+    throw new InvalidOperationException("Production startup blocked: set a unique JWT_KEY environment variable.");
 var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["Jwt:Issuer"] ?? "SwimXpert.Api";
 var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["Jwt:Audience"] ?? "SwimXpert.Client";
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

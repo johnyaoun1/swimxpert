@@ -25,6 +25,7 @@ export class CertificatesComponent {
   selectedCertificate = null as Certificate | null;
   showViewer = false;
 
+  
   certificates: Certificate[] = [
     { id: 1, title: 'Beginner — Girl', description: 'SwimXpert Beginner certificate for girls. Water comfort, basic floats, and introductory skills.', filePath: 'assets/certificates/beginner-girl.jpg', type: 'image' },
     { id: 2, title: 'Beginner — Boy', description: 'SwimXpert Beginner certificate for boys. Water comfort, basic floats, and introductory skills.', filePath: 'assets/certificates/beginner-boy.jpg', type: 'image' },

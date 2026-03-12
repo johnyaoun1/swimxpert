@@ -7,8 +7,10 @@ interface Location {
   address: string;
   phone: string;
   hours: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
+  comingSoon?: boolean;
+  hideMapLink?: boolean;
 }
 
 @Component({
@@ -22,30 +24,28 @@ export class LocationsComponent {
   locations: Location[] = [
     {
       id: 1,
-      name: 'Downtown Location',
-      address: '123 Main Street, Downtown District, City, State 12345',
-      phone: '(555) 123-4567',
-      hours: 'Mon-Fri: 9AM-7PM, Sat-Sun: 8AM-6PM',
-      lat: 40.7589,
-      lng: -73.9851
+      name: 'Cap Sur Ville Country Club',
+      address: 'Mar Roukoz, Dekwaneh, Beirut, Lebanon',
+      phone: '+961 76 144 927',
+      hours: 'Mon-Fri: 9:30AM-7:30PM, Sat: 9:30AM-6PM, Sun: 9AM-11AM',
+      lat: 33.8724157,
+      lng: 35.5581482
     },
     {
       id: 2,
-      name: 'Westside Location',
-      address: '456 Ocean Avenue, Westside, City, State 12345',
-      phone: '(555) 234-5678',
-      hours: 'Mon-Fri: 8AM-8PM, Sat-Sun: 9AM-5PM',
-      lat: 40.7489,
-      lng: -73.9680
+      name: 'Tilal Fanar',
+      address: 'Fanar, Beirut, Lebanon',
+      phone: '+961 76 144 927',
+      hours: 'Mon-Fri: 9:30AM-7:30PM, Sat: 9:30AM-6PM, Sun: 9AM-11AM',
+      hideMapLink: true
     },
     {
       id: 3,
-      name: 'Northside Location',
-      address: '789 Park Boulevard, Northside, City, State 12345',
-      phone: '(555) 345-6789',
-      hours: 'Mon-Fri: 10AM-6PM, Sat-Sun: 9AM-4PM',
-      lat: 40.7689,
-      lng: -73.9920
+      name: 'Coming Soon',
+      address: '',
+      phone: '',
+      hours: '',
+      comingSoon: true
     }
   ];
 }

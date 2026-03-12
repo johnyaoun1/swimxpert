@@ -120,14 +120,14 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
 
         var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
 
-        var query = dbContext.Attendances
-            .Where(a => a.TrainingSessionId == sessionId)
-            .Include(a => a.Swimmer);
+        IQueryable<Attendance> query = dbContext.Attendances
+            .Where(a => a.TrainingSessionId == sessionId);
 
         if (!isAdminOrCoach)
             query = query.Where(a => a.Swimmer.ParentUserId == currentUserId);
 
         var attendees = await query
+            .Include(a => a.Swimmer)
             .OrderBy(a => a.Swimmer.Name)
             .Select(a => new
             {
