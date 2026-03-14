@@ -10,6 +10,44 @@
   }
 }
 
+/* ============================================================
+   ACCESSIBILITY — Skip link + focus indicators
+   ============================================================ */
+
+/* Skip to main content link (hidden until focused) */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 99999;
+  background: #0d94b2;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Visible focus ring for all focusable elements */
+:focus-visible {
+  outline: 3px solid #0d94b2;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default focus outline only when :focus-visible is supported */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 @layer components {
   .btn-primary {
     @apply bg-gradient-to-r from-primary-600 via-primary-500 to-accent-600 hover:from-primary-700 hover:via-primary-600 hover:to-accent-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 relative overflow-hidden;
