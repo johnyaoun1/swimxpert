@@ -1,4 +1,4 @@
-<div class="hero-gradient text-white relative overflow-hidden">
+<header class="hero-gradient text-white relative overflow-hidden" aria-label="Hero">
   <!-- Animated background elements -->
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
@@ -19,7 +19,7 @@
       <div class="inline-block mb-6 animate-scale-in floating-element">
         <img
           src="assets/logo.png"
-          alt="SwimXpert"
+          alt="SwimXpert logo - Professional swimming lessons in Lebanon"
           class="h-28 w-28 md:h-36 md:w-36 object-cover rounded-full ring-4 ring-white/40 drop-shadow-2xl"
         />
       </div>
@@ -30,18 +30,19 @@
       </h1>
       <p class="text-xl md:text-2xl mb-8 text-blue-100 animate-slide-up leading-relaxed">Professional swimming lessons for all ages. Build confidence, learn skills, and have fun in the water!</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in" style="animation-delay: 0.3s;">
-        <a routerLink="/level-finder" class="btn-primary group relative overflow-hidden">
+        <a routerLink="/level-finder" class="btn-primary group relative overflow-hidden" title="Find your swimming level with our quick quiz - SwimXpert Lebanon">
           <span class="relative z-10">Find Your Level</span>
         </a>
-        <a routerLink="/swim-lessons" class="btn-secondary bg-white bg-opacity-10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-primary-600">
+        <a routerLink="/swim-lessons" class="btn-secondary bg-white bg-opacity-10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-primary-600" title="View swimming lesson programs and levels in Lebanon">
           View Lessons
         </a>
       </div>
     </div>
   </div>
-</div>
+</header>
 
-<section class="premium-section section-padding">
+<main id="main-content">
+<section class="premium-section section-padding" aria-label="Why Choose SwimXpert">
   <div class="section-container relative z-10">
     <div class="text-center mb-16 animate-slide-down">
       <div class="inline-block mb-4">
@@ -56,7 +57,7 @@
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-      <div class="interactive-card premium-container text-center animate-slide-up group">
+      <article class="interactive-card premium-container text-center animate-slide-up group">
         <div class="relative z-10">
           <div class="w-24 h-24 bg-gradient-to-br from-primary-500 via-accent-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element">
             <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,9 +68,9 @@
           <p class="text-gray-600 leading-relaxed text-lg">Certified instructors and safety-first approach ensure a secure learning environment.</p>
         </div>
         <div class="absolute top-4 right-4 w-2 h-2 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-      </div>
+      </article>
       
-      <div class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.1s;">
+      <article class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.1s;">
         <div class="relative z-10">
           <div class="w-24 h-24 bg-gradient-to-br from-accent-500 via-primary-500 to-accent-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element-delayed">
             <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,9 +81,9 @@
           <p class="text-gray-600 leading-relaxed text-lg">Structured 6-level program designed to build skills progressively from beginner to advanced.</p>
         </div>
         <div class="absolute top-4 right-4 w-2 h-2 bg-accent-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-      </div>
+      </article>
       
-      <div class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.2s;">
+      <article class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.2s;">
         <div class="relative z-10">
           <div class="w-24 h-24 bg-gradient-to-br from-primary-500 via-accent-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element">
             <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,18 +94,18 @@
           <p class="text-gray-600 leading-relaxed text-lg">Certified, experienced teachers dedicated to helping every student succeed.</p>
         </div>
         <div class="absolute top-4 right-4 w-2 h-2 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-      </div>
+      </article>
     </div>
   </div>
 </section>
 
-<section class="section-padding bg-gray-50">
+<section class="section-padding bg-gray-50" aria-label="Ready to start your swimming journey">
   <div class="container mx-auto">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
       <div>
         <h2 class="text-4xl font-bold text-gray-800 mb-6">Ready to Start Your Swimming Journey?</h2>
         <p class="text-lg text-gray-600 mb-6">Our Level Finder helps you determine the perfect starting point for your child's swimming education. Answer a few simple questions and we'll recommend the ideal level.</p>
-        <a routerLink="/level-finder" class="btn-primary inline-block">Find Your Level Now</a>
+        <a routerLink="/level-finder" class="btn-primary inline-block" title="Take the level finder quiz to find the right swimming class in Lebanon">Find Your Level Now</a>
       </div>
       <div class="premium-container interactive-card text-center group">
         <div class="relative z-10">
@@ -126,7 +127,7 @@
   </div>
 </section>
 
-<section class="section-padding bg-gradient-to-br from-primary-50 via-white to-accent-50 relative overflow-hidden">
+<section class="section-padding bg-gradient-to-br from-primary-50 via-white to-accent-50 relative overflow-hidden" aria-label="Join SwimXpert">
   <div class="absolute inset-0">
     <div class="absolute top-10 right-10 w-64 h-64 bg-primary-200 opacity-20 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-10 left-10 w-80 h-80 bg-accent-200 opacity-20 rounded-full blur-3xl floating-element-delayed"></div>
@@ -134,6 +135,7 @@
   <div class="container mx-auto text-center relative z-10">
     <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 animate-slide-down">Join Hundreds of Happy Swimmers</h2>
     <p class="text-xl md:text-2xl text-gray-600 mb-8 animate-slide-up">Start your swimming journey today</p>
-    <a routerLink="/signup" class="btn-primary inline-block animate-scale-in" style="animation-delay: 0.2s;">Get Started</a>
+    <a routerLink="/signup" class="btn-primary inline-block animate-scale-in" style="animation-delay: 0.2s;" title="Create your SwimXpert account and start swimming lessons in Lebanon">Get Started</a>
   </div>
 </section>
+</main>
