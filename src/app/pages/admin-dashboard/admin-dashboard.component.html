@@ -1,32 +1,33 @@
 <div class="admin-dashboard-root">
-<div class="hero-gradient text-white py-16 relative overflow-hidden">
-  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+<header class="hero-gradient text-white py-16 relative overflow-hidden" aria-label="Admin dashboard">
+  <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
     <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
   </div>
   <div class="container mx-auto px-4 relative z-10">
     <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Admin Dashboard</h1>
     <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">Manage clients, sessions, attendance, and revenue</p>
-    <div class="mt-4 flex flex-wrap gap-4 text-blue-100">
+    <nav class="mt-4 flex flex-wrap gap-4 text-blue-100" aria-label="Admin sections">
       <a routerLink="/admin/users" class="hover:text-white underline">Users</a>
       <a routerLink="/admin/audit" class="hover:text-white underline">Audit Log</a>
       <a routerLink="/admin/security" class="hover:text-white underline">Security &amp; 2FA</a>
-    </div>
+    </nav>
   </div>
-</div>
+</header>
 
 <section class="section-padding bg-gray-50 admin-content">
   <div class="container mx-auto">
     <!-- Statistics Overview -->
+    <section aria-label="Statistics overview">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div class="premium-container">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Total Clients</p>
-            <p class="text-3xl font-bold text-gray-800">{{ dashboardOverview().totalClients }}</p>
+            <p class="text-sm text-gray-600 mb-1" id="stat-clients-label">Total Clients</p>
+            <p class="text-3xl font-bold text-gray-800" aria-labelledby="stat-clients-label">{{ dashboardOverview().totalClients }}</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center" aria-hidden="true">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
           </div>
@@ -36,14 +37,14 @@
       <div class="premium-container">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Total Sessions</p>
-            <p class="text-3xl font-bold text-gray-800">{{ dashboardOverview().totalSessions }}</p>
+            <p class="text-sm text-gray-600 mb-1" id="stat-sessions-label">Total Sessions</p>
+            <p class="text-3xl font-bold text-gray-800" aria-labelledby="stat-sessions-label">{{ dashboardOverview().totalSessions }}</p>
             <p class="text-xs text-gray-500 mt-1">
               {{ dashboardOverview().completedSessions }} completed, {{ dashboardOverview().cancelledSessions }} cancelled
             </p>
           </div>
-          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center" aria-hidden="true">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
@@ -53,12 +54,12 @@
       <div class="premium-container">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Total Revenue</p>
-            <p class="text-3xl font-bold text-gray-800">${{ revenueData()?.totalRevenue || 0 }}</p>
+            <p class="text-sm text-gray-600 mb-1" id="stat-revenue-label">Total Revenue</p>
+            <p class="text-3xl font-bold text-gray-800" aria-labelledby="stat-revenue-label">${{ revenueData()?.totalRevenue || 0 }}</p>
             <p class="text-xs text-gray-500 mt-1">From completed sessions</p>
           </div>
-          <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center" aria-hidden="true">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
@@ -68,18 +69,19 @@
       <div class="premium-container">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Attendance Rate</p>
-            <p class="text-3xl font-bold text-gray-800">{{ dashboardOverview().attendanceRate }}%</p>
+            <p class="text-sm text-gray-600 mb-1" id="stat-attendance-label">Attendance Rate</p>
+            <p class="text-3xl font-bold text-gray-800" aria-labelledby="stat-attendance-label">{{ dashboardOverview().attendanceRate }}%</p>
             <p class="text-xs text-gray-500 mt-1">Live from backend records</p>
           </div>
-          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center" aria-hidden="true">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
         </div>
       </div>
     </div>
+    </section>
 
     <!-- Revenue Visualization -->
     <div class="premium-container mb-8">
@@ -125,7 +127,7 @@
 
       @if (monthlyRevenue().length === 0) {
         <div class="text-center py-10 text-gray-500">
-          <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           <p class="font-medium">No revenue recorded yet</p>
@@ -162,12 +164,13 @@
 
         <!-- Table -->
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="w-full text-sm" aria-label="Monthly revenue for the last 6 months">
+            <caption class="sr-only">Monthly revenue breakdown for the last 6 months</caption>
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-2 px-3 font-semibold text-gray-700">Month</th>
-                <th class="text-right py-2 px-3 font-semibold text-gray-700">Total Revenue</th>
-                <th class="text-right py-2 px-3 font-semibold text-gray-700">Share</th>
+                <th scope="col" class="text-left py-2 px-3 font-semibold text-gray-700">Month</th>
+                <th scope="col" class="text-right py-2 px-3 font-semibold text-gray-700">Total Revenue</th>
+                <th scope="col" class="text-right py-2 px-3 font-semibold text-gray-700">Share</th>
               </tr>
             </thead>
             <tbody>
@@ -221,14 +224,18 @@
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
+        <label for="lead-search" class="sr-only">Search leads by name, email, or phone</label>
         <input
+          id="lead-search"
           [value]="leadSearch()"
           (input)="leadSearch.set($any($event.target).value); onLeadFiltersChanged()"
           type="text"
           placeholder="Search name, email, phone..."
           class="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg"
         />
+        <label for="lead-status-filter" class="sr-only">Filter by lead status</label>
         <select
+          id="lead-status-filter"
           [value]="leadStatusFilter()"
           (change)="leadStatusFilter.set($any($event.target).value); onLeadFiltersChanged()"
           class="px-3 py-2 border border-gray-300 rounded-lg"
@@ -237,36 +244,43 @@
           <option value="new">New</option>
           <option value="contacted">Contacted</option>
         </select>
+        <label for="lead-from-date" class="sr-only">Filter leads from date</label>
         <input
+          id="lead-from-date"
           [value]="leadFromDate()"
           (input)="leadFromDate.set($any($event.target).value); onLeadFiltersChanged()"
           type="date"
+          aria-label="From date"
           class="px-3 py-2 border border-gray-300 rounded-lg"
         />
         <div class="flex gap-2">
+          <label for="lead-to-date" class="sr-only">Filter leads to date</label>
           <input
+            id="lead-to-date"
             [value]="leadToDate()"
             (input)="leadToDate.set($any($event.target).value); onLeadFiltersChanged()"
             type="date"
+            aria-label="To date"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg"
           />
-          <button (click)="clearLeadFilters()" class="btn-secondary text-sm px-3 py-2 whitespace-nowrap">Clear</button>
+          <button (click)="clearLeadFilters()" class="btn-secondary text-sm px-3 py-2 whitespace-nowrap" aria-label="Clear all lead filters">Clear</button>
         </div>
       </div>
       @if (leads().length === 0) {
         <p class="text-gray-500">No leads yet. Once visitors submit the popup form, they will appear here.</p>
       } @else {
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full" aria-label="Lead captures list">
+            <caption class="sr-only">All lead captures with contact status</caption>
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Source</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Created At</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Source</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Created At</th>
               </tr>
             </thead>
             <tbody>
@@ -285,6 +299,7 @@
                       <button
                         (click)="toggleLeadContacted(lead.id, !lead.isContacted)"
                         [disabled]="isUpdatingLead(lead.id)"
+                        [attr.aria-label]="(lead.isContacted ? 'Mark ' : 'Mark contacted: ') + lead.name"
                         class="text-xs text-primary-600 hover:text-primary-700 disabled:opacity-60"
                       >
                         {{ lead.isContacted ? 'Mark New' : 'Mark Contacted' }}
@@ -305,14 +320,16 @@
       <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h2 class="text-2xl font-bold text-gray-800">All Clients</h2>
         <div class="flex items-center gap-2">
+          <label for="client-search" class="sr-only">Search clients</label>
           <input
+            id="client-search"
             [value]="clientSearch()"
             (input)="clientSearch.set($any($event.target).value)"
             type="text"
             placeholder="Search clients..."
             class="px-3 py-2 border border-gray-300 rounded-lg w-48"
           />
-          <button (click)="selectedClientId.set(null)" class="btn-secondary text-sm">
+          <button (click)="selectedClientId.set(null)" class="btn-secondary text-sm" aria-label="Clear client selection">
             Clear Selection
           </button>
         </div>
@@ -325,10 +342,16 @@
             @for (client of getFilteredClients(); track client.id) {
               <div 
                 (click)="selectClient(client.id)"
+                (keydown.enter)="selectClient(client.id)"
+                (keydown.space)="selectClient(client.id)"
                 [class.bg-primary-50]="isClientSelected(client.id)"
                 [class.border-primary-500]="isClientSelected(client.id)"
                 class="p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md"
                 [class.border-gray-200]="!isClientSelected(client.id)"
+                role="button"
+                tabindex="0"
+                [attr.aria-pressed]="isClientSelected(client.id)"
+                [attr.aria-label]="'Select client ' + client.name"
               >
                 <div class="flex items-center gap-3">
                   @if (client.avatar) {
@@ -410,10 +433,13 @@
                                   type="button"
                                   (click)="toggleChildSkill(child, levelBlock.level, skill.name); $event.stopPropagation()"
                                   [disabled]="isSkillSaving(child.id, levelBlock.level, skill.name)"
+                                  [attr.aria-label]="skill.name + (skill.isUnlocked ? ' — passed, click to undo' : ' — not yet, click to mark passed')"
+                                  [attr.aria-pressed]="skill.isUnlocked"
                                   class="skill-star-btn w-full flex items-center gap-2 text-left py-2 px-2 rounded-lg hover:bg-white disabled:opacity-60 transition-colors cursor-pointer relative z-10"
                                 >
                                   <span 
                                     class="text-xl leading-none select-none"
+                                    aria-hidden="true"
                                     [class.text-yellow-400]="skill.isUnlocked"
                                     [class.text-gray-300]="!skill.isUnlocked"
                                   >
@@ -452,7 +478,9 @@
                             <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' + getStatusColor(session.status)">
                               {{ session.status }}
                             </span>
+                            <label [attr.for]="'session-status-' + session.id" class="sr-only">Change status for {{ session.childName }} on {{ session.date }}</label>
                             <select 
+                              [id]="'session-status-' + session.id"
                               [value]="session.status"
                               (change)="updateSessionStatus(session.id, $any($event.target).value)"
                               class="text-xs border border-gray-300 rounded px-2 py-1"
@@ -468,6 +496,7 @@
                           @if (session.status === 'scheduled') {
                             <button 
                               (click)="openAttendanceForm(session.id)"
+                              [attr.aria-label]="'Record attendance for ' + session.childName + ' on ' + session.date"
                               class="text-primary-600 hover:text-primary-700 font-semibold"
                             >
                               Record Attendance
@@ -504,7 +533,7 @@
         } @else {
           <div class="lg:col-span-2 premium-container flex items-center justify-center min-h-[400px]">
             <div class="text-center">
-              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
               <p class="text-gray-600">Select a client to view details</p>
@@ -518,7 +547,9 @@
     <div class="premium-container mb-8">
       <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h2 class="text-2xl font-bold text-gray-800">All Sessions</h2>
+        <label for="session-search" class="sr-only">Search sessions</label>
         <input
+          id="session-search"
           [value]="sessionSearch()"
           (input)="sessionSearch.set($any($event.target).value)"
           type="text"
@@ -527,16 +558,17 @@
         />
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full" aria-label="All training sessions">
+          <caption class="sr-only">List of all training sessions with status and actions</caption>
           <thead>
             <tr class="border-b border-gray-200">
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Date & Time</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Level</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Price</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Date &amp; Time</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Level</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Price</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -556,6 +588,7 @@
                   @if (session.status === 'scheduled') {
                     <button 
                       (click)="openAttendanceForm(session.id)"
+                      [attr.aria-label]="'Record attendance for ' + session.childName + ' on ' + session.date"
                       class="text-primary-600 hover:text-primary-700 text-sm font-semibold"
                     >
                       Record Attendance
@@ -573,15 +606,16 @@
     <div class="premium-container">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">Attendance History</h2>
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full" aria-label="Attendance history">
+          <caption class="sr-only">Attendance records for all sessions</caption>
           <thead>
             <tr class="border-b border-gray-200">
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Check-in Time</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-700">Notes</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Check-in Time</th>
+              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Notes</th>
             </tr>
           </thead>
           <tbody>
@@ -608,14 +642,18 @@
 
 <!-- Session Form Modal -->
 @if (showSessionForm()) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="session-modal-title">
     <div class="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Schedule New Session</h2>
+      <h2 id="session-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Schedule New Session</h2>
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Client</label>
+            <label for="session-client" class="block text-sm font-semibold text-gray-700 mb-2">Client</label>
             <select 
+              id="session-client"
               [(ngModel)]="newSession.clientId"
               (ngModelChange)="onClientChange($event)"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -627,8 +665,9 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Child</label>
+            <label for="session-child" class="block text-sm font-semibold text-gray-700 mb-2">Child</label>
             <select 
+              id="session-child"
               [(ngModel)]="newSession.childId"
               (ngModelChange)="onChildChange($event)"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -642,16 +681,18 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+            <label for="session-date" class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
             <input 
+              id="session-date"
               type="date" 
               [(ngModel)]="newSession.date"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg"
             />
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Time</label>
+            <label for="session-time" class="block text-sm font-semibold text-gray-700 mb-2">Time</label>
             <input 
+              id="session-time"
               type="time" 
               [(ngModel)]="newSession.time"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -660,8 +701,9 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Level</label>
+            <label for="session-level" class="block text-sm font-semibold text-gray-700 mb-2">Level</label>
             <input 
+              id="session-level"
               type="number" 
               [(ngModel)]="newSession.level"
               min="1"
@@ -670,8 +712,9 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
+            <label for="session-price" class="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
             <input 
+              id="session-price"
               type="number" 
               [(ngModel)]="newSession.price"
               min="0"
@@ -681,8 +724,9 @@
           </div>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Instructor</label>
+          <label for="session-instructor" class="block text-sm font-semibold text-gray-700 mb-2">Instructor</label>
           <input 
+            id="session-instructor"
             type="text" 
             [(ngModel)]="newSession.instructor"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -690,8 +734,9 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+          <label for="session-status" class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
           <select 
+            id="session-status"
             [(ngModel)]="newSession.status"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
           >
@@ -701,8 +746,9 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+          <label for="session-notes" class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
           <textarea 
+            id="session-notes"
             [(ngModel)]="newSession.notes"
             rows="3"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -711,7 +757,7 @@
         </div>
         <div class="flex gap-4">
           <button (click)="saveSession()" class="btn-primary flex-1">Save Session</button>
-          <button (click)="closeSessionForm()" class="btn-secondary flex-1">Cancel</button>
+          <button (click)="closeSessionForm()" class="btn-secondary flex-1" aria-label="Cancel scheduling session">Cancel</button>
         </div>
       </div>
     </div>
@@ -720,13 +766,17 @@
 
 <!-- Attendance Form Modal -->
 @if (showAttendanceForm()) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="attendance-modal-title">
     <div class="bg-white rounded-xl max-w-md w-full p-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Record Attendance</h2>
+      <h2 id="attendance-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Record Attendance</h2>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Child</label>
+          <label for="attendance-child" class="block text-sm font-semibold text-gray-700 mb-2">Child</label>
           <input 
+            id="attendance-child"
             type="text" 
             [value]="newAttendance.childName"
             disabled
@@ -734,16 +784,18 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+          <label for="attendance-date" class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
           <input 
+            id="attendance-date"
             type="date" 
             [(ngModel)]="newAttendance.date"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+          <label for="attendance-status" class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
           <select 
+            id="attendance-status"
             [(ngModel)]="newAttendance.status"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
           >
@@ -754,16 +806,18 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Check-in Time</label>
+          <label for="attendance-checkin" class="block text-sm font-semibold text-gray-700 mb-2">Check-in Time</label>
           <input 
+            id="attendance-checkin"
             type="time" 
             [(ngModel)]="newAttendance.checkInTime"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
           />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+          <label for="attendance-notes" class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
           <textarea 
+            id="attendance-notes"
             [(ngModel)]="newAttendance.notes"
             rows="3"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -772,7 +826,7 @@
         </div>
         <div class="flex gap-4">
           <button (click)="saveAttendance()" class="btn-primary flex-1">Save Attendance</button>
-          <button (click)="closeAttendanceForm()" class="btn-secondary flex-1">Cancel</button>
+          <button (click)="closeAttendanceForm()" class="btn-secondary flex-1" aria-label="Cancel recording attendance">Cancel</button>
         </div>
       </div>
     </div>
