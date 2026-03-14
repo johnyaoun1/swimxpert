@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 
@@ -12,7 +13,7 @@ import { ApiService } from '../../services/api.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -28,7 +29,9 @@ export class LoginComponent {
     private authService: AuthService,
     private apiService: ApiService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private title: Title,
+    private meta: Meta
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -39,6 +42,14 @@ export class LoginComponent {
     if (message) {
       this.errorMessage = message;
     }
+  }
+
+  ngOnInit(): void {
+    this.title.setTitle('Login | SwimXpert Member Portal');
+    this.meta.updateTag({
+      name: 'description',
+      content: 'Sign in to your SwimXpert account to manage sessions, track progress, and view payments.'
+    });
   }
 
   onSubmit(): void {
