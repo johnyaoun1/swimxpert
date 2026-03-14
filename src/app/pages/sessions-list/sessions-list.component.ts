@@ -1,8 +1,18 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { Session, SessionService } from '../../services/session.service';
+
+const BREADCRUMB_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://swimxpert.com' },
+    { '@type': 'ListItem', position: 2, name: 'Sessions', item: 'https://swimxpert.com/sessions' }
+  ]
+};
 
 @Component({
   selector: 'app-sessions-list',
@@ -11,7 +21,7 @@ import { Session, SessionService } from '../../services/session.service';
   templateUrl: './sessions-list.component.html',
   styleUrls: ['./sessions-list.component.scss']
 })
-export class SessionsListComponent implements OnInit {
+export class SessionsListComponent implements OnInit, OnDestroy {
   sessions: Session[] = [];
   filteredSessions: Session[] = [];
   loading = false;
@@ -23,10 +33,38 @@ export class SessionsListComponent implements OnInit {
     coach: ''
   };
 
-  constructor(private sessionService: SessionService, private router: Router) {}
+  private breadcrumbScript: HTMLScriptElement | null = null;
+
+  constructor(
+    private sessionService: SessionService,
+    private router: Router,
+    private title: Title,
+    private meta: Meta,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
 
   ngOnInit(): void {
+    this.title.setTitle('Swimming Sessions | Book Your Class | SwimXpert');
+    this.meta.updateTag({
+      name: 'description',
+      content: 'Browse and book available swimming sessions at SwimXpert Lebanon. Filter by level, date, and location.'
+    });
+    this.injectBreadcrumbSchema();
     this.loadSessions();
+  }
+
+  ngOnDestroy(): void {
+    if (this.breadcrumbScript && this.breadcrumbScript.parentNode) {
+      this.breadcrumbScript.parentNode.removeChild(this.breadcrumbScript);
+      this.breadcrumbScript = null;
+    }
+  }
+
+  private injectBreadcrumbSchema(): void {
+    this.breadcrumbScript = this.document.createElement('script');
+    this.breadcrumbScript.type = 'application/ld+json';
+    this.breadcrumbScript.textContent = JSON.stringify(BREADCRUMB_JSON_LD);
+    this.document.head.appendChild(this.breadcrumbScript);
   }
 
   loadSessions(): void {
