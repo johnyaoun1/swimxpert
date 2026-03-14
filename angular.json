@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/swimxpert",
+            "outputPath": "dist/swimxpert/browser",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -26,7 +26,9 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/sitemap.xml",
+              "src/robots.txt"
             ],
             "styles": [
               "src/styles.css"
@@ -50,8 +52,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kb",
-                  "maximumError": "6kb"
+                  "maximumWarning": "8kb",
+                  "maximumError": "16kb"
                 }
               ],
               "outputHashing": "all"
@@ -78,6 +80,67 @@
             }
           },
           "defaultConfiguration": "development"
+        },
+        "server": {
+          "builder": "@angular-devkit/build-angular:server",
+          "options": {
+            "outputPath": "dist/swimxpert/server",
+            "main": "server.ts",
+            "tsConfig": "tsconfig.server.json"
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "media"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false,
+              "vendorChunk": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve-ssr": {
+          "builder": "@angular-devkit/build-angular:ssr-dev-server",
+          "configurations": {
+            "development": {
+              "browserTarget": "swimxpert:build:development",
+              "serverTarget": "swimxpert:server:development"
+            },
+            "production": {
+              "browserTarget": "swimxpert:build:production",
+              "serverTarget": "swimxpert:server:production"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "prerender": {
+          "builder": "@angular-devkit/build-angular:prerender",
+          "options": {
+            "routes": [
+              "/",
+              "/about",
+              "/swim-lessons",
+              "/level-finder",
+              "/locations",
+              "/contact",
+              "/login",
+              "/signup"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "swimxpert:build:production",
+              "serverTarget": "swimxpert:server:production"
+            },
+            "development": {
+              "browserTarget": "swimxpert:build:development",
+              "serverTarget": "swimxpert:server:development"
+            }
+          },
+          "defaultConfiguration": "production"
         }
       }
     }
