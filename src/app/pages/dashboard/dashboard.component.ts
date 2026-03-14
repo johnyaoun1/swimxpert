@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { AuthService, Child } from '../../services/auth.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
 import { ProfilePictureUploadComponent } from '../../shared/profile-picture-upload/profile-picture-upload.component';
@@ -32,7 +33,9 @@ export class DashboardComponent implements OnInit {
     private authService: AuthService,
     private swimLevelsService: SwimLevelsService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private title: Title,
+    private meta: Meta
   ) {
     this.childForm = this.fb.group({
       name: ['', Validators.required],
@@ -59,6 +62,11 @@ export class DashboardComponent implements OnInit {
   editChildError = signal<string | null>(null);
 
   ngOnInit(): void {
+    this.title.setTitle('My Dashboard | SwimXpert');
+    this.meta.updateTag({
+      name: 'description',
+      content: 'Manage your SwimXpert account, view your swimmers progress, and track upcoming sessions.'
+    });
     this.authService.isAuthenticated().subscribe((isAuthenticated) => {
       if (!isAuthenticated) {
         this.router.navigate(['/login']);
