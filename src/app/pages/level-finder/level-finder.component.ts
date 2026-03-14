@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { LevelFinderService, LevelFinderAnswers } from '../../services/level-finder.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
 
@@ -12,7 +13,7 @@ import { SwimLevelsService } from '../../services/swim-levels.service';
   templateUrl: './level-finder.component.html',
   styleUrls: ['./level-finder.component.scss']
 })
-export class LevelFinderComponent {
+export class LevelFinderComponent implements OnInit {
   levelFinderForm: FormGroup;
   showResult = signal(false);
   determinedLevel = signal<number>(1);
@@ -37,7 +38,9 @@ export class LevelFinderComponent {
   constructor(
     private fb: FormBuilder,
     private levelFinderService: LevelFinderService,
-    private swimLevelsService: SwimLevelsService
+    private swimLevelsService: SwimLevelsService,
+    private title: Title,
+    private meta: Meta
   ) {
     const formControls: any = {
       age: [null, [Validators.required, Validators.min(3), Validators.max(18)]]
@@ -48,6 +51,14 @@ export class LevelFinderComponent {
     });
 
     this.levelFinderForm = this.fb.group(formControls);
+  }
+
+  ngOnInit(): void {
+    this.title.setTitle('Find Your Swimming Level | SwimXpert Lebanon');
+    this.meta.updateTag({
+      name: 'description',
+      content: 'Not sure which swimming class is right for you? Take our quick level assessment and find the perfect SwimXpert program in Lebanon.'
+    });
   }
 
   onSubmit(): void {
@@ -88,5 +99,9 @@ export class LevelFinderComponent {
     this.showResult.set(false);
     this.determinedLevel.set(1);
     this.levelInfo.set(null);
+  }
+
+  get answeredCount(): number {
+    return this.questions.filter(q => this.levelFinderForm.get(q.key)?.value !== null).length;
   }
 }
