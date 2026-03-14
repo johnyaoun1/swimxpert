@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /coach
+Disallow: /swimmer
+Disallow: /payments
+Disallow: /my-sessions
+Disallow: /sessions/create
+Disallow: /sessions/edit
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /forgot-password
+
+Sitemap: https://swimxpert.com/sitemap.xml
