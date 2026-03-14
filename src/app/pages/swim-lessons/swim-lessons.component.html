@@ -1,4 +1,4 @@
-<div class="hero-gradient text-white py-20 relative overflow-hidden">
+<header class="hero-gradient text-white py-20 relative overflow-hidden" aria-label="Swim lessons hero">
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute top-10 right-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-10 left-10 w-80 h-80 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
@@ -7,20 +7,21 @@
     <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Swim Lessons</h1>
     <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">Our comprehensive 6-level program takes students from beginner to advanced</p>
   </div>
-</div>
+</header>
 
-<section class="section-padding bg-white">
+<main id="main-content">
+<section class="section-padding bg-white" aria-label="Swimming levels program">
   <div class="container mx-auto">
     <div class="text-center mb-12">
       <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
         Our structured curriculum is designed to build skills progressively. Each level builds upon the previous one, ensuring students develop confidence and competence at every stage.
       </p>
-      <a routerLink="/level-finder" class="btn-primary">Find Your Level</a>
+      <a routerLink="/level-finder" class="btn-primary" title="Find your swimming level - SwimXpert Lebanon">Find Your Level</a>
     </div>
 
     <div class="space-y-10">
       @for (level of levels; track level.level) {
-        <div class="premium-container interactive-card group animate-slide-up" style="animation-delay: {{ (level.level - 1) * 0.1 }}s;">
+        <article class="premium-container interactive-card group animate-slide-up" style="animation-delay: {{ (level.level - 1) * 0.1 }}s;">
           <div class="flex flex-col md:flex-row md:items-start gap-8">
             <div class="flex-shrink-0 relative">
               <div class="w-28 h-28 bg-gradient-to-br from-primary-600 via-accent-500 to-primary-700 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element relative">
@@ -75,14 +76,15 @@
               </div>
             </div>
           </div>
-        </div>
+        </article>
       }
     </div>
 
     <div class="mt-12 text-center">
       <h2 class="text-3xl font-bold text-gray-800 mb-4">Not Sure Which Level?</h2>
       <p class="text-lg text-gray-600 mb-6">Use our Level Finder to determine the perfect starting point for your child.</p>
-      <a routerLink="/level-finder" class="btn-primary">Take Level Finder Quiz</a>
+      <a routerLink="/level-finder" class="btn-primary" title="Take the level finder quiz for swimming classes in Lebanon">Take Level Finder Quiz</a>
     </div>
   </div>
 </section>
+</main>
