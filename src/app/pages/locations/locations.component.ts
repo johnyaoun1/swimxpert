@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Title, Meta } from '@angular/platform-browser';
 
 interface Location {
   id: number;
@@ -20,7 +21,7 @@ interface Location {
   templateUrl: './locations.component.html',
   styleUrls: ['./locations.component.scss']
 })
-export class LocationsComponent {
+export class LocationsComponent implements OnInit {
   locations: Location[] = [
     {
       id: 1,
@@ -48,4 +49,14 @@ export class LocationsComponent {
       comingSoon: true
     }
   ];
+
+  constructor(private title: Title, private meta: Meta) {}
+
+  ngOnInit(): void {
+    this.title.setTitle('SwimXpert Pool Locations | Lebanon');
+    this.meta.updateTag({
+      name: 'description',
+      content: 'Find SwimXpert swimming lesson locations across Lebanon. Professional pools equipped for all age groups and skill levels.'
+    });
+  }
 }
