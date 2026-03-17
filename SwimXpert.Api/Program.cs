@@ -75,7 +75,8 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddHttpContextAccessor();
 
-// File storage: Cloudinary on Railway (persistent), local disk in development.
+builder.Services.AddHttpClient();
+
 if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")))
     builder.Services.AddSingleton<IStorageService, CloudinaryStorageService>();
 else
