@@ -10,7 +10,7 @@ header {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.3), transparent);
+    background: linear-gradient(to right, transparent, rgba(29, 155, 240, 0.3), transparent);
   }
 }
 
@@ -42,15 +42,16 @@ nav > .hidden a {
   border-radius: 0.5rem !important;
   font-size: 1rem !important;
   font-weight: 500 !important;
-  color: #1f2937 !important;
+  color: #cbd5e1 !important;
   text-decoration: none !important;
   min-height: 48px !important;
   border-left: 3px solid transparent;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 
   &:hover, &:active {
-    background-color: #eff6ff !important;
-    border-left-color: #1890ff;
+    background-color: rgba(29, 155, 240, 0.1) !important;
+    color: #1d9bf0 !important;
+    border-left-color: #1d9bf0;
   }
 
   span {
@@ -62,11 +63,8 @@ nav > .hidden a {
 
 // ---- Mobile nav menu panel ----
 .mobile-nav-menu {
-  // Slide-in from top
   animation: mobileMenuIn 0.25s ease-out forwards;
-
-  // Force all text inside to be visible dark color
-  color: #1f2937;
+  color: #cbd5e1;
 
   a {
     display: flex;
@@ -76,16 +74,16 @@ nav > .hidden a {
     border-radius: 0.5rem;
     font-weight: 500;
     font-size: 1rem;
-    color: #374151;
+    color: #cbd5e1;
     text-decoration: none;
     border-left: 2px solid transparent;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 
     &:hover,
     &:active {
-      background-color: #eff6ff;
-      color: #1d4ed8;
-      border-left-color: #1890ff;
+      background-color: rgba(29, 155, 240, 0.1);
+      color: #1d9bf0;
+      border-left-color: #1d9bf0;
     }
 
     span {
@@ -98,19 +96,9 @@ nav > .hidden a {
       flex-shrink: 0;
       width: 1.125rem;
       height: 1.125rem;
-      color: #1890ff;
     }
   }
 
-  // "Account" divider section
-  .relative.my-4 span {
-    color: #9ca3af;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  // Logout button (same style as links)
   button {
     display: flex;
     align-items: center;
@@ -120,7 +108,7 @@ nav > .hidden a {
     border-radius: 0.5rem;
     font-weight: 500;
     font-size: 1rem;
-    color: #374151;
+    color: #cbd5e1;
     text-align: left;
     background: none;
     border: none;
@@ -128,8 +116,8 @@ nav > .hidden a {
     transition: background-color 0.2s ease, color 0.2s ease;
     cursor: pointer;
 
-    &:hover { background-color: #fef2f2; color: #dc2626; }
-    svg { flex-shrink: 0; width: 1.125rem; height: 1.125rem; color: #dc2626; }
+    &:hover { background-color: rgba(239, 68, 68, 0.1); color: #f87171; }
+    svg { flex-shrink: 0; width: 1.125rem; height: 1.125rem; }
   }
 }
 
