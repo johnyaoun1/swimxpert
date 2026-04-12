@@ -1,7 +1,7 @@
 .lead-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(6, 37, 63, 0.55);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   z-index: 1100;
 }
@@ -12,10 +12,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(92vw, 460px);
-  background: #fff;
+  background: #0d1b3e;
   border-radius: 20px;
-  border: 1px solid #d2e9fb;
-  box-shadow: 0 28px 54px rgba(5, 56, 99, 0.3);
+  border: 1px solid rgba(29, 155, 240, 0.2);
+  box-shadow: 0 28px 54px rgba(0, 0, 0, 0.6);
   z-index: 1101;
   padding: 20px;
 }
@@ -30,7 +30,7 @@
 .lead-modal-header h3 {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #0f3152;
+  color: #f1f5f9;
   margin: 0;
 }
 
@@ -38,12 +38,14 @@
   border: none;
   background: transparent;
   font-size: 1.5rem;
-  color: #486b8b;
+  color: #94a3b8;
   cursor: pointer;
+
+  &:hover { color: #f1f5f9; }
 }
 
 .lead-subtitle {
-  color: #4a6a89;
+  color: #94a3b8;
   margin-bottom: 14px;
   font-size: 0.95rem;
 }
@@ -56,17 +58,25 @@
 .lead-form label {
   display: grid;
   gap: 6px;
-  color: #173c60;
+  color: #94a3b8;
   font-size: 0.86rem;
   font-weight: 600;
 }
 
 .lead-form input[type='text'],
 .lead-form input[type='email'] {
-  border: 1px solid #bedef5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 10px 12px;
   font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+
+  &:focus {
+    border-color: #1d9bf0;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.2);
+  }
 }
 
 .consent-row {
@@ -83,17 +93,19 @@
   padding: 10px 16px;
   color: #fff;
   font-weight: 700;
-  background: linear-gradient(135deg, #0b7ddc, #2aa9f8);
+  background: linear-gradient(135deg, #1d9bf0, #00c4ff);
   cursor: pointer;
+
+  &:hover { opacity: 0.9; }
 }
 
 .submit-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .error {
   margin: 0;
-  color: #b42318;
+  color: #f87171;
   font-size: 0.85rem;
 }
