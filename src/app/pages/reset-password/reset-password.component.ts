@@ -9,38 +9,38 @@ import { ApiService } from '../../services/api.service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4" style="background:#0a0f1e;">
       <div class="max-w-md w-full">
-        <h2 class="text-center text-2xl font-bold text-gray-900 mb-6">Reset password</h2>
+        <h2 class="text-center text-2xl font-bold text-white mb-6">Reset password</h2>
         @if (success) {
-          <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+          <div class="rounded-lg px-4 py-3 mb-4" style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.3); color:#4ade80;">
             Password reset. You can now log in.
           </div>
-          <a routerLink="/login" class="mt-4 block text-center text-primary-600 font-medium">Go to login</a>
+          <a routerLink="/login" class="mt-4 block text-center text-primary-400 font-medium">Go to login</a>
         } @else if (!token) {
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">Invalid reset link.</div>
-          <a routerLink="/login" class="mt-4 block text-center text-primary-600 font-medium">Back to login</a>
+          <div class="rounded-lg px-4 py-3" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#f87171;">Invalid reset link.</div>
+          <a routerLink="/login" class="mt-4 block text-center text-primary-400 font-medium">Back to login</a>
         } @else {
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
             @if (errorMessage) {
-              <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">{{ errorMessage }}</div>
+              <div class="rounded-lg px-4 py-3" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#f87171;">{{ errorMessage }}</div>
             }
             <div>
-              <label for="newPassword" class="block text-sm font-medium text-gray-700">New password</label>
-              <input id="newPassword" type="password" formControlName="newPassword" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" />
+              <label for="newPassword" class="block text-sm font-medium mb-1" style="color:#94a3b8;">New password</label>
+              <input id="newPassword" type="password" formControlName="newPassword" class="mt-1 block w-full rounded-lg px-4 py-3" />
               @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
-                <p class="text-red-600 text-sm mt-1">Min 8 characters</p>
+                <p class="text-red-400 text-sm mt-1">Min 8 characters</p>
               }
             </div>
             <div>
-              <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm password</label>
-              <input id="confirmPassword" type="password" formControlName="confirmPassword" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" />
+              <label for="confirmPassword" class="block text-sm font-medium mb-1" style="color:#94a3b8;">Confirm password</label>
+              <input id="confirmPassword" type="password" formControlName="confirmPassword" class="mt-1 block w-full rounded-lg px-4 py-3" />
               @if (form.get('confirmPassword')?.touched && form.hasError('mismatch')) {
-                <p class="text-red-600 text-sm mt-1">Passwords do not match</p>
+                <p class="text-red-400 text-sm mt-1">Passwords do not match</p>
               }
             </div>
             <button type="submit" [disabled]="form.invalid || loading"
-              class="w-full py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50">
+              class="btn-primary w-full disabled:opacity-50">
               {{ loading ? 'Resetting...' : 'Reset password' }}
             </button>
           </form>
