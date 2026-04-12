@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SwimXpert.Api.Data;
 using SwimXpert.Api.Models;
+using SwimXpert.Api.Options;
 using SwimXpert.Api.Services;
 using System.Text;
 
@@ -76,6 +77,10 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.Configure<GoogleCalendarOptions>(builder.Configuration.GetSection(GoogleCalendarOptions.SectionName));
+builder.Services.AddScoped<IGoogleCalendarSyncService, GoogleCalendarSyncService>();
+builder.Services.AddScoped<IGoogleCalendarMutationsService, GoogleCalendarMutationsService>();
 
 if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME")))
     builder.Services.AddSingleton<IStorageService, CloudinaryStorageService>();
@@ -233,6 +238,23 @@ using (var scope = app.Services.CreateScope())
     """);
 
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"PoolLocation\" character varying(200);");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"Price\" numeric(18,2) NOT NULL DEFAULT 0;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"IsPaid\" boolean NOT NULL DEFAULT FALSE;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"GoogleEventId\" character varying(200);");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"RecurrenceSeriesId\" uuid;");
+    await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_TrainingSessions_RecurrenceSeriesId" ON "TrainingSessions" ("RecurrenceSeriesId");""");
+    await db.Database.ExecuteSqlRawAsync(
+        """CREATE UNIQUE INDEX IF NOT EXISTS "IX_TrainingSessions_GoogleEventId_unique" ON "TrainingSessions" ("GoogleEventId") WHERE "GoogleEventId" IS NOT NULL;""");
+    await db.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS "GoogleCalendarStates" (
+            "Id" integer NOT NULL PRIMARY KEY,
+            "RefreshToken" text,
+            "LastSyncUtc" timestamp with time zone,
+            "UpdatedAt" timestamp with time zone NOT NULL
+        );
+        """);
 
     var adminEmail = Environment.GetEnvironmentVariable("INITIAL_ADMIN_EMAIL");
     var adminPassword = Environment.GetEnvironmentVariable("INITIAL_ADMIN_PASSWORD");
