@@ -145,28 +145,72 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
     {
         var query = dbContext.Payments.Where(p => p.Status == "Completed");
 
-        if (from.HasValue)
+        // Query-string dates bind as Unspecified; Npgsql requires UTC for timestamptz parameters.
+        var fromUtc = from.HasValue ? ToUtcForPostgres(from.Value) : (DateTime?)null;
+        var toUtc = to.HasValue ? ToUtcForPostgres(to.Value) : (DateTime?)null;
+
+        if (fromUtc.HasValue)
         {
-            query = query.Where(p => p.PaymentDate >= from.Value);
+            query = query.Where(p => p.PaymentDate >= fromUtc.Value);
         }
 
-        if (to.HasValue)
+        if (toUtc.HasValue)
         {
-            query = query.Where(p => p.PaymentDate <= to.Value);
+            query = query.Where(p => p.PaymentDate <= toUtc.Value);
         }
 
         var payments = await query
+            .Include(p => p.User)
             .OrderByDescending(p => p.PaymentDate)
             .ToListAsync();
 
         var totalRevenue = payments.Sum(p => p.Amount);
+        var clientRevenue = payments
+            .GroupBy(p => p.UserId)
+            .Select(g => new
+            {
+                clientId = g.Key,
+                clientName = g.First().User.FullName,
+                revenue = g.Sum(p => p.Amount),
+                sessions = g.Count()
+            })
+            .OrderByDescending(x => x.revenue)
+            .ToList();
+
+        var paymentRows = payments
+            .Select(p => new
+            {
+                p.Id,
+                p.UserId,
+                clientName = p.User.FullName,
+                clientEmail = p.User.Email,
+                p.Amount,
+                p.PaymentDate,
+                p.Method,
+                p.Status,
+                p.Reference
+            })
+            .ToList();
+
         return Ok(new
         {
             totalRevenue,
             paymentsCount = payments.Count,
-            payments
+            clientRevenue,
+            payments = paymentRows
         });
     }
+
+    /// <summary>
+    /// Aligns DateTime Kind with PostgreSQL timestamptz (Npgsql rejects Unspecified).
+    /// </summary>
+    private static DateTime ToUtcForPostgres(DateTime dt) =>
+        dt.Kind switch
+        {
+            DateTimeKind.Utc => dt,
+            DateTimeKind.Local => dt.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
+        };
 }
 
 public class CreatePaymentRequest
