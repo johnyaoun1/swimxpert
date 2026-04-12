@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<QuizResult> QuizResults { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+    public DbSet<GoogleCalendarState> GoogleCalendarStates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,13 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.Payments)
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TrainingSession>()
+            .Property(t => t.Price)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<GoogleCalendarState>()
+            .HasKey(x => x.Id);
 
         modelBuilder.Entity<LeadCapture>()
             .HasIndex(l => l.CreatedAt);
