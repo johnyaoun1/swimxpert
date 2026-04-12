@@ -4,28 +4,30 @@
 // TypeScript, logic, bindings, and function names are untouched.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Brand tokens ─────────────────────────────────────────────────────────────
-$p:        #4A8FA8;   // primary
-$p-light:  #6DB8CC;   // primary light
-$p-dark:   #2C6478;   // primary dark
-$accent:   #A8D8E8;   // accent
-$bg:       #F4F9FB;
-$bg-end:   #E0F2F8;
-$text:     #0D1E26;
-$text-mid: #4A6E7E;
-$track:    #C8E0EA;   // progress track bg
+// ── Brand tokens (dark navy theme) ───────────────────────────────────────────
+$p:        #1d9bf0;   // electric blue
+$p-light:  #00c4ff;   // cyan
+$p-dark:   #1578c2;   // darker blue
+$accent:   #00c4ff;
+$bg:       #0a0f1e;
+$bg-end:   #0d1635;
+$text:     #f1f5f9;
+$text-mid: #94a3b8;
+$track:    rgba(255,255,255,0.08);
 $white:    #ffffff;
 $gold:     #FFB703;
-$shadow-sm: rgba(74, 143, 168, 0.10);
-$shadow:    rgba(74, 143, 168, 0.16);
-$shadow-lg: rgba(74, 143, 168, 0.24);
+$card-bg:  #0f1e3d;
+$card-border: rgba(255,255,255,0.07);
+$shadow-sm: rgba(0,0,0,0.3);
+$shadow:    rgba(0,0,0,0.4);
+$shadow-lg: rgba(29,155,240,0.25);
 $radius:    20px;
 $radius-sm: 14px;
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 .lf-page {
   min-height: 100vh;
-  background: linear-gradient(160deg, $bg 0%, $bg-end 60%, darken($bg-end, 4%) 100%);
+  background: $bg;
   animation: lf-fadeInPage 0.4s ease-out;
 }
 
@@ -33,7 +35,7 @@ $radius-sm: 14px;
 .lf-header {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, $p-dark 0%, $p 55%, $p-light 100%);
+  background: linear-gradient(135deg, #060e24 0%, #0d1b3e 55%, #132851 100%);
   padding: 4rem 1.5rem 5rem;
   text-align: center;
   color: $white;
@@ -106,26 +108,29 @@ $radius-sm: 14px;
 
 // ── Base card ─────────────────────────────────────────────────────────────────
 .lf-card {
-  background: $white;
+  background: $card-bg;
   border-radius: $radius;
   box-shadow: 0 4px 24px $shadow-sm;
-  border: 1px solid rgba(168, 216, 232, 0.45);
+  border: 1px solid $card-border;
   margin-bottom: 1.25rem;
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 
-  &:hover { box-shadow: 0 8px 32px $shadow; }
+  &:hover {
+    box-shadow: 0 8px 32px $shadow;
+    border-color: rgba(29,155,240,0.2);
+  }
 }
 
 // ── Progress card ─────────────────────────────────────────────────────────────
 .lf-progress-card {
-  background: $white;
+  background: $card-bg;
   border-radius: $radius;
   padding: 1.5rem 1.75rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 24px $shadow-sm;
-  border: 1px solid rgba(168, 216, 232, 0.45);
+  border: 1px solid $card-border;
   animation: lf-slideDown 0.45s ease-out 0.05s both;
 }
 
@@ -207,18 +212,18 @@ $radius-sm: 14px;
   font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
-  border: 2px solid $track;
+  border: 2px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   color: $text;
-  background: $white;
+  background: rgba(255,255,255,0.05);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-  &::placeholder { color: lighten($text-mid, 20%); font-weight: 400; }
+  &::placeholder { color: rgba(148,163,184,0.5); font-weight: 400; }
 
   &:focus {
     outline: none;
     border-color: $p;
-    box-shadow: 0 0 0 3px rgba(74, 143, 168, 0.22);
+    box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.22);
   }
 }
 
@@ -340,18 +345,18 @@ $radius-sm: 14px;
 
 // YES default + active
 .lf-opt-yes {
-  background: linear-gradient(135deg, rgba(74,143,168,0.08), rgba(109,184,204,0.08));
-  color: rgba(74, 143, 168, 0.75);
-  border: 2px solid rgba(74, 143, 168, 0.3);
+  background: rgba(29,155,240,0.08);
+  color: rgba(29,155,240,0.75);
+  border: 2px solid rgba(29,155,240,0.25);
 
-  .lf-opt-icon { color: rgba(74, 143, 168, 0.75); }
+  .lf-opt-icon { color: rgba(29,155,240,0.75); }
 
   &:hover {
     transform: scale(1.04);
     background: linear-gradient(135deg, $p, $p-light);
     color: $white;
     border-color: transparent;
-    box-shadow: 0 8px 24px $shadow;
+    box-shadow: 0 8px 24px $shadow-lg;
 
     .lf-opt-icon { color: $white; }
   }
@@ -368,26 +373,26 @@ $radius-sm: 14px;
 
 // NO default + active
 .lf-opt-no {
-  background: $white;
-  color: rgba(74, 110, 126, 0.70);
-  border: 2px solid $track;
+  background: rgba(255,255,255,0.04);
+  color: rgba(148,163,184,0.70);
+  border: 2px solid rgba(255,255,255,0.08);
 
-  .lf-opt-icon { color: rgba(74, 110, 126, 0.70); }
+  .lf-opt-icon { color: rgba(148,163,184,0.70); }
 
   &:hover {
     transform: scale(1.04);
     border-color: $p;
     color: $p;
-    background: rgba(74, 143, 168, 0.05);
+    background: rgba(29,155,240,0.06);
 
     .lf-opt-icon { color: $p; }
   }
 
   &.lf-opt-active {
-    background: #64748b;
+    background: #334155;
     color: $white;
     border-color: transparent;
-    box-shadow: 0 6px 20px rgba(100, 116, 139, 0.30);
+    box-shadow: 0 6px 20px rgba(51, 65, 85, 0.40);
 
     .lf-opt-icon { color: $white; transform: scale(1.15); }
   }
@@ -500,7 +505,7 @@ $radius-sm: 14px;
 .lf-result-name {
   font-size: clamp(1.4rem, 3vw, 1.7rem);
   font-weight: 700;
-  color: $text;
+  color: #f1f5f9;
   margin: 0 0 1rem;
   animation: lf-slideUp 0.4s ease-out 0.3s both;
 }
@@ -555,11 +560,11 @@ $radius-sm: 14px;
 
 .lf-block-text {
   font-size: 1rem;
-  color: $text;
+  color: #94a3b8;
   line-height: 1.72;
   margin: 0;
 
-  strong { color: $p-dark; font-weight: 700; }
+  strong { color: #1d9bf0; font-weight: 700; }
 }
 
 // CTAs
@@ -608,9 +613,9 @@ $radius-sm: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: $text-mid;
-  background: $white;
-  border: 2px solid $track;
+  color: #94a3b8;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.1);
   border-radius: $radius-sm;
   cursor: pointer;
   min-height: 54px;
@@ -619,7 +624,7 @@ $radius-sm: 14px;
   &:hover {
     border-color: $p;
     color: $p;
-    background: rgba(74, 143, 168, 0.05);
+    background: rgba(29,155,240,0.06);
   }
 
   &:focus-visible { outline: 3px solid $p; outline-offset: 3px; }
