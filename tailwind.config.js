@@ -6,30 +6,44 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Deep-navy / electric-blue dark theme (Beswim-style)
         primary: {
-          50:  '#eaf7fb',
-          100: '#c2eaf5',
-          200: '#8cd5ec',
-          300: '#56c0e3',
-          400: '#1faadb',
-          500: '#0d94b2',   // main pool-teal — matches logo water
-          600: '#0a7590',
-          700: '#07566d',
-          800: '#04384a',
-          900: '#021b25',
+          50:  '#e8f4ff',
+          100: '#c3e0ff',
+          200: '#90c5ff',
+          300: '#5ca9ff',
+          400: '#3594ff',
+          500: '#1d9bf0',   // electric blue — primary CTA
+          600: '#1578c2',
+          700: '#0d5a96',
+          800: '#073d6a',
+          900: '#031f3d',
         },
         accent: {
-          50:  '#e5f6fb',
-          100: '#b3e5f4',
-          200: '#7dd2ec',
-          300: '#47bfe4',
-          400: '#11acdc',
-          500: '#14a8c5',   // lighter pool-blue highlight from logo ripples
-          600: '#108aaa',
-          700: '#0c6b88',
-          800: '#074d64',
-          900: '#032e40',
-        }
+          50:  '#e0faff',
+          100: '#b3f3ff',
+          200: '#7decff',
+          300: '#47e5ff',
+          400: '#1adeff',
+          500: '#00c4ff',   // cyan highlight
+          600: '#009dcf',
+          700: '#0077a0',
+          800: '#005270',
+          900: '#002e40',
+        },
+        navy: {
+          50:  '#e8ecf6',
+          100: '#c3ccdf',
+          200: '#9aadc8',
+          300: '#6f8eb0',
+          400: '#4a739d',
+          500: '#2d5a8e',
+          600: '#1e3a6e',
+          700: '#132851',
+          800: '#0d1b3e',
+          900: '#060e24',
+          950: '#030811',
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.8s ease-in',
