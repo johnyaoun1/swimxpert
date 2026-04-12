@@ -10,6 +10,19 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Google OAuth: do not commit real ClientId/ClientSecret. Use user secrets (dev) or env vars, e.g.:
+// GoogleCalendar__ClientId, GoogleCalendar__ClientSecret, GoogleCalendar__CalendarId
+// or GOOGLE_CALENDAR_CLIENT_ID / GOOGLE_CALENDAR_CLIENT_SECRET / GOOGLE_CALENDAR_CALENDAR_ID
+var gClientId = Environment.GetEnvironmentVariable("GOOGLE_CALENDAR_CLIENT_ID");
+var gClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CALENDAR_CLIENT_SECRET");
+var gCalendarId = Environment.GetEnvironmentVariable("GOOGLE_CALENDAR_CALENDAR_ID");
+if (!string.IsNullOrEmpty(gClientId))
+    builder.Configuration["GoogleCalendar:ClientId"] = gClientId;
+if (!string.IsNullOrEmpty(gClientSecret))
+    builder.Configuration["GoogleCalendar:ClientSecret"] = gClientSecret;
+if (!string.IsNullOrEmpty(gCalendarId))
+    builder.Configuration["GoogleCalendar:CalendarId"] = gCalendarId;
+
 // Allow ALLOWED_HOSTS env var to override appsettings (e.g. "swimxpert.com" in production).
 var allowedHostsEnv = Environment.GetEnvironmentVariable("ALLOWED_HOSTS");
 if (!string.IsNullOrWhiteSpace(allowedHostsEnv))
