@@ -159,3 +159,14 @@ CREATE INDEX IF NOT EXISTS "IX_AuditLogs_Action" ON "AuditLogs" ("Action");
 -- 9. ALTER TABLE "TrainingSessions" (Program.cs)
 -- =============================================================================
 ALTER TABLE "TrainingSessions" ADD COLUMN IF NOT EXISTS "PoolLocation" character varying(200);
+ALTER TABLE "TrainingSessions" ADD COLUMN IF NOT EXISTS "Price" numeric(18,2) NOT NULL DEFAULT 0;
+ALTER TABLE "TrainingSessions" ADD COLUMN IF NOT EXISTS "IsPaid" boolean NOT NULL DEFAULT false;
+ALTER TABLE "TrainingSessions" ADD COLUMN IF NOT EXISTS "GoogleEventId" character varying(200);
+CREATE UNIQUE INDEX IF NOT EXISTS "IX_TrainingSessions_GoogleEventId_unique" ON "TrainingSessions" ("GoogleEventId") WHERE "GoogleEventId" IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS "GoogleCalendarStates" (
+    "Id" integer NOT NULL PRIMARY KEY,
+    "RefreshToken" text,
+    "LastSyncUtc" timestamp with time zone,
+    "UpdatedAt" timestamp with time zone NOT NULL
+);
