@@ -6,12 +6,12 @@ import { environment } from '../../../environments/environment';
 import { AuthService, User } from '../../services/auth.service';
 import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 import { SessionService, Session, SessionStatus } from '../../services/session.service';
-import { AttendanceService, Attendance, AttendanceStatus } from '../../services/attendance.service';
+import { AttendanceService, Attendance } from '../../services/attendance.service';
 import { RevenueService, MonthlyRevenue } from '../../services/revenue.service';
 import { ApiService } from '../../services/api.service';
 import { SwimmerSkillCard, SwimmerSkillsService } from '../../services/swimmer-skills.service';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -61,7 +61,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     price: 50
   };
 
-  newAttendance: Partial<Attendance> = {
+  newAttendance: Partial<Attendance> & { registrationId?: string } = {
     sessionId: '',
     childId: '',
     childName: '',
@@ -71,6 +71,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     status: 'present',
     checkInTime: ''
   };
+
+  /** Quick payment entry (writes to Payments API). */
+  paymentUserId = '';
+  paymentAmount: number | null = null;
+  paymentMethod = 'Cash';
+  paymentDate = '';
+  paymentReference = '';
+  paymentSaving = signal(false);
+  paymentMessage = signal('');
 
   monthlyRevenue = signal<MonthlyRevenue[]>([]);
   monthlyRevenueError = signal('');
@@ -149,7 +158,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           canceledSessionsRevenue: cancelledSessions,
           scheduledSessionsRevenue: scheduledSessions,
           periodRevenue: revenue?.periodRevenue || [],
-          clientRevenue: revenue?.clientRevenue || []
+          clientRevenue: revenue?.clientRevenue ?? []
         });
 
         if (showLoader) {
@@ -331,7 +340,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         status: (session.status as SessionStatus) || 'scheduled',
         instructor: session.instructor,
         notes: session.notes,
-        price: session.price || 50
+        price: session.price || 50,
+        isPaid: false
       }).subscribe({
         next: () => {
           this.loadDataFromApi(false);
@@ -363,6 +373,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   openAttendanceForm(sessionId: string): void {
     const session = this.sessions().find(s => s.id === sessionId);
     if (session) {
+      const regRow = this.attendance().find(
+        (r) => r.sessionId === session.id && r.childId === session.childId
+      );
       this.newAttendance = {
         sessionId: session.id,
         childId: session.childId,
@@ -370,8 +383,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         clientId: session.clientId,
         clientName: session.clientName,
         date: session.date,
-        status: 'present',
-        checkInTime: session.time
+        status: regRow?.status && regRow.status !== 'absent' ? regRow.status : 'present',
+        checkInTime: session.time,
+        registrationId: regRow?.id
       };
       this.showAttendanceForm.set(true);
     }
@@ -383,30 +397,66 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   saveAttendance(): void {
     const attendance = this.newAttendance;
-    if (attendance.sessionId && attendance.childId && attendance.date) {
-      this.isLoading.set(true);
-      this.attendanceService.recordAttendance({
-        sessionId: attendance.sessionId!,
-        childId: attendance.childId!,
-        childName: attendance.childName!,
-        clientId: attendance.clientId!,
-        clientName: attendance.clientName!,
-        date: attendance.date!,
-        status: (attendance.status as AttendanceStatus) || 'present',
-        checkInTime: attendance.checkInTime,
-        notes: attendance.notes
-      }).subscribe({
+    if (!attendance.sessionId || !attendance.childId || !attendance.date) {
+      return;
+    }
+    // API stores present vs absent only; late/excused count as attended for stats.
+    const attended = attendance.status !== 'absent';
+    this.isLoading.set(true);
+
+    const finish = (): void => {
+      this.loadDataFromApi(false);
+      this.closeAttendanceForm();
+      this.isLoading.set(false);
+    };
+    const onErr = (error: unknown): void => {
+      if (!environment.production) {
+        console.error('Failed to save attendance:', error);
+      }
+      this.isLoading.set(false);
+    };
+
+    if (attendance.registrationId) {
+      this.attendanceService.markAttendance(attendance.registrationId, attended).subscribe({
+        next: () => finish(),
+        error: onErr
+      });
+      return;
+    }
+
+    this.attendanceService
+      .registerForSession(attendance.sessionId, attendance.childId)
+      .pipe(switchMap((reg) => this.attendanceService.markAttendance(reg.id, attended)))
+      .subscribe({
+        next: () => finish(),
+        error: onErr
+      });
+  }
+
+  recordAdminPayment(): void {
+    const uid = this.paymentUserId?.trim();
+    const amt = this.paymentAmount;
+    if (!uid || amt == null || amt <= 0) {
+      this.paymentMessage.set('Choose a client and enter an amount greater than zero.');
+      return;
+    }
+    this.paymentSaving.set(true);
+    this.paymentMessage.set('');
+    this.revenueService
+      .processPayment(amt, this.paymentMethod, uid, this.paymentDate || undefined, this.paymentReference?.trim() || undefined)
+      .subscribe({
         next: () => {
+          this.paymentSaving.set(false);
+          this.paymentMessage.set('Payment saved.');
+          this.paymentAmount = null;
+          this.paymentReference = '';
           this.loadDataFromApi(false);
-          this.closeAttendanceForm();
-          this.isLoading.set(false);
         },
-        error: (error) => {
-          if (!environment.production) { console.error('Failed to save attendance:', error); }
-          this.isLoading.set(false);
+        error: () => {
+          this.paymentSaving.set(false);
+          this.paymentMessage.set('Could not save payment. Ensure you are logged in as admin and the API is running.');
         }
       });
-    }
   }
 
   getStatusColor(status: string): string {
