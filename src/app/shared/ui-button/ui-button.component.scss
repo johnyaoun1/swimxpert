@@ -23,27 +23,27 @@
 }
 
 :host .ui-btn--primary {
-  background: var(--btn-blue-600);
+  background: linear-gradient(135deg, #1d9bf0, #00c4ff);
   color: #fff;
-  border-color: var(--btn-blue-600);
-  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(29, 155, 240, 0.3);
 }
 
 :host .ui-btn--primary:hover:not(:disabled) {
-  background: var(--btn-blue-700);
-  border-color: var(--btn-blue-700);
+  background: linear-gradient(135deg, #1578c2, #009dcf);
+  border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 24px rgba(29, 155, 240, 0.4);
 }
 
 :host .ui-btn--primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px rgba(29, 155, 240, 0.3);
 }
 
 :host .ui-btn--secondary {
-  color: var(--btn-blue-700);
-  border-color: var(--btn-blue-600);
+  color: #1d9bf0;
+  border-color: #1d9bf0;
   background: transparent;
   overflow: hidden;
 }
@@ -52,7 +52,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--btn-blue-100);
+  background: rgba(29, 155, 240, 0.08);
   opacity: 0.5;
   transform: scaleX(0);
   transform-origin: left center;
