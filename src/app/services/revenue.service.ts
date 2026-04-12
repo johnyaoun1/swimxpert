@@ -80,14 +80,24 @@ export class RevenueService {
     if (to) params = params.set('to', to);
 
     return this.http.get<any>(`${this.paymentsApi}/revenue`, { params, withCredentials: true }).pipe(
-      map((response) => ({
-        totalRevenue: Number(response?.totalRevenue ?? 0),
-        completedSessionsRevenue: Number(response?.totalRevenue ?? 0),
-        periodRevenue: [],
-        clientRevenue: []
-      })),
+      map((response) => this.mapRevenueResponse(response)),
       tap((data) => this.revenueData.set(data))
     );
+  }
+
+  private mapRevenueResponse(response: any): RevenueData {
+    const rows = Array.isArray(response?.clientRevenue) ? response.clientRevenue : [];
+    return {
+      totalRevenue: Number(response?.totalRevenue ?? 0),
+      completedSessionsRevenue: Number(response?.totalRevenue ?? 0),
+      periodRevenue: [],
+      clientRevenue: rows.map((c: { clientId: number | string; clientName?: string; revenue: number; sessions: number }) => ({
+        clientId: String(c.clientId),
+        clientName: c.clientName || 'Client',
+        revenue: Number(c.revenue ?? 0),
+        sessions: Number(c.sessions ?? 0)
+      }))
+    };
   }
 
   calculateRevenue(): RevenueData {
@@ -105,12 +115,7 @@ export class RevenueService {
     if (to) params = params.set('to', to);
 
     return this.http.get<any>(`${this.paymentsApi}/revenue`, { params, withCredentials: true }).pipe(
-      map((response) => ({
-        totalRevenue: Number(response?.totalRevenue ?? 0),
-        completedSessionsRevenue: Number(response?.totalRevenue ?? 0),
-        periodRevenue: [],
-        clientRevenue: []
-      })),
+      map((response) => this.mapRevenueResponse(response)),
       tap((data) => this.revenueData.set(data))
     );
   }
