@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace SwimXpert.Api.Models;
 
@@ -44,6 +45,8 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Swimmer> Swimmers { get; set; } = [];
+
+    [JsonIgnore]
     public List<Payment> Payments { get; set; } = [];
     public List<QuizResult> QuizResults { get; set; } = [];
 }
