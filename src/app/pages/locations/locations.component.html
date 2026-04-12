@@ -1,4 +1,4 @@
-<header class="hero-gradient text-white py-20 relative overflow-hidden" aria-label="SwimXpert locations">
+<header class="hero-gradient text-white py-20 relative overflow-hidden min-h-[min(50vh,26rem)] md:min-h-[min(56vh,30rem)]" aria-label="SwimXpert locations" style="background-image:linear-gradient(rgba(6,14,36,0.65),rgba(13,27,62,0.72)),url('/assets/swimmer-action.png');background-size:cover,cover;background-position:center,48% 40%;background-repeat:no-repeat,no-repeat;">
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute top-10 left-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-10 right-10 w-80 h-80 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
@@ -10,7 +10,7 @@
 </header>
 
 <main id="main-content">
-<section class="section-padding bg-white" aria-label="Swimming pool locations in Lebanon">
+<section class="section-padding premium-section" aria-label="Swimming pool locations in Lebanon">
   <div class="container mx-auto">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
       @for (location of locations; track location.id) {
@@ -19,14 +19,14 @@
           <!-- Coming Soon card -->
           <article class="premium-container animate-scale-in flex flex-col items-center justify-center text-center min-h-[220px]"
                [style.animation-delay]="(location.id - 1) * 0.1 + 's'">
-            <div class="w-14 h-14 bg-gradient-to-br from-primary-100 to-accent-100 rounded-full flex items-center justify-center mb-4">
-              <svg class="w-7 h-7 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4" style="background:rgba(29,155,240,0.12);">
+              <svg class="w-7 h-7 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <span class="inline-block bg-primary-100 text-primary-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">New Location</span>
-            <h3 class="text-2xl font-extrabold text-gray-400">Coming Soon</h3>
-            <p class="text-sm text-gray-400 mt-2">Stay tuned — a new SwimXpert location is on the way!</p>
+            <span class="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 text-primary-400" style="background:rgba(29,155,240,0.12); border:1px solid rgba(29,155,240,0.2);">New Location</span>
+            <h3 class="text-2xl font-extrabold" style="color:#64748b;">Coming Soon</h3>
+            <p class="text-sm mt-2" style="color:#475569;">Stay tuned — a new SwimXpert location is on the way!</p>
           </article>
 
         } @else {
@@ -37,7 +37,7 @@
                 <h3 class="text-2xl font-extrabold text-gradient">{{ location.name }}</h3>
                 <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
               </div>
-              <div class="space-y-2 text-gray-700">
+              <div class="space-y-2" style="color:#94a3b8;">
                 <p class="flex items-start">
                   <svg class="w-5 h-5 mr-2 mt-0.5 text-primary-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -76,15 +76,15 @@
       }
     </div>
 
-    <div class="bg-gray-100 rounded-xl p-8" aria-label="Map of SwimXpert pool locations">
+    <div class="rounded-xl p-8" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);" aria-label="Map of SwimXpert pool locations">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h2 class="text-3xl font-bold text-gray-800">Find Us on the Map</h2>
+        <h2 class="text-3xl font-bold text-white">Find Us on the Map</h2>
         <a
           href="https://www.google.com/maps/place/Cap+Sur+Ville+Country+Club/@33.8723314,35.5577879,200m/data=!3m1!1e3!4m14!1m7!3m6!1s0x151f17d100000001:0xecdc7e1c5f8e47c9!2sCap+Sur+Ville+Country+Club!8m2!3d33.8724157!4d35.5581482!16s%2Fg%2F11byz7gwwd!3m5!1s0x151f17d100000001:0xecdc7e1c5f8e47c9!8m2!3d33.8724157!4d35.5581482!16s%2Fg%2F11byz7gwwd?entry=ttu&g_ep=EgoyMDI2MDMwOS4wIKXMDSoASAFQAw%3D%3D"
           target="_blank"
           rel="noopener noreferrer"
           title="Open Cap Sur Ville Country Club swimming pool location on Google Maps - Beirut, Lebanon"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200 shadow-md flex-shrink-0"
+          class="inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors duration-200 shadow-md flex-shrink-0" style="background:linear-gradient(135deg,#1d9bf0,#00c4ff);"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -92,7 +92,7 @@
           View on Google Maps
         </a>
       </div>
-      <div class="bg-white rounded-lg overflow-hidden shadow-lg" style="height: 480px;">
+      <div class="rounded-lg overflow-hidden shadow-lg" style="height: 480px; border:1px solid rgba(255,255,255,0.07);">
         <iframe
           src="https://maps.google.com/maps?q=33.8724157,35.5581482&z=18&output=embed"
           width="100%"
@@ -104,7 +104,7 @@
           title="Cap Sur Ville Country Club location">
         </iframe>
       </div>
-      <p class="text-center text-sm text-gray-500 mt-3">
+      <p class="text-center text-sm mt-3" style="color:#64748b;">
         <svg class="w-4 h-4 inline-block mr-1 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
