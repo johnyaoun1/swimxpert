@@ -81,7 +81,8 @@ public class GoogleCalendarSyncService(
                 request.TimeMaxDateTimeOffset = new DateTimeOffset(DateTime.SpecifyKind(timeMax, DateTimeKind.Utc), TimeSpan.Zero);
                 request.SingleEvents = true;
                 request.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
-                request.ShowDeleted = false;
+                // Include deleted events so we can mark sessions cancelled in-app.
+                request.ShowDeleted = true;
                 request.PageToken = pageToken;
                 var eventsPage = await request.ExecuteAsync(cancellationToken);
                 if (eventsPage.Items is { Count: > 0 })
@@ -127,8 +128,9 @@ public class GoogleCalendarSyncService(
             if (title.Length > 200)
                 title = title[..200];
 
-            var priceFromGoogle = ParsePriceFromEvent(ev);
-            var locationFromGoogle = ParseLocationFromEvent(ev);
+            var priceFromGoogle = ParsePriceFromEvent(ev); // null if not present in description
+            // Prefer the native Google Calendar Location field; fall back to our description convention.
+            var locationFromGoogle = !string.IsNullOrWhiteSpace(ev.Location) ? ev.Location.Trim() : ParseLocationFromEvent(ev);
 
             var existingByGoogle = await db.TrainingSessions.FirstOrDefaultAsync(
                 s => s.GoogleEventId == ev.Id, cancellationToken);
@@ -142,7 +144,7 @@ public class GoogleCalendarSyncService(
                     EndTime = endUtc,
                     Capacity = 10,
                     Status = "Scheduled",
-                    Price = priceFromGoogle,
+                    Price = priceFromGoogle ?? 0m,
                     PoolLocation = locationFromGoogle,
                     IsPaid = false,
                     GoogleEventId = ev.Id,
@@ -156,10 +158,19 @@ public class GoogleCalendarSyncService(
                 existingByGoogle.StartTime = startUtc;
                 existingByGoogle.EndTime = endUtc;
                 existingByGoogle.GoogleEventId = ev.Id;
-                if (priceFromGoogle > 0)
-                    existingByGoogle.Price = priceFromGoogle;
-                if (!string.IsNullOrWhiteSpace(locationFromGoogle))
+                // Only update price when it's explicitly present in the Google description.
+                if (priceFromGoogle.HasValue)
+                    existingByGoogle.Price = priceFromGoogle.Value;
+
+                // If Location exists on the event, allow clearing it (set null).
+                if (ev.Location is not null)
+                {
+                    existingByGoogle.PoolLocation = string.IsNullOrWhiteSpace(ev.Location) ? null : ev.Location.Trim();
+                }
+                else if (!string.IsNullOrWhiteSpace(locationFromGoogle))
+                {
                     existingByGoogle.PoolLocation = locationFromGoogle.Trim();
+                }
                 updated++;
             }
         }
@@ -214,14 +225,14 @@ public class GoogleCalendarSyncService(
         return false;
     }
 
-    private static decimal ParsePriceFromEvent(Event ev)
+    private static decimal? ParsePriceFromEvent(Event ev)
     {
         var desc = ev.Description ?? "";
         var m = Regex.Match(desc, @"SwimXpert · Price:\s*\$?\s*([\d.,]+)", RegexOptions.IgnoreCase);
-        if (m.Success && decimal.TryParse(m.Groups[1].Value.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var x))
-            return x < 0 ? 0 : x;
-
-        return 0;
+        if (!m.Success) return null;
+        if (!decimal.TryParse(m.Groups[1].Value.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var x))
+            return null;
+        return x < 0 ? 0 : x;
     }
 
     private static string? ParseLocationFromEvent(Event ev)
