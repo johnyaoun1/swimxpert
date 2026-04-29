@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
@@ -15,6 +16,7 @@ public class ChatController : ControllerBase
         _httpClientFactory = httpClientFactory;
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Chat([FromBody] ChatRequest request)
     {

@@ -10,8 +10,12 @@ public class RateLimitMiddleware
     private readonly RequestDelegate _next;
     private static readonly ConcurrentDictionary<string, WindowCount> AuthAttempts = new();
     private static readonly ConcurrentDictionary<string, WindowCount> LeadAttempts = new();
+    private static readonly ConcurrentDictionary<string, WindowCount> ChatAttempts = new();
+    private static readonly ConcurrentDictionary<string, WindowCount> PasswordAttempts = new();
     private const int AuthPermitLimit = 10;
     private const int LeadPermitLimit = 20;
+    private const int ChatPermitLimit = 20;
+    private const int PasswordPermitLimit = 5;
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
     public RateLimitMiddleware(RequestDelegate next) => _next = next;
@@ -19,6 +23,7 @@ public class RateLimitMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         var path = context.Request.Path.Value ?? "";
+        var method = context.Request.Method;
         var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
         if (path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase)
@@ -32,9 +37,31 @@ public class RateLimitMiddleware
                 return;
             }
         }
-        else if (path.StartsWith("/api/leads/capture", StringComparison.OrdinalIgnoreCase) && context.Request.Method == "POST")
+        else if (path.StartsWith("/api/leads/capture", StringComparison.OrdinalIgnoreCase) && method == "POST")
         {
             if (!TryConsume(LeadAttempts, ip, LeadPermitLimit))
+            {
+                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("""{"message":"Too many requests. Please try again later."}""");
+                return;
+            }
+        }
+        else if (path.Equals("/api/chat", StringComparison.OrdinalIgnoreCase) && method == "POST")
+        {
+            if (!TryConsume(ChatAttempts, ip, ChatPermitLimit))
+            {
+                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("""{"message":"Too many requests. Please try again later."}""");
+                return;
+            }
+        }
+        else if ((path.StartsWith("/api/auth/forgot-password", StringComparison.OrdinalIgnoreCase)
+                  || path.StartsWith("/api/auth/reset-password", StringComparison.OrdinalIgnoreCase))
+                 && method == "POST")
+        {
+            if (!TryConsume(PasswordAttempts, ip, PasswordPermitLimit))
             {
                 context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                 context.Response.ContentType = "application/json";
