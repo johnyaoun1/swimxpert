@@ -1,56 +1,741 @@
-// Level finder component styles
+// ═══════════════════════════════════════════════════════════════════════════════
+// Level Finder — Premium Design
+// All class names use "lf-" prefix to prevent global style conflicts.
+// TypeScript, logic, bindings, and function names are untouched.
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// ============================================================
-// RESPONSIVE
-// ============================================================
+// ── Brand tokens (dark navy theme) ───────────────────────────────────────────
+$p:        #1d9bf0;   // electric blue
+$p-light:  #00c4ff;   // cyan
+$p-dark:   #1578c2;   // darker blue
+$accent:   #00c4ff;
+$bg:       #0a0f1e;
+$bg-end:   #0d1635;
+$text:     #f1f5f9;
+$text-mid: #94a3b8;
+$track:    rgba(255,255,255,0.08);
+$white:    #ffffff;
+$gold:     #FFB703;
+$card-bg:  #0f1e3d;
+$card-border: rgba(255,255,255,0.07);
+$shadow-sm: rgba(0,0,0,0.3);
+$shadow:    rgba(0,0,0,0.4);
+$shadow-lg: rgba(29,155,240,0.25);
+$radius:    20px;
+$radius-sm: 14px;
 
-@media (max-width: 389px) {
-  .hero-gradient .container {
-    padding: 2.5rem 1rem;
-  }
-  .hero-gradient h1 { font-size: 1.75rem; }
-  .hero-gradient p  { font-size: 0.9375rem; }
-
-  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
-
-  .premium-container.interactive-card {
-    padding: 1.25rem !important;
-  }
-
-  input[type="number"],
-  input[type="radio"] + label {
-    font-size: 16px;
-  }
-
-  input[type="number"] { min-height: 44px; }
-
-  // Yes/No radio buttons: stack on xs
-  .flex.gap-4 {
-    flex-direction: column;
-    gap: 0.5rem;
-    label { font-size: 0.9375rem; }
-  }
-
-  h3 { font-size: 1.25rem !important; }
-  p.text-lg { font-size: 0.9375rem !important; }
-
-  button[type="submit"] { min-height: 48px; width: 100%; }
-
-  // Result card
-  .text-7xl { font-size: 3.5rem !important; }
+// ── Page ─────────────────────────────────────────────────────────────────────
+.lf-page {
+  min-height: 100vh;
+  background: $bg;
+  animation: lf-fadeInPage 0.4s ease-out;
 }
 
-@media (min-width: 390px) and (max-width: 639px) {
-  .hero-gradient h1 { font-size: 2rem; }
-  .hero-gradient p  { font-size: 1rem; }
-  .container { padding-left: 1rem; padding-right: 1rem; }
-
-  .premium-container.interactive-card { padding: 1.5rem !important; }
-
-  input[type="number"] { font-size: 16px; min-height: 44px; }
-  button[type="submit"] { min-height: 48px; }
+// ── Header ───────────────────────────────────────────────────────────────────
+.lf-header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #060e24 0%, #0d1b3e 55%, #132851 100%);
+  padding: 4rem 1.5rem 5rem;
+  text-align: center;
+  color: $white;
 }
 
-@media (min-width: 640px) and (max-width: 767px) {
-  .hero-gradient h1 { font-size: 2.75rem; }
+.lf-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  filter: blur(55px);
+  pointer-events: none;
+}
+.lf-orb-1 { width: 22rem; height: 22rem; top: -6rem;  left: -5rem;  animation: lf-float 12s ease-in-out infinite; }
+.lf-orb-2 { width: 18rem; height: 18rem; bottom: -5rem; right: -3rem; animation: lf-float 9s ease-in-out infinite 4s; }
+
+.lf-header-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.lf-swim-emoji {
+  display: block;
+  font-size: 3.25rem;
+  margin-bottom: 0.75rem;
+  animation: lf-bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.18));
+}
+
+.lf-title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  color: $white;
+  margin: 0 0 0.8rem;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  animation: lf-slideDown 0.55s ease-out 0.12s both;
+}
+
+.lf-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0 0 1.75rem;
+  line-height: 1.55;
+  animation: lf-slideUp 0.55s ease-out 0.22s both;
+}
+
+.lf-wave-line {
+  animation: lf-fadeIn 0.6s ease-out 0.5s both;
+}
+.lf-wave-svg {
+  width: min(340px, 80%);
+  margin: 0 auto;
+  display: block;
+
+  path {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+    animation: lf-drawWave 1.2s ease-out 0.6s forwards;
+  }
+}
+
+// ── Main container ────────────────────────────────────────────────────────────
+.lf-main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+// ── Base card ─────────────────────────────────────────────────────────────────
+.lf-card {
+  background: $card-bg;
+  border-radius: $radius;
+  box-shadow: 0 4px 24px $shadow-sm;
+  border: 1px solid $card-border;
+  margin-bottom: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    box-shadow: 0 8px 32px $shadow;
+    border-color: rgba(29,155,240,0.2);
+  }
+}
+
+// ── Progress card ─────────────────────────────────────────────────────────────
+.lf-progress-card {
+  background: $card-bg;
+  border-radius: $radius;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 24px $shadow-sm;
+  border: 1px solid $card-border;
+  animation: lf-slideDown 0.45s ease-out 0.05s both;
+}
+
+.lf-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.lf-progress-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text-mid;
+}
+
+.lf-progress-pct {
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: $p;
+  letter-spacing: 0.02em;
+}
+
+.lf-progress-track {
+  width: 100%;
+  height: 8px;
+  background: $track;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.lf-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $p-dark, $p, $p-light);
+  border-radius: 99px;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+// ── Badge ─────────────────────────────────────────────────────────────────────
+.lf-badge {
+  display: inline-block;
+  background: rgba(74, 143, 168, 0.10);
+  color: $p;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 99px;
+  margin-bottom: 1rem;
+}
+
+// ── Question text ─────────────────────────────────────────────────────────────
+.lf-q-text {
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+  font-weight: 600;
+  color: $text;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+// ── Age card ──────────────────────────────────────────────────────────────────
+.lf-age-card {
+  padding: 2rem;
+  animation: lf-cardIn 0.4s ease-out 0.1s both;
+}
+
+.lf-age-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.lf-age-input {
+  width: 7.5rem;
+  padding: 0.875rem 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: $text;
+  background: rgba(255,255,255,0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &::placeholder { color: rgba(148,163,184,0.5); font-weight: 400; }
+
+  &:focus {
+    outline: none;
+    border-color: $p;
+    box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.22);
+  }
+}
+
+.lf-age-unit {
+  font-size: 1rem;
+  color: $text-mid;
+  font-weight: 500;
+}
+
+.lf-error {
+  margin-top: 0.625rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+// ── Question cards ────────────────────────────────────────────────────────────
+.lf-q-card {
+  padding: 2rem;
+  animation: lf-cardIn 0.4s ease-out var(--q-delay, 0s) both;
+
+  // Water-ripple decoration (top-right corner, CSS only)
+  .lf-ripple {
+    position: absolute;
+    top: -2.25rem;
+    right: -2.25rem;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    border: 2px solid rgba(74, 143, 168, 0.10);
+    pointer-events: none;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0.875rem;
+      border-radius: 50%;
+      border: 2px solid rgba(74, 143, 168, 0.065);
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 1.75rem;
+      border-radius: 50%;
+      border: 2px solid rgba(74, 143, 168, 0.04);
+    }
+  }
+
+  // Answered state
+  &.lf-answered {
+    border-color: rgba(74, 143, 168, 0.38);
+
+    .lf-badge {
+      background: rgba(74, 143, 168, 0.14);
+      color: $p-dark;
+    }
+  }
+
+  // YES selected
+  &.lf-yes-state { border-left: 4px solid $p; }
+
+  // NO selected
+  &.lf-no-state { border-left: 4px solid #94a3b8; }
+}
+
+// ── YES / NO option buttons ───────────────────────────────────────────────────
+.lf-options {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+// Hidden radio – still keyboard-accessible (SR-only technique)
+.lf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lf-opt-yes,
+.lf-opt-no {
+  flex: 1;
+  min-width: 130px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: $radius-sm;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  min-height: 54px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+
+  // Focus-within outline (keyboard nav)
+  &:focus-within {
+    box-shadow: 0 0 0 3px rgba(74, 143, 168, 0.35);
+  }
+  &:active { transform: scale(0.97); }
+}
+
+.lf-opt-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+// YES default + active
+.lf-opt-yes {
+  background: rgba(29,155,240,0.08);
+  color: rgba(29,155,240,0.75);
+  border: 2px solid rgba(29,155,240,0.25);
+
+  .lf-opt-icon { color: rgba(29,155,240,0.75); }
+
+  &:hover {
+    transform: scale(1.04);
+    background: linear-gradient(135deg, $p, $p-light);
+    color: $white;
+    border-color: transparent;
+    box-shadow: 0 8px 24px $shadow-lg;
+
+    .lf-opt-icon { color: $white; }
+  }
+
+  &.lf-opt-active {
+    background: linear-gradient(135deg, $p-dark, $p);
+    color: $white;
+    border-color: transparent;
+    box-shadow: 0 6px 20px $shadow-lg;
+
+    .lf-opt-icon { color: $white; transform: scale(1.15); }
+  }
+}
+
+// NO default + active
+.lf-opt-no {
+  background: rgba(255,255,255,0.04);
+  color: rgba(148,163,184,0.70);
+  border: 2px solid rgba(255,255,255,0.08);
+
+  .lf-opt-icon { color: rgba(148,163,184,0.70); }
+
+  &:hover {
+    transform: scale(1.04);
+    border-color: $p;
+    color: $p;
+    background: rgba(29,155,240,0.06);
+
+    .lf-opt-icon { color: $p; }
+  }
+
+  &.lf-opt-active {
+    background: #334155;
+    color: $white;
+    border-color: transparent;
+    box-shadow: 0 6px 20px rgba(51, 65, 85, 0.40);
+
+    .lf-opt-icon { color: $white; transform: scale(1.15); }
+  }
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+.lf-submit-row {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.lf-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 1.1rem 2.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $white;
+  background: linear-gradient(135deg, $p-dark, $p, $p-light);
+  background-size: 200% 100%;
+  border: none;
+  border-radius: $radius-sm;
+  box-shadow: 0 6px 22px $shadow-lg;
+  cursor: pointer;
+  min-height: 56px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: lf-gradient-shift 4s ease infinite;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px $shadow-lg;
+    background-position: right center;
+  }
+
+  &:active:not(:disabled) { transform: translateY(-1px); }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 3px solid $p;
+    outline-offset: 3px;
+  }
+}
+
+.lf-arrow-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform 0.2s ease;
+}
+.lf-btn-submit:hover:not(:disabled) .lf-arrow-icon {
+  transform: translateX(5px);
+}
+
+// ── Result card ───────────────────────────────────────────────────────────────
+.lf-result-card {
+  padding: 3rem 2rem;
+  text-align: center;
+  animation: lf-celebrate 0.65s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+// Sparkle decorations (pure CSS, no libraries)
+.lf-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lf-sp {
+  position: absolute;
+  font-size: 1.2rem;
+  color: $gold;
+  opacity: 0;
+  animation: lf-sparkle 3.5s ease-in-out infinite;
+}
+.lf-sp-1 { top: 10%; left: 7%;   animation-delay: 0.0s;  animation-duration: 2.8s; }
+.lf-sp-2 { top: 6%;  right: 10%; animation-delay: 0.35s; animation-duration: 3.2s; }
+.lf-sp-3 { top: 22%; left: 13%;  animation-delay: 0.7s;  animation-duration: 2.5s; }
+.lf-sp-4 { top: 14%; right: 18%; animation-delay: 1.05s; animation-duration: 3.0s; }
+.lf-sp-5 { top: 30%; left: 5%;   animation-delay: 1.4s;  animation-duration: 2.7s; }
+
+// Level badge circle
+.lf-result-badge {
+  width: 5.5rem;
+  height: 5.5rem;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $p-dark 0%, $p 50%, $p-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 36px $shadow-lg;
+  animation: lf-badgePop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+.lf-result-num {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: $white;
+  line-height: 1;
+}
+
+.lf-result-name {
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 1rem;
+  animation: lf-slideUp 0.4s ease-out 0.3s both;
+}
+
+// Stars
+.lf-stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-bottom: 2rem;
+}
+
+.lf-star {
+  font-size: 1.85rem;
+  color: rgba(200, 224, 234, 0.8);
+  transition: color 0.25s ease, transform 0.2s ease;
+
+  &.lf-star-on {
+    color: $gold;
+    text-shadow: 0 2px 10px rgba(255, 183, 3, 0.45);
+  }
+}
+
+// Staggered star pop
+@for $i from 1 through 5 {
+  .lf-star:nth-child(#{$i}) {
+    animation: lf-starPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) #{0.35 + $i * 0.1}s both;
+  }
+}
+
+// Info blocks
+.lf-result-block {
+  text-align: left;
+  background: rgba(74, 143, 168, 0.06);
+  border: 1px solid rgba(74, 143, 168, 0.14);
+  border-radius: $radius-sm;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  animation: lf-slideUp 0.4s ease-out 0.55s both;
+
+  & + & { animation-delay: 0.65s; }
+}
+
+.lf-block-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: $p;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.lf-block-text {
+  font-size: 1rem;
+  color: #94a3b8;
+  line-height: 1.72;
+  margin: 0;
+
+  strong { color: #1d9bf0; font-weight: 700; }
+}
+
+// CTAs
+.lf-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 2rem;
+  animation: lf-slideUp 0.4s ease-out 0.75s both;
+}
+
+.lf-btn-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $white;
+  background: linear-gradient(135deg, $p-dark, $p, $p-light);
+  background-size: 200% 100%;
+  border-radius: $radius-sm;
+  text-decoration: none;
+  box-shadow: 0 6px 22px $shadow-lg;
+  min-height: 54px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: lf-gradient-shift 4s ease infinite;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px $shadow-lg;
+    background-position: right center;
+  }
+
+  &:focus-visible { outline: 3px solid $p; outline-offset: 3px; }
+}
+
+.lf-btn-retake {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: $radius-sm;
+  cursor: pointer;
+  min-height: 54px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $p;
+    color: $p;
+    background: rgba(29,155,240,0.06);
+  }
+
+  &:focus-visible { outline: 3px solid $p; outline-offset: 3px; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Keyframes
+// ═══════════════════════════════════════════════════════════════════════════════
+
+@keyframes lf-fadeInPage {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes lf-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes lf-slideDown {
+  from { transform: translateY(-18px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes lf-slideUp {
+  from { transform: translateY(18px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes lf-bounceIn {
+  0%  { transform: scale(0.4);  opacity: 0; }
+  65% { transform: scale(1.18); }
+  100%{ transform: scale(1);    opacity: 1; }
+}
+
+@keyframes lf-cardIn {
+  from { transform: translateY(22px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes lf-celebrate {
+  0%  { transform: scale(0.86); opacity: 0; }
+  65% { transform: scale(1.025); }
+  100%{ transform: scale(1);    opacity: 1; }
+}
+
+@keyframes lf-badgePop {
+  0%  { transform: scale(0) rotate(-15deg); opacity: 0; }
+  100%{ transform: scale(1) rotate(0);      opacity: 1; }
+}
+
+@keyframes lf-starPop {
+  0%  { transform: scale(0) rotate(-30deg); opacity: 0; }
+  100%{ transform: scale(1) rotate(0);      opacity: 1; }
+}
+
+@keyframes lf-sparkle {
+  0%  { opacity: 0;   transform: translateY(0)     scale(0.6); }
+  25% { opacity: 1; }
+  75% { opacity: 0.7; }
+  100%{ opacity: 0;   transform: translateY(-45px) scale(1.3); }
+}
+
+@keyframes lf-float {
+  0%, 100% { transform: translate(0, 0); }
+  50%       { transform: translate(8px, -14px); }
+}
+
+@keyframes lf-drawWave {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes lf-gradient-shift {
+  0%, 100% { background-position: left center; }
+  50%       { background-position: right center; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Responsive
+// ═══════════════════════════════════════════════════════════════════════════════
+
+@media (max-width: 480px) {
+  .lf-header     { padding: 2.5rem 1rem 3.25rem; }
+  .lf-main       { padding: 1.5rem 1rem 3.5rem; }
+  .lf-age-card   { padding: 1.5rem; }
+  .lf-q-card     { padding: 1.5rem; }
+  .lf-result-card{ padding: 2rem 1.25rem; }
+
+  .lf-options    { flex-direction: column; }
+  .lf-opt-yes,
+  .lf-opt-no     { min-width: 100%; }
+
+  .lf-age-input  { width: 100%; max-width: 8rem; font-size: 16px; min-height: 48px; }
+  .lf-btn-submit { width: 100%; min-height: 52px; }
+  .lf-btn-cta,
+  .lf-btn-retake { min-height: 52px; }
+
+  .lf-result-badge { width: 4.75rem; height: 4.75rem; }
+  .lf-result-num   { font-size: 2rem; }
+}
+
+@media (min-width: 481px) and (max-width: 639px) {
+  .lf-main    { padding: 2rem 1.25rem 4rem; }
+  .lf-q-card  { padding: 1.75rem; }
+  .lf-age-input { font-size: 16px; min-height: 46px; }
+}
+
+@media (min-width: 640px) {
+  .lf-age-card    { padding: 2.25rem; }
+  .lf-q-card      { padding: 2.25rem; }
+  .lf-result-card { padding: 3.5rem 2.5rem; }
+  .lf-result-badge{ width: 6rem; height: 6rem; }
+  .lf-result-num  { font-size: 2.5rem; }
 }

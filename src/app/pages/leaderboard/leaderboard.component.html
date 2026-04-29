@@ -1,4 +1,4 @@
-<div class="hero-gradient text-white py-20 relative overflow-hidden">
+<div class="hero-gradient text-white py-20 relative overflow-hidden min-h-[min(48vh,24rem)] md:min-h-[min(52vh,28rem)]" style="background-image:linear-gradient(rgba(6,14,36,0.65),rgba(13,27,62,0.72)),url('/assets/swimmer-dark.png');background-size:cover,cover;background-position:center,50% 36%;background-repeat:no-repeat,no-repeat;">
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
@@ -42,8 +42,8 @@
     @if (!loading && error) {
       <div class="premium-container text-center py-12 animate-fade-in">
         <div class="text-5xl mb-4">⚠️</div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h2>
-        <p class="text-gray-600 mb-6">{{ error }}</p>
+        <h2 class="text-2xl font-bold text-white mb-2">Something went wrong</h2>
+        <p class="mb-6" style="color:#94a3b8;">{{ error }}</p>
         <button (click)="loadLeaderboard()" class="btn-primary">Try Again</button>
       </div>
     }
@@ -52,8 +52,8 @@
     @if (!loading && !error && leaderboard.length === 0) {
       <div class="premium-container text-center py-16 animate-fade-in">
         <div class="text-6xl mb-6">📝</div>
-        <h2 class="text-3xl font-bold text-gray-800 mb-4">No Quiz Results Yet</h2>
-        <p class="text-lg text-gray-600 mb-8">No quiz results yet — be the first to take the quiz!</p>
+        <h2 class="text-3xl font-bold text-white mb-4">No Quiz Results Yet</h2>
+        <p class="text-lg mb-8" style="color:#94a3b8;">No quiz results yet — be the first to take the quiz!</p>
         <a routerLink="/quizzes" class="btn-primary">Take Quiz Now</a>
       </div>
     }
@@ -65,48 +65,34 @@
           <div
             class="premium-container interactive-card animate-slide-up"
             [class.bg-gradient-to-r]="i < 3"
-            [class.from-yellow-50]="i === 0"
-            [class.to-yellow-100]="i === 0"
-            [class.from-gray-50]="i === 1"
-            [class.to-gray-100]="i === 1"
-            [class.from-orange-50]="i === 2"
-            [class.to-orange-100]="i === 2"
-            [class.border-yellow-300]="i === 0"
-            [class.border-gray-300]="i === 1"
-            [class.border-orange-300]="i === 2"
-            [class.border-4]="i < 3"
+            [class.border-yellow-500]="i === 0"
+            [class.border-gray-400]="i === 1"
+            [class.border-orange-500]="i === 2"
+            [class.border-2]="i < 3"
             [style.animation-delay.ms]="i * 50"
           >
             <div class="flex items-center gap-4 sm:gap-6">
 
               <!-- Rank badge -->
               <div class="flex-shrink-0">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl"
-                     [class.bg-gradient-to-br]="i < 3"
-                     [class.from-yellow-400]="i === 0"
-                     [class.to-yellow-600]="i === 0"
-                     [class.from-gray-300]="i === 1"
-                     [class.to-gray-500]="i === 1"
-                     [class.from-orange-400]="i === 2"
-                     [class.to-orange-600]="i === 2"
-                     [class.bg-primary-100]="i >= 3"
-                     [class.text-primary-700]="i >= 3"
-                     [class.text-white]="i < 3">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl text-white"
+                     [style.background]="i === 0 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : i === 1 ? 'linear-gradient(135deg,#94a3b8,#64748b)' : i === 2 ? 'linear-gradient(135deg,#f97316,#ea580c)' : 'rgba(29,155,240,0.15)'"
+                     [style.color]="i < 3 ? '#fff' : '#1d9bf0'">
                   {{ getRankIcon(entry.rank) }}
                 </div>
               </div>
 
               <!-- Avatar (initial-based — API never returns avatar) -->
               <div class="flex-shrink-0">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center border-4 border-white shadow-lg">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,#1d9bf0,#00c4ff); border:3px solid rgba(255,255,255,0.1);">
                   <span class="text-xl sm:text-2xl font-bold text-white">{{ entry.displayName.charAt(0) }}</span>
                 </div>
               </div>
 
               <!-- Name + meta -->
               <div class="flex-1 min-w-0">
-                <h3 class="text-lg sm:text-2xl font-extrabold text-gray-800 truncate">{{ entry.displayName }}</h3>
-                <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 text-sm text-gray-600">
+                <h3 class="text-lg sm:text-2xl font-extrabold text-white truncate">{{ entry.displayName }}</h3>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 text-sm" style="color:#94a3b8;">
                   <span class="flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -125,13 +111,10 @@
               <!-- Percentage score -->
               <div class="flex-shrink-0 text-right">
                 <div class="text-3xl sm:text-4xl font-black mb-1"
-                     [class.text-yellow-600]="i === 0"
-                     [class.text-gray-600]="i === 1"
-                     [class.text-orange-600]="i === 2"
-                     [class.text-primary-600]="i >= 3">
+                     [style.color]="i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#f97316' : '#1d9bf0'">
                   {{ entry.percentage }}%
                 </div>
-                <div class="text-xs sm:text-sm text-gray-500 font-semibold">Best Score</div>
+                <div class="text-xs sm:text-sm font-semibold" style="color:#64748b;">Best Score</div>
               </div>
             </div>
           </div>
@@ -139,7 +122,7 @@
       </div>
 
       <div class="mt-12 text-center animate-fade-in">
-        <p class="text-lg text-gray-600 mb-6">Want to improve your ranking?</p>
+        <p class="text-lg mb-6" style="color:#94a3b8;">Want to improve your ranking?</p>
         <a routerLink="/quizzes" class="btn-primary">Take Quiz Again</a>
       </div>
     }

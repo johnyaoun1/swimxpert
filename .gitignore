@@ -28,5 +28,10 @@ yarn-error.log*
 !.env.example
 **/appsettings.Production.json
 **/appsettings.*.Production.json
+**/appsettings.Development.json
 **/secrets.json
 **/*.user
+
+# Local image scratch files
+*.jpeg
+*.jpg

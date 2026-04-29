@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://swimxpert.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://swimxpert.com/about</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://swimxpert.com/swim-lessons</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://swimxpert.com/level-finder</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://swimxpert.com/sessions</loc><priority>0.9</priority><changefreq>daily</changefreq></url>
+  <url><loc>https://swimxpert.com/locations</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://swimxpert.com/contact</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://swimxpert.com/login</loc><priority>0.5</priority><changefreq>never</changefreq></url>
+  <url><loc>https://swimxpert.com/signup</loc><priority>0.6</priority><changefreq>never</changefreq></url>
+</urlset>

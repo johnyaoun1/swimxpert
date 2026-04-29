@@ -1,110 +1,218 @@
-<div class="hero-gradient text-white py-20 relative overflow-hidden">
-  <div class="absolute inset-0 overflow-hidden">
-    <div class="absolute top-20 left-20 w-56 h-56 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
-    <div class="absolute bottom-20 right-20 w-72 h-72 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
-  </div>
-  <div class="container mx-auto px-4 text-center relative z-10">
-    <div class="inline-block mb-4 animate-scale-in">
-      <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm floating-element">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+<div class="lf-page">
+
+  <!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+  <header class="lf-header" aria-label="Find your swimming level">
+    <div class="lf-orb lf-orb-1" aria-hidden="true"></div>
+    <div class="lf-orb lf-orb-2" aria-hidden="true"></div>
+    <div class="lf-header-inner">
+      <div class="lf-swim-emoji" aria-hidden="true">🏊</div>
+      <h1 class="lf-title">Find Your Swimming Level</h1>
+      <p class="lf-subtitle">Answer a few questions and we'll recommend the perfect class for you</p>
+      <div class="lf-wave-line" aria-hidden="true">
+        <svg viewBox="0 0 360 24" xmlns="http://www.w3.org/2000/svg" class="lf-wave-svg" preserveAspectRatio="none">
+          <path d="M0,12 C40,2 80,22 120,12 C160,2 200,22 240,12 C280,2 320,22 360,12"
+                fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
       </div>
     </div>
-    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 animate-slide-down">Level Finder</h1>
-    <p class="text-xl md:text-2xl text-blue-100 animate-slide-up">Answer a few questions to find the perfect swim level for your child</p>
-  </div>
-</div>
+  </header>
 
-<section class="section-padding bg-gray-50">
-  <div class="container mx-auto max-w-4xl">
+  <!-- ═══════════════════════════════════ MAIN ═══════════════════════════════════ -->
+  <main id="main-content" class="lf-main">
+
     @if (!showResult()) {
-      <form [formGroup]="levelFinderForm" (ngSubmit)="onSubmit()" class="premium-container interactive-card animate-scale-in">
-        <div class="mb-8">
-          <label class="block text-lg font-semibold text-gray-800 mb-2">
-            What is your child's age?
-          </label>
-          <input 
-            type="number" 
-            formControlName="age"
-            min="3"
-            max="18"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            placeholder="Enter age (3-18)"
-          />
-          @if (levelFinderForm.get('age')?.invalid && levelFinderForm.get('age')?.touched) {
-            <p class="text-red-600 mt-1">Please enter a valid age between 3 and 18</p>
-          }
-        </div>
 
-        <div class="space-y-6">
-          <h3 class="text-2xl font-bold text-gray-800 mb-4">Please answer the following questions:</h3>
-          
-          @for (question of questions; track question.id) {
-            <div class="border-b border-gray-200 pb-6">
-              <p class="text-lg font-semibold text-gray-800 mb-4">{{ question.id }}. {{ question.text }}</p>
-              <div class="flex gap-4">
-                <label class="flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    [formControlName]="question.key"
-                    [value]="true"
-                    class="w-5 h-5 text-primary-600 focus:ring-primary-500"
-                  />
-                  <span class="ml-2 text-gray-700">Yes</span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                  <input 
-                    type="radio" 
-                    [formControlName]="question.key"
-                    [value]="false"
-                    class="w-5 h-5 text-primary-600 focus:ring-primary-500"
-                  />
-                  <span class="ml-2 text-gray-700">No</span>
-                </label>
-              </div>
+      <!-- ─── FORM ─── -->
+      <section aria-label="Swimming level assessment quiz">
+      <form [formGroup]="levelFinderForm" (ngSubmit)="onSubmit()" class="lf-form" novalidate>
+
+        <!-- PROGRESS BAR -->
+        <div class="lf-progress-card">
+          <div class="lf-progress-meta">
+            <span class="lf-progress-label">
+              {{ answeredCount }} of {{ questions.length }} answered
+            </span>
+            <span class="lf-progress-pct">
+              {{ (answeredCount / questions.length * 100) | number:'1.0-0' }}% complete
+            </span>
+          </div>
+          <div class="lf-progress-track"
+               role="progressbar"
+               [attr.aria-valuenow]="answeredCount"
+               aria-valuemin="0"
+               [attr.aria-valuemax]="questions.length">
+            <div class="lf-progress-fill"
+                 [style.width.%]="answeredCount / questions.length * 100">
             </div>
+          </div>
+        </div>
+
+        <!-- AGE CARD -->
+        <div class="lf-card lf-age-card">
+          <span class="lf-badge">Age</span>
+          <p class="lf-q-text" role="heading" aria-level="3">What is your child's age?</p>
+          <div class="lf-age-row">
+            <input
+              type="number"
+              formControlName="age"
+              min="3"
+              max="18"
+              class="lf-age-input"
+              placeholder="3–18"
+              aria-label="Child's age in years"
+            />
+            <span class="lf-age-unit">years old</span>
+          </div>
+          @if (levelFinderForm.get('age')?.invalid && levelFinderForm.get('age')?.touched) {
+            <p class="lf-error" role="alert">Please enter a valid age between 3 and 18</p>
           }
         </div>
 
-        <div class="mt-8 flex justify-center">
-          <button 
-            type="submit" 
+        <!-- QUESTION CARDS -->
+        @for (question of questions; track question.id) {
+          <div class="lf-card lf-q-card"
+               [class.lf-answered]="levelFinderForm.get(question.key)?.value !== null"
+               [class.lf-yes-state]="levelFinderForm.get(question.key)?.value === true"
+               [class.lf-no-state]="levelFinderForm.get(question.key)?.value === false"
+               [style.--q-delay]="(question.id * 0.04) + 's'">
+
+            <!-- Water ripple decoration -->
+            <div class="lf-ripple" aria-hidden="true"></div>
+
+            <span class="lf-badge">Question {{ question.id }}</span>
+            <p class="lf-q-text" role="heading" aria-level="3">{{ question.text }}</p>
+
+            <div class="lf-options">
+
+              <!-- YES -->
+              <label class="lf-opt-yes"
+                     [class.lf-opt-active]="levelFinderForm.get(question.key)?.value === true"
+                     [attr.aria-label]="'Yes — ' + question.text">
+                <input type="radio"
+                       [formControlName]="question.key"
+                       [value]="true"
+                       class="lf-sr-only" />
+                <svg class="lf-opt-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"/>
+                </svg>
+                <span>YES</span>
+              </label>
+
+              <!-- NO -->
+              <label class="lf-opt-no"
+                     [class.lf-opt-active]="levelFinderForm.get(question.key)?.value === false"
+                     [attr.aria-label]="'No — ' + question.text">
+                <input type="radio"
+                       [formControlName]="question.key"
+                       [value]="false"
+                       class="lf-sr-only" />
+                <svg class="lf-opt-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clip-rule="evenodd"/>
+                </svg>
+                <span>NO</span>
+              </label>
+
+            </div>
+          </div>
+        }
+
+        <!-- SUBMIT -->
+        <div class="lf-submit-row">
+          <button
+            type="submit"
             [disabled]="levelFinderForm.invalid"
-            class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Find My Level
+            class="lf-btn-submit"
+            aria-label="Calculate my swimming level">
+            <span>Find My Level</span>
+            <svg class="lf-arrow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clip-rule="evenodd"/>
+            </svg>
           </button>
         </div>
+
       </form>
+      </section>
+
+    } @else {
+
+      <!-- ─── RESULT ─── -->
+      <section aria-label="Your recommended swimming level">
+      <div class="lf-card lf-result-card">
+
+        <!-- Sparkles -->
+        <div class="lf-sparkles" aria-hidden="true">
+          <span class="lf-sp lf-sp-1">✦</span>
+          <span class="lf-sp lf-sp-2">✦</span>
+          <span class="lf-sp lf-sp-3">✦</span>
+          <span class="lf-sp lf-sp-4">✦</span>
+          <span class="lf-sp lf-sp-5">✦</span>
+        </div>
+
+        <!-- Level badge -->
+        <div class="lf-result-badge" aria-label="Your recommended level">
+          <span class="lf-result-num">{{ determinedLevel() }}</span>
+        </div>
+
+        <!-- Level name -->
+        @if (levelInfo()) {
+          <h2 class="lf-result-name">{{ levelInfo()!.title }}</h2>
         } @else {
-          <div class="premium-container text-center animate-scale-in">
-        <div class="mb-6">
-          <div class="w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center text-white text-5xl font-bold mx-auto mb-4">
-            {{ determinedLevel() }}
+          <h2 class="lf-result-name">Level {{ determinedLevel() }}</h2>
+        }
+
+        <!-- Stars -->
+        <div class="lf-stars" aria-label="Skill level indicator">
+          <span class="lf-star" [class.lf-star-on]="1 <= determinedLevel()" aria-hidden="true">★</span>
+          <span class="lf-star" [class.lf-star-on]="2 <= determinedLevel()" aria-hidden="true">★</span>
+          <span class="lf-star" [class.lf-star-on]="3 <= determinedLevel()" aria-hidden="true">★</span>
+          <span class="lf-star" [class.lf-star-on]="4 <= determinedLevel()" aria-hidden="true">★</span>
+          <span class="lf-star" [class.lf-star-on]="5 <= determinedLevel()" aria-hidden="true">★</span>
+        </div>
+
+        <!-- What this means -->
+        @if (levelInfo()) {
+          <div class="lf-result-block">
+            <h3 class="lf-block-label">What this means for you</h3>
+            <p class="lf-block-text">{{ levelInfo()!.goal }}</p>
           </div>
-          <h2 class="text-4xl font-bold text-gray-800 mb-4">Level {{ determinedLevel() }}</h2>
-          @if (levelInfo()) {
-            <p class="text-2xl text-primary-600 mb-2">{{ levelInfo()!.title }}</p>
-            <p class="text-lg text-gray-600 mb-6">{{ levelInfo()!.goal }}</p>
-          }
-        </div>
+        }
 
-        <div class="bg-primary-50 rounded-lg p-6 mb-8 text-left">
-          <h3 class="text-xl font-semibold text-gray-800 mb-4">What's Next?</h3>
-          <p class="text-gray-700 mb-4">
-            Based on your answers, we recommend starting at Level {{ determinedLevel() }}. This level is designed to match your child's current abilities and will help them progress at the right pace.
-          </p>
-          <p class="text-gray-700">
-            Ready to get started? Click the button below to apply for lessons at this level.
+        <!-- Recommended steps -->
+        <div class="lf-result-block">
+          <h3 class="lf-block-label">Recommended Next Steps</h3>
+          <p class="lf-block-text">
+            Based on your answers, we recommend starting at
+            <strong>Level {{ determinedLevel() }}</strong>.
+            This level is designed to match your child's current abilities
+            and will help them progress at the right pace.
           </p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a routerLink="/contact" class="btn-primary">Apply Now</a>
-          <button (click)="resetForm()" class="btn-secondary">Start Over</button>
+        <!-- CTAs -->
+        <div class="lf-result-actions">
+          <a routerLink="/contact"
+             class="lf-btn-cta"
+             aria-label="Browse available swimming sessions">
+            Browse Available Sessions →
+          </a>
+          <button type="button"
+                  (click)="resetForm()"
+                  class="lf-btn-retake"
+                  aria-label="Retake the level finder quiz">
+            Retake Quiz
+          </button>
         </div>
+
       </div>
+      </section>
+
     }
-  </div>
-</section>
+
+  </main>
+</div>

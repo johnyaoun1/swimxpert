@@ -27,7 +27,8 @@ public class SecurityHeadersMiddleware
             if (!_env.IsDevelopment())
             {
                 headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
-                headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';";
+                // frame-src: allow Contact page embeds (Google Calendar, Maps). Without this, default-src blocks third-party iframes.
+                headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' https://calendar.google.com https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';";
             }
             return Task.CompletedTask;
         });

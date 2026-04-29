@@ -1,86 +1,89 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style="background:#0a0f1e;">
   <div class="max-w-md w-full space-y-8">
     <div>
       <div class="flex justify-center">
-        <div class="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:linear-gradient(135deg,#1d9bf0,#00c4ff);">
           <span class="text-white font-bold text-2xl">S</span>
         </div>
       </div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
         Create your account
       </h2>
-      <p class="mt-2 text-center text-sm text-gray-600">
+      <p class="mt-2 text-center text-sm" style="color:#94a3b8;">
         Or
-        <a routerLink="/login" class="font-medium text-primary-600 hover:text-primary-500">
+        <a routerLink="/login" class="font-medium text-primary-400 hover:text-primary-300">
           sign in to your existing account
         </a>
       </p>
     </div>
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
       @if (errorMessage) {
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+        <div role="alert" class="rounded-lg px-4 py-3" style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#f87171;">
           {{ errorMessage }}
         </div>
       }
       <div class="space-y-4">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+          <label for="name" class="block text-sm font-medium mb-1" style="color:#94a3b8;">Full Name</label>
           <input
             id="name"
             name="name"
             type="text"
             formControlName="name"
             required
-            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            class="mt-1 appearance-none relative block w-full px-4 py-3 rounded-lg"
             placeholder="Your full name"
           />
           @if (signupForm.get('name')?.invalid && signupForm.get('name')?.touched) {
-            <p class="text-red-600 mt-1 text-sm">Name is required</p>
+            <p role="alert" class="text-red-400 mt-1 text-sm">Name is required</p>
           }
         </div>
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+          <label for="email" class="block text-sm font-medium mb-1" style="color:#94a3b8;">Email address</label>
           <input
             id="email"
             name="email"
             type="email"
             formControlName="email"
             required
-            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            autocomplete="email"
+            class="mt-1 appearance-none relative block w-full px-4 py-3 rounded-lg"
             placeholder="Email address"
           />
           @if (signupForm.get('email')?.invalid && signupForm.get('email')?.touched) {
-            <p class="text-red-600 mt-1 text-sm">Valid email is required</p>
+            <p role="alert" class="text-red-400 mt-1 text-sm">Valid email is required</p>
           }
         </div>
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <label for="password" class="block text-sm font-medium mb-1" style="color:#94a3b8;">Password</label>
           <input
             id="password"
             name="password"
             type="password"
             formControlName="password"
             required
-            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            autocomplete="new-password"
+            class="mt-1 appearance-none relative block w-full px-4 py-3 rounded-lg"
             placeholder="Password"
           />
           @if (signupForm.get('password')?.invalid && signupForm.get('password')?.touched) {
-            <p class="text-red-600 mt-1 text-sm">Password is required (min 8 characters)</p>
+            <p role="alert" class="text-red-400 mt-1 text-sm">Password is required (min 8 characters)</p>
           }
         </div>
         <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <label for="confirmPassword" class="block text-sm font-medium mb-1" style="color:#94a3b8;">Confirm Password</label>
           <input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
             formControlName="confirmPassword"
             required
-            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            autocomplete="new-password"
+            class="mt-1 appearance-none relative block w-full px-4 py-3 rounded-lg"
             placeholder="Confirm password"
           />
           @if (signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched) {
-            <p class="text-red-600 mt-1 text-sm">Passwords must match</p>
+            <p role="alert" class="text-red-400 mt-1 text-sm">Passwords must match</p>
           }
         </div>
       </div>
@@ -89,7 +92,7 @@
         <button
           type="submit"
           [disabled]="signupForm.invalid || loading"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           @if (loading) {
             Creating account...

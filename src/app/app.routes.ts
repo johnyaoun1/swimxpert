@@ -21,6 +21,7 @@ export const routes: Routes = [
   { path: 'reset-password', loadComponent: () => import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent), title: 'Reset Password - SwimXpert' },
   { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent), title: 'Dashboard - SwimXpert', canActivate: [authGuard] },
   { path: 'admin', loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent), title: 'Admin Dashboard - SwimXpert', canActivate: [adminGuard] },
+  { path: 'admin/schedule', loadComponent: () => import('./pages/admin-schedule/admin-schedule.component').then((m) => m.AdminScheduleComponent), title: 'Schedule - SwimXpert', canActivate: [adminGuard] },
 
   // Sessions
   { path: 'sessions', loadComponent: () => import('./pages/sessions-list/sessions-list.component').then((m) => m.SessionsListComponent), title: 'Sessions - SwimXpert', canActivate: [authGuard] },

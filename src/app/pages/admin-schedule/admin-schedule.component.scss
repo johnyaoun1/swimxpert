@@ -1,0 +1,196 @@
+.admin-schedule-root {
+  --schedule-track-height: 672px;
+}
+
+.schedule-scroll-x {
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.schedule-toolbar {
+  margin-bottom: 16px;
+}
+
+.schedule-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.schedule-week-nav {
+  position: sticky;
+  top: 12px;
+  z-index: 30;
+  width: 164px;
+  flex: 0 0 164px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 768px) {
+  .schedule-layout {
+    flex-direction: column;
+  }
+  .schedule-week-nav {
+    width: 100%;
+    flex: 0 0 auto;
+    position: sticky;
+    top: 8px;
+    flex-direction: row;
+    gap: 8px;
+  }
+}
+
+.schedule-gutter {
+  box-shadow: 4px 0 8px -4px rgba(15, 23, 42, 0.12);
+}
+
+.schedule-hour-label {
+  height: calc(var(--schedule-track-height) / 14);
+  line-height: 1.15;
+  padding-top: 4px;
+  color: #374151;
+}
+
+.schedule-day-track {
+  min-height: var(--schedule-track-height);
+  height: var(--schedule-track-height);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 100% calc(var(--schedule-track-height) / 14);
+}
+
+.schedule-day-date {
+  color: #ffffff;
+}
+
+.session-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  min-height: 28px;
+  appearance: none;
+  display: block;
+  width: calc(100% - 4px);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  background: linear-gradient(135deg, #fde047, #facc15);
+  border: 1px solid rgba(180, 130, 0, 0.45);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.25;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  z-index: 1;
+}
+
+.session-block--compact {
+  display: flex;
+  align-items: center;
+  padding: 2px 5px;
+  line-height: 1.2;
+}
+
+.session-block__single-line {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+  font-size: 9px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-block__sn {
+  flex-shrink: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-block__g-badge {
+  flex-shrink: 0;
+  font-size: 7px;
+  font-weight: 800;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 2px;
+  padding: 0 2px;
+  line-height: 1.2;
+}
+
+.session-block__dots {
+  flex-shrink: 0;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.session-block__time-inline {
+  flex-shrink: 0;
+  color: #1d4ed8;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-block__loc-inline {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #4b5563;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.session-block:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.session-block--canceled {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  opacity: 0.92;
+}
+
+.session-block__title {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.session-block__time {
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #1d4ed8;
+  letter-spacing: -0.02em;
+  margin-bottom: 1px;
+}
+
+.session-block__meta {
+  color: #4b5563;
+  font-size: 10px;
+}
+
+.session-block__loc {
+  font-style: italic;
+}
+
+.session-block__hint {
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #6b7280;
+  opacity: 0.95;
+}

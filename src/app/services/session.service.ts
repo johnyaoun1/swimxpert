@@ -1,8 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, switchMap, tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { toDate } from 'date-fns-tz';
+import { BEIRUT_TZ } from '../utils/beirut-week';
 
 export type SessionStatus = 'scheduled' | 'completed' | 'canceled';
 
@@ -22,7 +24,25 @@ export interface Session {
   poolLocation?: string;
   maxSwimmers?: number;
   price: number;
+  /** Counts toward weekly brief income when true (and session not canceled). */
+  isPaid: boolean;
+  /** Original API timestamps (UTC ISO) — use for timezone-accurate calendar layout. */
+  startTimeUtc?: string;
+  endTimeUtc?: string;
+  /** Present when this row was synced from Google Calendar. */
+  googleEventId?: string;
+  /** Same id for all sessions in a weekly package (repeat weekly). */
+  recurrenceSeriesId?: string;
   createdAt: string;
+}
+
+interface ApiRegistrationRow {
+  id: number;
+  swimmerId: number;
+  swimmerName: string;
+  parentUserId: number;
+  parentName: string;
+  isPresent: boolean;
 }
 
 interface ApiSession {
@@ -34,6 +54,11 @@ interface ApiSession {
   poolLocation?: string;
   status: string;
   createdAt: string;
+  price?: number;
+  isPaid?: boolean;
+  googleEventId?: string;
+  recurrenceSeriesId?: string;
+  registrations?: ApiRegistrationRow[];
 }
 
 @Injectable({
@@ -42,6 +67,7 @@ interface ApiSession {
 export class SessionService {
   private readonly baseUrl = environment.apiUrl;
   private readonly apiUrl = `${this.baseUrl}/sessions`;
+  private readonly registrationsUrl = `${this.baseUrl}/registrations`;
   sessions = signal<Session[]>([]);
 
   constructor(private http: HttpClient) {
@@ -84,31 +110,100 @@ export class SessionService {
       endTime,
       maxSwimmers: session.maxSwimmers ?? 10,
       poolLocation: session.poolLocation ?? null,
-      status: this.toApiStatus(session.status)
+      status: this.toApiStatus(session.status),
+      price: session.price ?? 0,
+      isPaid: !!session.isPaid
     };
 
     return this.http.post<ApiSession>(this.apiUrl, payload).pipe(
+      switchMap((created) => this.ensureSwimmerRegistration(created, session)),
       map((created) => this.fromApiSession(created, session)),
       tap((created) => this.sessions.update((sessions) => [...sessions, created]))
     );
   }
 
-  updateSession(sessionId: string, updates: Partial<Session>): Observable<Session> {
+  /** Create session with date/time interpreted in Asia/Beirut (admin schedule). */
+  createSessionBeirut(session: Omit<Session, 'id' | 'createdAt' | 'startTimeUtc' | 'endTimeUtc'> & { endTime: string }): Observable<Session> {
+    const startTime = toDate(`${session.date}T${session.time}:00`, { timeZone: BEIRUT_TZ }).toISOString();
+    const endTime = toDate(`${session.date}T${session.endTime}:00`, { timeZone: BEIRUT_TZ }).toISOString();
+    const payload = {
+      title: session.childName ? `${session.childName} Session` : 'Training Session',
+      startTime,
+      endTime,
+      maxSwimmers: session.maxSwimmers ?? 10,
+      poolLocation: session.poolLocation ?? null,
+      status: this.toApiStatus(session.status),
+      price: session.price ?? 0,
+      isPaid: !!session.isPaid
+    };
+
+    return this.http.post<ApiSession>(this.apiUrl, payload).pipe(
+      switchMap((created) => this.ensureSwimmerRegistration(created, session)),
+      map((created) => this.fromApiSession(created, session)),
+      tap((created) => this.sessions.update((sessions) => [...sessions, created]))
+    );
+  }
+
+  /** Links swimmer ↔ session in the API after creating a session (required for attendance & client lists). */
+  private ensureSwimmerRegistration(created: ApiSession, session: Omit<Session, 'id' | 'createdAt'>): Observable<ApiSession> {
+    const swimmerId = Number(session.childId);
+    if (!Number.isFinite(swimmerId) || swimmerId <= 0) {
+      return of(created);
+    }
+    return this.http
+      .post<{ id: number }>(this.registrationsUrl, {
+        swimmerId,
+        trainingSessionId: created.id
+      })
+      .pipe(
+        switchMap(() => this.http.get<ApiSession>(`${this.apiUrl}/${created.id}`)),
+        catchError((err: { status?: number }) => {
+          if (err?.status === 409) {
+            return this.http.get<ApiSession>(`${this.apiUrl}/${created.id}`);
+          }
+          return of(created);
+        })
+      );
+  }
+
+  /**
+   * @param recurrenceApply For weekly packages: which rows get the same price/location/paid/status (API: single | thisAndFollowing | allInSeries).
+   */
+  updateSession(
+    sessionId: string,
+    updates: Partial<Session>,
+    recurrenceApply?: 'single' | 'thisAndFollowing' | 'allInSeries'
+  ): Observable<Session> {
     return this.getSessionById(sessionId).pipe(
       switchMap((existing) => {
         const merged = { ...existing, ...updates };
-        const endTime = merged.endTime
-          ? this.toIsoDateTime(merged.date, merged.endTime)
-          : this.toIsoDateTime(merged.date, merged.time, 60);
+        const timeFieldsChanged = ['date', 'time', 'endTime'].some((k) => k in updates);
 
-        const payload = {
+        let startIso: string;
+        let endIso: string;
+        if (!timeFieldsChanged && existing.startTimeUtc && existing.endTimeUtc) {
+          startIso = existing.startTimeUtc;
+          endIso = existing.endTimeUtc;
+        } else {
+          endIso = merged.endTime
+            ? this.toIsoDateTime(merged.date, merged.endTime)
+            : this.toIsoDateTime(merged.date, merged.time, 60);
+          startIso = this.toIsoDateTime(merged.date, merged.time);
+        }
+
+        const payload: Record<string, unknown> = {
           title: merged.childName ? `${merged.childName} Session` : 'Training Session',
-          startTime: this.toIsoDateTime(merged.date, merged.time),
-          endTime,
+          startTime: startIso,
+          endTime: endIso,
           maxSwimmers: merged.maxSwimmers ?? 10,
           poolLocation: merged.poolLocation ?? null,
-          status: this.toApiStatus(merged.status)
+          status: this.toApiStatus(merged.status),
+          price: merged.price ?? 0,
+          isPaid: !!merged.isPaid
         };
+        if (recurrenceApply && recurrenceApply !== 'single') {
+          payload['recurrenceApply'] = recurrenceApply;
+        }
 
         return this.http.put<ApiSession>(`${this.apiUrl}/${sessionId}`, payload).pipe(
           map((updated) => this.fromApiSession(updated, merged)),
@@ -125,10 +220,23 @@ export class SessionService {
     );
   }
 
-  deleteSession(sessionId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${sessionId}`).pipe(
-      tap(() => this.sessions.update((sessions) => sessions.filter((s) => s.id !== sessionId)))
-    );
+  /** scope: thisEvent (default) | thisAndFollowing | allEvents (maps to API delete scope). */
+  deleteSession(
+    sessionId: string,
+    scope: 'thisEvent' | 'thisAndFollowing' | 'allEvents' = 'thisEvent'
+  ): Observable<void> {
+    let params = new HttpParams();
+    if (scope === 'thisAndFollowing') params = params.set('scope', 'thisAndFollowing');
+    else if (scope === 'allEvents') params = params.set('scope', 'allInSeries');
+
+    return this.http.delete<void>(`${this.apiUrl}/${sessionId}`, { params });
+  }
+
+  /** Clone this session forward by 7 days per week (same price, location, registrations). */
+  repeatWeeklySession(sessionId: string, weeks: number): Observable<{ created: number; skipped: number; recurrenceSeriesId?: string }> {
+    return this.http.post<{ created: number; skipped: number; recurrenceSeriesId?: string }>(`${this.apiUrl}/${sessionId}/repeat-weekly`, {
+      weeks
+    });
   }
 
   getSessionsByClient(clientId: string): Session[] {
@@ -167,12 +275,14 @@ export class SessionService {
   private fromApiSession(api: ApiSession, fallback?: Partial<Session>): Session {
     const start = new Date(api.startTime);
     const end = new Date(api.endTime);
+    const reg = api.registrations?.[0];
+    const titleChild = this.childNameFromSessionTitle(api.title);
     return {
       id: String(api.id),
-      childId: fallback?.childId || '',
-      childName: fallback?.childName || api.title || '',
-      clientId: fallback?.clientId || '',
-      clientName: fallback?.clientName || '',
+      childId: fallback?.childId || (reg?.swimmerId != null ? String(reg.swimmerId) : ''),
+      childName: fallback?.childName || reg?.swimmerName || titleChild || api.title || '',
+      clientId: fallback?.clientId || (reg?.parentUserId != null ? String(reg.parentUserId) : ''),
+      clientName: fallback?.clientName || reg?.parentName || '',
       date: start.toISOString().split('T')[0],
       time: start.toTimeString().slice(0, 5),
       endTime: end.toTimeString().slice(0, 5),
@@ -182,9 +292,20 @@ export class SessionService {
       notes: fallback?.notes,
       poolLocation: api.poolLocation ?? fallback?.poolLocation,
       maxSwimmers: api.maxSwimmers ?? fallback?.maxSwimmers ?? 10,
-      price: fallback?.price || 0,
+      price: Number(api.price ?? fallback?.price ?? 0),
+      isPaid: api.isPaid ?? fallback?.isPaid ?? false,
+      startTimeUtc: api.startTime,
+      endTimeUtc: api.endTime,
+      googleEventId: api.googleEventId || undefined,
+      recurrenceSeriesId: api.recurrenceSeriesId != null ? String(api.recurrenceSeriesId) : undefined,
       createdAt: api.createdAt
     };
+  }
+
+  /** When title was saved as "{Child} Session", recover child name for display. */
+  private childNameFromSessionTitle(title: string): string {
+    const m = title?.trim().match(/^(.+?)\s+Session$/i);
+    return m ? m[1].trim() : '';
   }
 
   private toApiStatus(status: string): string {

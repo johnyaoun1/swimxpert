@@ -237,4 +237,50 @@ export class ApiService {
     formData.append('file', file);
     return this.http.post<{ url: string }>(`${this.apiUrl}/upload/profile-picture`, formData).pipe(catchError(this.handleError));
   }
+
+  // ========== GOOGLE CALENDAR (admin) ==========
+
+  getGoogleCalendarStatus(): Observable<{
+    connected: boolean;
+    lastSyncUtc: string | null;
+    calendarIdConfigured: boolean;
+    oauthConfigured: boolean;
+  }> {
+    return this.http.get<{
+      connected: boolean;
+      lastSyncUtc: string | null;
+      calendarIdConfigured: boolean;
+      oauthConfigured: boolean;
+    }>(`${this.apiUrl}/admin/google-calendar/status`, { headers: this.getHeaders() }).pipe(catchError(this.handleError));
+  }
+
+  getGoogleCalendarAuthorizationUrl(): Observable<{ url: string }> {
+    return this.http.get<{ url: string }>(`${this.apiUrl}/admin/google-calendar/authorization-url`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  syncGoogleCalendar(): Observable<{
+    created: number;
+    updated: number;
+    skipped: number;
+    cancelledInDb: number;
+    errors: string[];
+  }> {
+    return this.http
+      .post<{
+        created: number;
+        updated: number;
+        skipped: number;
+        cancelledInDb: number;
+        errors: string[];
+      }>(`${this.apiUrl}/admin/google-calendar/sync`, {}, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  disconnectGoogleCalendar(): Observable<{ message: string }> {
+    return this.http
+      .post<{ message: string }>(`${this.apiUrl}/admin/google-calendar/disconnect`, {}, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
+  }
 }

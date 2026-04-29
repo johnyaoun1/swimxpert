@@ -69,7 +69,8 @@ export class SessionFormComponent implements OnInit {
       instructor: this.form.coach,
       poolLocation: this.form.poolLocation,
       maxSwimmers: this.form.maxSwimmers,
-      price: 0
+      price: 0,
+      isPaid: false
     };
 
     const request$ = this.isEdit && this.sessionId

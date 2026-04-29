@@ -12,6 +12,8 @@ interface Certificate {
   /** MIME type: 'image/jpeg' for JPG, 'application/pdf' for PDF */
   type: 'image' | 'pdf';
   thumbnail?: string;
+  /** If true, the "CERTIFIED" badge is hidden (e.g. for invitation card) */
+  hideCertifiedBadge?: boolean;
 }
 
 @Component({
@@ -30,9 +32,9 @@ export class CertificatesComponent {
     { id: 1, title: 'Beginner — Girl', description: 'SwimXpert Beginner certificate for girls. Water comfort, basic floats, and introductory skills.', filePath: 'assets/certificates/beginner-girl.jpg', type: 'image' },
     { id: 2, title: 'Beginner — Boy', description: 'SwimXpert Beginner certificate for boys. Water comfort, basic floats, and introductory skills.', filePath: 'assets/certificates/beginner-boy.jpg', type: 'image' },
     { id: 3, title: 'Intermediate — Girl', description: 'SwimXpert Intermediate certificate for girls. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/intermediate-girl.jpg', type: 'image' },
-    { id: 4, title: 'Intermediate — Boy', description: 'SwimXpert Intermediate certificate for boys. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/SWIM.jpg', type: 'image' },
-    { id: 5, title: 'Advanced — Girl', description: 'SwimXpert Advanced certificate for girls. Coordinated strokes, stamina, and refined technique.', filePath: 'assets/certificates/advanced-girl.jpg', type: 'image' },
-    { id: 6, title: 'Advanced — Boy', description: 'SwimXpert Advanced certificate for boys. Coordinated strokes, stamina, and refined technique.', filePath: 'assets/certificates/advanced-boy.jpg', type: 'image' }
+    { id: 4, title: 'Intermediate — Boy', description: 'SwimXpert Intermediate certificate for boys. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/intermediate-boy.jpg', type: 'image' },
+    { id: 5, title: 'Advanced', description: 'SwimXpert Advanced certificate. Coordinated strokes, stamina, and refined technique.', filePath: 'assets/certificates/advanced-girl.jpg', type: 'image' },
+    { id: 6, title: 'Invitation Card', description: 'SwimXpert invitation card for events and sessions.', filePath: 'assets/certificates/advanced-boy.jpg', type: 'image', hideCertifiedBadge: true }
   ];
 
   viewCertificate(certificate: Certificate): void {

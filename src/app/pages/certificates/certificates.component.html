@@ -1,4 +1,4 @@
-<div class="hero-gradient text-white py-20 relative overflow-hidden">
+<div class="hero-gradient text-white py-20 relative overflow-hidden min-h-[min(48vh,24rem)] md:min-h-[min(52vh,28rem)]" style="background-image:linear-gradient(rgba(6,14,36,0.65),rgba(13,27,62,0.72)),url('/assets/swimmer-dark.png');background-size:cover,cover;background-position:center,50% 36%;background-repeat:no-repeat,no-repeat;">
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
@@ -30,16 +30,16 @@
   </div>
 </div>
 
-<section class="section-padding bg-gradient-to-br from-gray-50 via-white to-primary-50 relative overflow-hidden">
+<section class="section-padding premium-section relative overflow-hidden">
   <div class="absolute inset-0">
-    <div class="absolute top-10 right-10 w-64 h-64 bg-primary-100 opacity-30 rounded-full blur-3xl floating-element"></div>
-    <div class="absolute bottom-10 left-10 w-80 h-80 bg-accent-100 opacity-30 rounded-full blur-3xl floating-element-delayed"></div>
+    <div class="absolute top-10 right-10 w-64 h-64 rounded-full blur-3xl floating-element" style="background:rgba(29,155,240,0.07);"></div>
+    <div class="absolute bottom-10 left-10 w-80 h-80 rounded-full blur-3xl floating-element-delayed" style="background:rgba(0,196,255,0.05);"></div>
   </div>
   
   <div class="container mx-auto px-4 relative z-10">
     <div class="text-center mb-16 animate-slide-down">
-      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4">Professional Certifications</h2>
-      <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our team holds the highest industry certifications ensuring the best instruction and safety standards.</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">Professional Certifications</h2>
+      <p class="text-xl max-w-3xl mx-auto" style="color:#94a3b8;">Our team holds the highest industry certifications ensuring the best instruction and safety standards.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
@@ -54,9 +54,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
             </div>
-            <div class="certificate-badge">
-              <span class="text-xs font-bold">CERTIFIED</span>
-            </div>
+            @if (!certificate.hideCertifiedBadge) {
+              <div class="certificate-badge">
+                <span class="text-xs font-bold">CERTIFIED</span>
+              </div>
+            }
           </div>
           
           <div class="certificate-content">

@@ -9,7 +9,10 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api/sessions")]
-public class SessionsController(ApplicationDbContext dbContext, IAuditLogService auditLog) : ControllerBase
+public class SessionsController(
+    ApplicationDbContext dbContext,
+    IAuditLogService auditLog,
+    IGoogleCalendarMutationsService googleCalendarMutations) : ControllerBase
 {
     /// <summary>
     /// Creates a new training session. Requires Coach or Admin role.
@@ -31,13 +34,20 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
             Capacity = request.MaxSwimmers,
             PoolLocation = request.PoolLocation?.Trim(),
             Status = string.IsNullOrWhiteSpace(request.Status) ? "Scheduled" : request.Status,
+            Price = request.Price < 0 ? 0 : request.Price,
+            IsPaid = request.IsPaid,
             CreatedAt = DateTime.UtcNow
         };
 
         dbContext.TrainingSessions.Add(session);
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("SessionCreated", "TrainingSession", session.Id.ToString(), new { session.Title });
-        return CreatedAtAction(nameof(GetSessionById), new { id = session.Id }, ToDto(session));
+        var created = await dbContext.TrainingSessions
+            .Include(s => s.Attendances)
+                .ThenInclude(a => a.Swimmer)
+                    .ThenInclude(sw => sw.ParentUser)
+            .FirstAsync(s => s.Id == session.Id);
+        return CreatedAtAction(nameof(GetSessionById), new { id = session.Id }, ToSessionDto(created));
     }
 
     /// <summary>
@@ -65,10 +75,13 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
         }
 
         var sessions = await query
+            .Include(s => s.Attendances)
+                .ThenInclude(a => a.Swimmer)
+                    .ThenInclude(sw => sw.ParentUser)
             .OrderBy(s => s.StartTime)
             .ToListAsync();
 
-        return Ok(sessions.Select(ToDto));
+        return Ok(sessions.Select(ToSessionDto));
     }
 
     /// <summary>
@@ -80,11 +93,14 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
     {
         var now = DateTime.UtcNow;
         var sessions = await dbContext.TrainingSessions
+            .Include(s => s.Attendances)
+                .ThenInclude(a => a.Swimmer)
+                    .ThenInclude(sw => sw.ParentUser)
             .Where(s => s.StartTime > now)
             .OrderBy(s => s.StartTime)
             .ToListAsync();
 
-        return Ok(sessions.Select(ToDto));
+        return Ok(sessions.Select(ToSessionDto));
     }
 
     /// <summary>
@@ -94,13 +110,17 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
     [Authorize]
     public async Task<IActionResult> GetSessionById(int id)
     {
-        var session = await dbContext.TrainingSessions.FindAsync(id);
+        var session = await dbContext.TrainingSessions
+            .Include(s => s.Attendances)
+                .ThenInclude(a => a.Swimmer)
+                    .ThenInclude(sw => sw.ParentUser)
+            .FirstOrDefaultAsync(s => s.Id == id);
         if (session is null)
         {
             return NotFound(new { message = "Session not found." });
         }
 
-        return Ok(ToDto(session));
+        return Ok(ToSessionDto(session));
     }
 
     /// <summary>
@@ -108,9 +128,9 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
     /// </summary>
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Coach,Admin")]
-    public async Task<IActionResult> UpdateSession(int id, [FromBody] UpdateSessionRequest request)
+    public async Task<IActionResult> UpdateSession(int id, [FromBody] UpdateSessionRequest request, CancellationToken cancellationToken)
     {
-        var session = await dbContext.TrainingSessions.FindAsync(id);
+        var session = await dbContext.TrainingSessions.FindAsync(new object[] { id }, cancellationToken);
         if (session is null)
         {
             return NotFound(new { message = "Session not found." });
@@ -127,39 +147,256 @@ public class SessionsController(ApplicationDbContext dbContext, IAuditLogService
         session.Capacity = request.MaxSwimmers;
         session.PoolLocation = request.PoolLocation?.Trim();
         session.Status = request.Status;
+        session.Price = request.Price < 0 ? 0 : request.Price;
+        session.IsPaid = request.IsPaid;
 
-        await dbContext.SaveChangesAsync();
-        await auditLog.LogAsync("SessionUpdated", "TrainingSession", id.ToString(), new { request.Title });
-        return Ok(ToDto(session));
+        var apply = NormalizeRecurrenceApply(request.RecurrenceApply);
+        var anchorUtc = session.StartTime;
+        var seriesId = session.RecurrenceSeriesId;
+
+        if (apply != RecurrenceApplyKind.Single && seriesId is Guid sidSeries)
+        {
+            var siblingsQuery = dbContext.TrainingSessions.Where(s => s.RecurrenceSeriesId == sidSeries && s.Id != id);
+            if (apply == RecurrenceApplyKind.ThisAndFollowing)
+                siblingsQuery = siblingsQuery.Where(s => s.StartTime >= anchorUtc);
+
+            var siblings = await siblingsQuery.ToListAsync(cancellationToken);
+            foreach (var o in siblings)
+            {
+                o.Price = session.Price;
+                o.PoolLocation = session.PoolLocation;
+                o.IsPaid = session.IsPaid;
+                o.Status = session.Status;
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        await PushGoogleBestEffortAsync(session, cancellationToken);
+        if (apply != RecurrenceApplyKind.Single && seriesId is Guid sidPush)
+        {
+            var others = await dbContext.TrainingSessions
+                .Where(s => s.RecurrenceSeriesId == sidPush && s.Id != id &&
+                            (apply == RecurrenceApplyKind.AllInSeries || s.StartTime >= anchorUtc))
+                .ToListAsync(cancellationToken);
+            foreach (var o in others)
+                await PushGoogleBestEffortAsync(o, cancellationToken);
+        }
+
+        await auditLog.LogAsync("SessionUpdated", "TrainingSession", id.ToString(), new { request.Title, apply });
+        var updated = await dbContext.TrainingSessions
+            .Include(s => s.Attendances)
+                .ThenInclude(a => a.Swimmer)
+                    .ThenInclude(sw => sw.ParentUser)
+            .FirstAsync(s => s.Id == id, cancellationToken);
+        return Ok(ToSessionDto(updated));
     }
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteSession(int id)
+    public async Task<IActionResult> DeleteSession([FromRoute] int id, [FromQuery] string? scope, CancellationToken cancellationToken = default)
     {
-        var session = await dbContext.TrainingSessions.FindAsync(id);
+        var session = await dbContext.TrainingSessions
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (session is null)
-        {
             return NotFound(new { message = "Session not found." });
+
+        var deleteScope = NormalizeDeleteScope(scope);
+        List<TrainingSession> toRemove;
+        if (session.RecurrenceSeriesId is null || deleteScope == DeleteScopeKind.ThisEvent)
+        {
+            toRemove = [session];
+        }
+        else
+        {
+            var q = dbContext.TrainingSessions.Where(s => s.RecurrenceSeriesId == session.RecurrenceSeriesId);
+            if (deleteScope == DeleteScopeKind.ThisAndFollowing)
+                q = q.Where(s => s.StartTime >= session.StartTime);
+            toRemove = await q.ToListAsync(cancellationToken);
         }
 
-        dbContext.TrainingSessions.Remove(session);
-        await dbContext.SaveChangesAsync();
-        await auditLog.LogAsync("SessionDeleted", "TrainingSession", id.ToString());
+        foreach (var s in toRemove)
+        {
+            if (!string.IsNullOrEmpty(s.GoogleEventId))
+            {
+                var (gOk, gErr) = await googleCalendarMutations.TryDeleteGoogleEventAsync(s.GoogleEventId, cancellationToken);
+                if (!gOk)
+                    await auditLog.LogAsync("GoogleCalendarDeleteFailed", "TrainingSession", s.Id.ToString(), new { gErr });
+            }
+        }
+
+        dbContext.TrainingSessions.RemoveRange(toRemove);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await auditLog.LogAsync("SessionDeleted", "TrainingSession", id.ToString(), new { count = toRemove.Count, deleteScope });
         return NoContent();
     }
 
-    private static object ToDto(TrainingSession s) => new
+    /// <summary>
+    /// Creates additional weekly copies of this session (same time-of-week, title, price, location, registrations).
+    /// Does not sync to Google; new rows have no GoogleEventId. Skips weeks where a session with the same title and start already exists.
+    /// </summary>
+    [HttpPost("{id:int}/repeat-weekly")]
+    [Authorize(Roles = "Coach,Admin")]
+    public async Task<IActionResult> RepeatWeekly(int id, [FromBody] RepeatWeeklyRequest? request, CancellationToken cancellationToken = default)
     {
-        id = s.Id,
-        title = s.Title,
-        startTime = s.StartTime,
-        endTime = s.EndTime,
-        maxSwimmers = s.Capacity,
-        poolLocation = s.PoolLocation,
-        status = s.Status,
-        createdAt = s.CreatedAt
-    };
+        var weeks = request?.Weeks ?? 0;
+        if (weeks < 1 || weeks > 52)
+            return BadRequest(new { message = "Weeks must be between 1 and 52." });
+
+        var source = await dbContext.TrainingSessions
+            .Include(s => s.Attendances)
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        if (source is null)
+            return NotFound(new { message = "Session not found." });
+
+        var seriesId = source.RecurrenceSeriesId ?? Guid.NewGuid();
+        if (source.RecurrenceSeriesId is null)
+        {
+            source.RecurrenceSeriesId = seriesId;
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        await using var tx = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var newSessions = new List<TrainingSession>();
+        var skipped = 0;
+
+        for (var i = 1; i <= weeks; i++)
+        {
+            var newStart = source.StartTime.AddDays(7 * i);
+            var newEnd = source.EndTime.AddDays(7 * i);
+
+            var existsInDb = await dbContext.TrainingSessions.AsNoTracking()
+                .AnyAsync(s => s.StartTime == newStart && s.Title == source.Title, cancellationToken);
+            var existsInBatch = newSessions.Any(s => s.StartTime == newStart && s.Title == source.Title);
+            if (existsInDb || existsInBatch)
+            {
+                skipped++;
+                continue;
+            }
+
+            newSessions.Add(new TrainingSession
+            {
+                Title = source.Title,
+                StartTime = newStart,
+                EndTime = newEnd,
+                Capacity = source.Capacity,
+                PoolLocation = source.PoolLocation,
+                Status = "Scheduled",
+                Price = source.Price < 0 ? 0 : source.Price,
+                IsPaid = false,
+                GoogleEventId = null,
+                RecurrenceSeriesId = seriesId,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        if (newSessions.Count > 0)
+        {
+            dbContext.TrainingSessions.AddRange(newSessions);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            foreach (var ns in newSessions)
+            {
+                foreach (var a in source.Attendances)
+                {
+                    dbContext.Attendances.Add(new Attendance
+                    {
+                        SwimmerId = a.SwimmerId,
+                        TrainingSessionId = ns.Id,
+                        SessionDate = ns.StartTime.Date,
+                        IsPresent = false,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        await tx.CommitAsync(cancellationToken);
+
+        await auditLog.LogAsync("SessionsRepeatedWeekly", "TrainingSession", id.ToString(),
+            new { weeks, created = newSessions.Count, skipped });
+
+        return Ok(new { created = newSessions.Count, skipped, recurrenceSeriesId = seriesId });
+    }
+
+    private async Task PushGoogleBestEffortAsync(TrainingSession s, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(s.GoogleEventId)) return;
+        var (gOk, gErr) = await googleCalendarMutations.TryPushSessionToGoogleAsync(s, ct);
+        if (!gOk)
+            await auditLog.LogAsync("GoogleCalendarPushFailed", "TrainingSession", s.Id.ToString(), new { gErr });
+    }
+
+    private enum RecurrenceApplyKind
+    {
+        Single,
+        ThisAndFollowing,
+        AllInSeries
+    }
+
+    private enum DeleteScopeKind
+    {
+        ThisEvent,
+        ThisAndFollowing,
+        AllEvents
+    }
+
+    private static RecurrenceApplyKind NormalizeRecurrenceApply(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return RecurrenceApplyKind.Single;
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "thisandfollowing" or "this_and_following" => RecurrenceApplyKind.ThisAndFollowing,
+            "allinseries" or "all_in_series" or "allevents" => RecurrenceApplyKind.AllInSeries,
+            _ => RecurrenceApplyKind.Single
+        };
+    }
+
+    private static DeleteScopeKind NormalizeDeleteScope(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return DeleteScopeKind.ThisEvent;
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "thisandfollowing" or "this_and_following" => DeleteScopeKind.ThisAndFollowing,
+            "allinseries" or "all_in_series" or "allevents" or "all" => DeleteScopeKind.AllEvents,
+            _ => DeleteScopeKind.ThisEvent
+        };
+    }
+
+    private static object ToSessionDto(TrainingSession s)
+    {
+        var registrations = s.Attendances
+            .Select(a => new
+            {
+                id = a.Id,
+                swimmerId = a.SwimmerId,
+                swimmerName = a.Swimmer?.Name ?? "",
+                parentUserId = a.Swimmer?.ParentUserId ?? 0,
+                parentName = a.Swimmer?.ParentUser?.FullName ?? "",
+                isPresent = a.IsPresent
+            })
+            .ToList();
+
+        return new
+        {
+            id = s.Id,
+            title = s.Title,
+            startTime = s.StartTime,
+            endTime = s.EndTime,
+            maxSwimmers = s.Capacity,
+            poolLocation = s.PoolLocation,
+            status = s.Status,
+            price = s.Price,
+            isPaid = s.IsPaid,
+            googleEventId = s.GoogleEventId,
+            recurrenceSeriesId = s.RecurrenceSeriesId,
+            createdAt = s.CreatedAt,
+            registrations
+        };
+    }
 }
 
 public class CreateSessionRequest
@@ -170,6 +407,8 @@ public class CreateSessionRequest
     public int MaxSwimmers { get; set; } = 10;
     public string? PoolLocation { get; set; }
     public string Status { get; set; } = "Scheduled";
+    public decimal Price { get; set; }
+    public bool IsPaid { get; set; }
 }
 
 public class UpdateSessionRequest
@@ -180,4 +419,15 @@ public class UpdateSessionRequest
     public int MaxSwimmers { get; set; } = 10;
     public string? PoolLocation { get; set; }
     public string Status { get; set; } = "Scheduled";
+    public decimal Price { get; set; }
+    public bool IsPaid { get; set; }
+
+    /// <summary>single | thisAndFollowing | allInSeries — for recurring package sessions (same RecurrenceSeriesId).</summary>
+    public string? RecurrenceApply { get; set; }
+}
+
+public class RepeatWeeklyRequest
+{
+    /// <summary>Number of future weekly occurrences to add (not including this session).</summary>
+    public int Weeks { get; set; }
 }

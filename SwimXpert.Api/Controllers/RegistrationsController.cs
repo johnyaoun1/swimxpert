@@ -7,16 +7,12 @@ using SwimXpert.Api.Models;
 
 namespace SwimXpert.Api.Controllers;
 
-/// <summary>
-/// Manages swimmer registrations and attendance records.
-/// </summary>
+
 [ApiController]
 [Route("api/registrations")]
 public class RegistrationsController(ApplicationDbContext dbContext) : ControllerBase
 {
-    /// <summary>
-    /// Returns all registrations with swimmer and session details. Admin/Coach only.
-    /// </summary>
+   
     [HttpGet]
     [Authorize(Roles = "Coach,Admin")]
     public async Task<IActionResult> GetAll()
@@ -46,9 +42,7 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         return Ok(registrations);
     }
 
-    /// <summary>
-    /// Registers a swimmer to a session.
-    /// </summary>
+ 
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Register([FromBody] CreateRegistrationRequest request)
@@ -106,10 +100,6 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         });
     }
 
-    /// <summary>
-    /// Returns attendees for a session.
-    /// Admin/Coach see all attendees; Parent sees only their own children.
-    /// </summary>
     [HttpGet("session/{sessionId:int}")]
     [Authorize]
     public async Task<IActionResult> GetBySession(int sessionId)
@@ -142,9 +132,7 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         return Ok(attendees);
     }
 
-    /// <summary>
-    /// Returns all registrations for a swimmer.
-    /// </summary>
+    
     [HttpGet("swimmer/{swimmerId:int}")]
     [Authorize]
     public async Task<IActionResult> GetBySwimmer(int swimmerId)
@@ -180,9 +168,7 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         return Ok(registrations);
     }
 
-    /// <summary>
-    /// Marks attendance status for a registration.
-    /// </summary>
+   
     [HttpPut("{id:int}/attendance")]
     [Authorize(Roles = "Coach,Admin")]
     public async Task<IActionResult> MarkAttendance(int id, [FromBody] MarkAttendanceRequest request)
@@ -205,9 +191,6 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         });
     }
 
-    /// <summary>
-    /// Cancels a registration.
-    /// </summary>
     [HttpDelete("{id:int}")]
     [Authorize]
     public async Task<IActionResult> CancelRegistration(int id)
@@ -231,9 +214,7 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         return NoContent();
     }
 
-    /// <summary>
-    /// Returns one registration by id.
-    /// </summary>
+   
     [HttpGet("{id:int}")]
     [Authorize]
     public async Task<IActionResult> GetById(int id)

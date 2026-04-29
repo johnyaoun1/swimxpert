@@ -19,10 +19,10 @@
         <!-- Progress Bar -->
         <div class="mb-8">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-semibold text-gray-700">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
-            <span class="text-sm font-semibold text-primary-600">{{ getProgressPercentage() }}%</span>
+            <span class="text-sm font-semibold" style="color:#94a3b8;">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
+            <span class="text-sm font-semibold text-primary-400">{{ getProgressPercentage() }}%</span>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div class="w-full rounded-full h-3 overflow-hidden" style="background:rgba(255,255,255,0.08);">
             <div 
               class="bg-gradient-to-r from-primary-500 to-accent-500 h-3 rounded-full transition-all duration-500"
               [style.width.%]="((currentQuestionIndex + 1) / questions.length) * 100"
@@ -32,7 +32,7 @@
 
         <!-- Question -->
         <div class="mb-8">
-          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-6 text-gradient">
+          <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6 text-gradient">
             {{ getCurrentQuestion().question }}
           </h2>
 
@@ -47,14 +47,14 @@
                 [class.border-green-600]="showResult && $index === getCurrentQuestion().correctAnswer"
                 [class.bg-red-100]="showResult && selectedAnswer === $index && selectedAnswer !== getCurrentQuestion().correctAnswer"
                 [class.border-red-600]="showResult && selectedAnswer === $index && selectedAnswer !== getCurrentQuestion().correctAnswer"
-                class="w-full text-left p-6 rounded-xl border-2 border-gray-200 hover:border-primary-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                class="w-full text-left p-6 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg" style="border-color:rgba(255,255,255,0.08); background:rgba(255,255,255,0.03);"
                 [disabled]="showResult"
               >
                 <div class="flex items-center">
                   <div class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold mr-4 flex-shrink-0">
                     {{ getOptionLetter($index) }}
                   </div>
-                  <span class="text-lg font-semibold text-gray-800">{{ option }}</span>
+                  <span class="text-lg font-semibold text-white">{{ option }}</span>
                   @if (showResult && $index === getCurrentQuestion().correctAnswer) {
                     <svg class="w-6 h-6 text-green-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -99,7 +99,7 @@
                     Not quite right
                   }
                 </h3>
-                <p class="text-gray-700 leading-relaxed">{{ getCurrentQuestion().explanation }}</p>
+                <p class="leading-relaxed" style="color:#94a3b8;">{{ getCurrentQuestion().explanation }}</p>
               </div>
             </div>
           </div>
@@ -136,23 +136,23 @@
           <div class="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center shadow-2xl floating-element">
             <span class="text-6xl font-black text-white">{{ quizResult?.percentage }}%</span>
           </div>
-          <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 text-gradient">Quiz Complete!</h2>
-          <p class="text-2xl text-gray-600 mb-2">You scored {{ quizResult?.score }} out of {{ quizResult?.totalQuestions }}</p>
-          <p class="text-xl text-primary-600 font-bold mb-6">{{ getScoreMessage() }}</p>
+          <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4 text-gradient">Quiz Complete!</h2>
+          <p class="text-2xl mb-2" style="color:#94a3b8;">You scored {{ quizResult?.score }} out of {{ quizResult?.totalQuestions }}</p>
+          <p class="text-xl text-primary-400 font-bold mb-6">{{ getScoreMessage() }}</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border-2 border-primary-200">
-            <div class="text-4xl font-black text-primary-600 mb-2">{{ quizResult?.score }}</div>
-            <div class="text-gray-700 font-semibold">Correct Answers</div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="rounded-xl p-6" style="background:rgba(29,155,240,0.08); border:2px solid rgba(29,155,240,0.2);">
+            <div class="text-4xl font-black text-primary-400 mb-2">{{ quizResult?.score }}</div>
+            <div class="font-semibold" style="color:#94a3b8;">Correct Answers</div>
           </div>
-          <div class="bg-gradient-to-br from-accent-50 to-accent-100 rounded-xl p-6 border-2 border-accent-200">
-            <div class="text-4xl font-black text-accent-600 mb-2">{{ quizResult?.percentage }}%</div>
-            <div class="text-gray-700 font-semibold">Score</div>
+          <div class="rounded-xl p-6" style="background:rgba(0,196,255,0.08); border:2px solid rgba(0,196,255,0.2);">
+            <div class="text-4xl font-black text-accent-400 mb-2">{{ quizResult?.percentage }}%</div>
+            <div class="font-semibold" style="color:#94a3b8;">Score</div>
           </div>
-          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
-            <div class="text-4xl font-black text-green-600 mb-2">{{ questions.length }}</div>
-            <div class="text-gray-700 font-semibold">Total Questions</div>
+          <div class="rounded-xl p-6" style="background:rgba(34,197,94,0.08); border:2px solid rgba(34,197,94,0.2);">
+            <div class="text-4xl font-black text-green-400 mb-2">{{ questions.length }}</div>
+            <div class="font-semibold" style="color:#94a3b8;">Total Questions</div>
           </div>
         </div>
 
