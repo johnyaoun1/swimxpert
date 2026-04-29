@@ -31,3 +31,7 @@ yarn-error.log*
 **/appsettings.Development.json
 **/secrets.json
 **/*.user
+
+# Local image scratch files
+*.jpeg
+*.jpg
