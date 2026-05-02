@@ -1,10 +1,14 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
 import { LevelFinderService, LevelFinderAnswers, AiLevelResult } from '../../services/level-finder.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
+import { AuthService } from '../../services/auth.service';
+
+const LF_RESULT_KEY = 'lf_pending_result';
 
 @Component({
   selector: 'app-level-finder',
@@ -13,7 +17,8 @@ import { SwimLevelsService } from '../../services/swim-levels.service';
   templateUrl: './level-finder.component.html',
   styleUrls: ['./level-finder.component.scss']
 })
-export class LevelFinderComponent implements OnInit {
+export class LevelFinderComponent implements OnInit, OnDestroy {
+  private querySub?: Subscription;
   levelFinderForm: FormGroup;
   showResult  = signal(false);
   loading     = signal(false);
@@ -42,6 +47,8 @@ export class LevelFinderComponent implements OnInit {
     private fb: FormBuilder,
     private levelFinderService: LevelFinderService,
     private swimLevelsService: SwimLevelsService,
+    private authService: AuthService,
+    private route: ActivatedRoute,
     private title: Title,
     private meta: Meta
   ) {
@@ -58,6 +65,39 @@ export class LevelFinderComponent implements OnInit {
       name: 'description',
       content: 'Not sure which swimming class is right for you? Take our quick level assessment and find the perfect SwimXpert program in Lebanon.'
     });
+
+    // Subscribe to queryParams so restore works even when the component is reused
+    this.querySub = this.route.queryParams.subscribe(params => {
+      if (params['restore'] === '1') {
+        this.tryRestoreResult();
+      }
+    });
+
+    // Also try to restore immediately if the user is already logged in and there's a pending result
+    // (handles the case where the user logs in via another tab or returns directly)
+    if (this.authService.isAuthenticatedSync() && !this.showResult()) {
+      this.tryRestoreResult();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.querySub?.unsubscribe();
+  }
+
+  private tryRestoreResult(): void {
+    try {
+      const raw = localStorage.getItem(LF_RESULT_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as AiLevelResult & { determinedLevel: number };
+        this.aiResult.set(saved);
+        this.determinedLevel.set(saved.determinedLevel ?? 1);
+        this.levelInfo.set(this.swimLevelsService.getLevel(saved.determinedLevel ?? 1));
+        this.showResult.set(true);
+        localStorage.removeItem(LF_RESULT_KEY);
+      }
+    } catch {
+      localStorage.removeItem(LF_RESULT_KEY);
+    }
   }
 
   onSubmit(): void {
@@ -65,7 +105,6 @@ export class LevelFinderComponent implements OnInit {
 
     const formValue = this.levelFinderForm.value;
 
-    // Build question/answer pairs for the AI
     const answers = this.questions.map(q => ({
       question: q.text,
       answer: this.convertToBoolean(formValue[q.key]) === true  ? 'Yes'
@@ -78,15 +117,20 @@ export class LevelFinderComponent implements OnInit {
 
     this.levelFinderService.analyzeLevel({ age: formValue.age, answers }).subscribe({
       next: (result) => {
-        this.aiResult.set(result);
         const num = this.levelFinderService.levelNameToNumber(result.level);
+        this.aiResult.set(result);
         this.determinedLevel.set(num);
         this.levelInfo.set(this.swimLevelsService.getLevel(num));
         this.loading.set(false);
         this.showResult.set(true);
+
+        // If guest, persist result so it survives a login/signup redirect
+        if (!this.authService.isAuthenticatedSync()) {
+          localStorage.setItem(LF_RESULT_KEY, JSON.stringify({ ...result, determinedLevel: num }));
+        }
       },
       error: (err) => {
-        this.aiError.set(err?.message || 'AI assessment failed. Please try again.');
+        this.aiError.set(err?.error?.message || err?.message || 'AI assessment failed. Please try again.');
         this.loading.set(false);
       }
     });

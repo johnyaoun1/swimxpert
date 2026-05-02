@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { AuthService } from '../../services/auth.service';
 
@@ -21,6 +21,7 @@ export class SignupComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private title: Title,
     private meta: Meta
   ) {
@@ -38,6 +39,12 @@ export class SignupComponent implements OnInit {
       name: 'description',
       content: 'Create your SwimXpert account and start your swimming journey in Lebanon. Register today for professional coaching tailored to your level.'
     });
+
+    // Capture returnUrl from query params (in case signup is linked with one)
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
+      sessionStorage.setItem('auth_return_url', returnUrl);
+    }
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -59,7 +66,7 @@ export class SignupComponent implements OnInit {
       this.authService.signup(email, password, name).subscribe({
         next: (response) => {
           if (response?.id != null) {
-            this.router.navigate(['/dashboard']);
+            this.redirectAfterAuth();
           } else {
             this.errorMessage = 'Error creating account. Please try again.';
           }
@@ -71,5 +78,28 @@ export class SignupComponent implements OnInit {
         }
       });
     }
+  }
+
+  private redirectAfterAuth(): void {
+    // Priority 1: a specific page the user was trying to reach
+    const storedReturn = sessionStorage.getItem('auth_return_url');
+    const queryReturn  = this.route.snapshot.queryParamMap.get('returnUrl');
+    const target = storedReturn || queryReturn;
+
+    if (target && target !== '/dashboard' && target !== '/login') {
+      sessionStorage.removeItem('auth_return_url');
+      this.router.navigateByUrl(target);
+      return;
+    }
+
+    // Priority 2: pending level-finder result — show it first
+    if (localStorage.getItem('lf_pending_result')) {
+      sessionStorage.removeItem('auth_return_url');
+      this.router.navigate(['/level-finder'], { queryParams: { restore: '1' } });
+      return;
+    }
+
+    sessionStorage.removeItem('auth_return_url');
+    this.router.navigate(['/dashboard']);
   }
 }

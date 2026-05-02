@@ -10,10 +10,12 @@ namespace SwimXpert.Api.Controllers;
 public class ChatController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
 
-    public ChatController(IHttpClientFactory httpClientFactory)
+    public ChatController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
     }
 
     [Authorize]
@@ -21,17 +23,20 @@ public class ChatController : ControllerBase
     public async Task<IActionResult> Chat([FromBody] ChatRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Message))
-            return BadRequest(new { error = "Message is required." });
+            return BadRequest(new { message = "Message is required." });
 
-        var apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+        // Read from user-secrets / appsettings first, fall back to OS env var
+        var apiKey = _configuration["GEMINI_API_KEY"]
+                  ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+
         if (string.IsNullOrWhiteSpace(apiKey))
-            return StatusCode(503, new { error = "GEMINI_API_KEY is not set." });
+            return StatusCode(503, new { message = "AI service is not configured. Please contact support." });
 
         const string systemPrompt = """
-You are SwimXpert's assistant. SwimXpert is a swimming school in Lebanon.
-Help users choose a swimming level, explain programs, and guide them to book a trial session.
+You are SwimXpert's AI assistant. SwimXpert is a professional swimming school in Lebanon (Beirut).
+Help users choose a swimming level, explain programs, and guide them to book a session.
 If asked about pricing, ask them to contact SwimXpert for current rates.
-Answer in the same language as the user (Arabic or English). Keep replies short.
+Answer in the same language as the user (Arabic or English). Keep replies concise and friendly.
 """;
 
         var body = new
@@ -41,26 +46,41 @@ Answer in the same language as the user (Arabic or English). Keep replies short.
             {
                 new { role = "user", parts = new[] { new { text = request.Message } } }
             },
-            generationConfig = new { temperature = 0.7, maxOutputTokens = 300 }
+            generationConfig = new
+            {
+                temperature = 0.7,
+                maxOutputTokens = 400,
+                thinkingConfig = new { thinkingBudget = 0 }
+            }
         };
 
         var json = JsonSerializer.Serialize(body);
-var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
 
         var client = _httpClientFactory.CreateClient();
         var resp = await client.PostAsync(url, new StringContent(json, Encoding.UTF8, "application/json"));
         var respText = await resp.Content.ReadAsStringAsync();
 
         if (!resp.IsSuccessStatusCode)
-            return StatusCode(502, new { error = "Gemini error", details = respText });
+            return StatusCode(502, new { message = "AI service is temporarily unavailable. Please try again." });
 
         using var doc = JsonDocument.Parse(respText);
-        var reply =
-            doc.RootElement.GetProperty("candidates")[0]
-               .GetProperty("content").GetProperty("parts")[0]
-               .GetProperty("text").GetString();
+        var parts = doc.RootElement
+            .GetProperty("candidates")[0]
+            .GetProperty("content")
+            .GetProperty("parts")
+            .EnumerateArray()
+            .ToList();
 
-        return Ok(new { reply = reply ?? "" });
+        // Skip thought parts (gemini-2.5-flash returns thought + answer parts)
+        var answerPart = parts.LastOrDefault(p =>
+            !p.TryGetProperty("thought", out var t) || !t.GetBoolean());
+
+        var reply = answerPart.ValueKind != JsonValueKind.Undefined
+            ? answerPart.GetProperty("text").GetString() ?? ""
+            : "";
+
+        return Ok(new { reply });
     }
 }
 

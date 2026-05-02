@@ -12,16 +12,27 @@
               <th class="text-left p-3">Date</th>
               <th class="text-left p-3">Amount</th>
               <th class="text-left p-3">Method</th>
-              <th class="text-left p-3">Reference</th>
+              <th class="text-left p-3">Receipt / Ref</th>
+              <th class="text-left p-3">Status</th>
             </tr>
           </thead>
           <tbody>
             @for (p of payments; track p.id) {
               <tr class="border-b">
-                <td class="p-3">{{ p.paymentDate | date:'shortDate' }}</td>
-                <td class="p-3">${{ p.amount }}</td>
+                <td class="p-3">{{ p.paymentDate | date:'mediumDate' }}</td>
+                <td class="p-3 font-semibold">${{ p.amount | number:'1.2-2' }}</td>
                 <td class="p-3">{{ p.method }}</td>
-                <td class="p-3">{{ p.reference || '-' }}</td>
+                <td class="p-3 text-sm text-gray-500">{{ p.reference || '—' }}</td>
+                <td class="p-3">
+                  <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                    [class.bg-green-100]="p.status === 'Completed'"
+                    [class.text-green-700]="p.status === 'Completed'"
+                    [class.bg-yellow-100]="p.status === 'Pending'"
+                    [class.text-yellow-700]="p.status === 'Pending'"
+                    [class.bg-red-100]="p.status === 'Failed'"
+                    [class.text-red-700]="p.status === 'Failed'"
+                  >{{ p.status || 'Completed' }}</span>
+                </td>
               </tr>
             }
           </tbody>

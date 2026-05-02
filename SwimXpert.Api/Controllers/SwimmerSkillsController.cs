@@ -176,8 +176,8 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
         if (swimmer is null)
             return NotFound(new { message = "Swimmer not found." });
 
-        var isAdmin = User.IsInRole("Admin");
-        if (!isAdmin && swimmer.ParentUserId != userId)
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isAdminOrCoach && swimmer.ParentUserId != userId)
             return Forbid();
 
         DateTime entryDate = DateTime.UtcNow.Date;

@@ -283,7 +283,7 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
             UserId      = currentUserId,
             Amount      = request.Amount,
             Method      = $"Card ****{request.CardLastFour}",
-            Status      = "Paid",
+            Status      = "Completed",
             PaymentDate = DateTime.UtcNow,
             Reference   = receiptId
         };

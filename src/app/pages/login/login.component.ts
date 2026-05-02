@@ -50,6 +50,12 @@ export class LoginComponent implements OnInit {
       name: 'description',
       content: 'Sign in to your SwimXpert account to manage sessions, track progress, and view payments.'
     });
+
+    // Store the returnUrl in sessionStorage so signup can access it too
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
+      sessionStorage.setItem('auth_return_url', returnUrl);
+    }
   }
 
   onSubmit(): void {
@@ -60,8 +66,7 @@ export class LoginComponent implements OnInit {
       const { email, password } = this.loginForm.value;
       this.authService.login(email, password).subscribe({
         next: (response) => {
-          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
-          this.router.navigateByUrl(returnUrl);
+          this.redirectAfterAuth();
           this.loading = false;
         },
         error: (err: any) => {
@@ -93,8 +98,7 @@ export class LoginComponent implements OnInit {
     this.apiService.verify2Fa(this.emailFor2Fa, this.twoFaCode).subscribe({
       next: (res) => {
         this.authService.persistAuthResponseFromMe(res);
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
-        this.router.navigateByUrl(returnUrl);
+        this.redirectAfterAuth();
         this.loading = false;
       },
       error: (err) => {
@@ -102,6 +106,29 @@ export class LoginComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  private redirectAfterAuth(): void {
+    // Priority 1: a specific page the user was trying to reach (stored by this page or in query params)
+    const storedReturn = sessionStorage.getItem('auth_return_url');
+    const queryReturn  = this.route.snapshot.queryParamMap.get('returnUrl');
+    const target = storedReturn || queryReturn;
+
+    if (target && target !== '/dashboard' && target !== '/login') {
+      sessionStorage.removeItem('auth_return_url');
+      this.router.navigateByUrl(target);
+      return;
+    }
+
+    // Priority 2: pending level-finder result — show it first
+    if (localStorage.getItem('lf_pending_result')) {
+      sessionStorage.removeItem('auth_return_url');
+      this.router.navigate(['/level-finder'], { queryParams: { restore: '1' } });
+      return;
+    }
+
+    sessionStorage.removeItem('auth_return_url');
+    this.router.navigate(['/dashboard']);
   }
 
   resendVerification(): void {
