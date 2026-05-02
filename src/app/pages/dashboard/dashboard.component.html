@@ -125,6 +125,24 @@
       </div>
     }
 
+    <!-- Quick actions bar -->
+    <div class="flex flex-wrap gap-3 mb-8">
+      <a routerLink="/sessions/available" class="btn-primary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        Browse &amp; Book Sessions
+      </a>
+      <a routerLink="/my-sessions" class="btn-secondary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        My Sessions
+      </a>
+    </div>
+
     <div class="flex justify-between items-center mb-8">
       <h2 class="text-3xl font-bold text-gray-800">Your Children</h2>
       @if (!showAddChildForm()) {

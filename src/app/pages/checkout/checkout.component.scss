@@ -1,0 +1,335 @@
+/* ── Shared tokens ────────────────────────────────────────────────────── */
+$surface:   rgba(255,255,255,.04);
+$border:    rgba(255,255,255,.08);
+$text:      #f1f5f9;
+$muted:     #94a3b8;
+$accent:    #0ea5e9;
+$accent-dk: #0369a1;
+$green:     #22c55e;
+$red:       #ef4444;
+
+/* ── Page wrapper ─────────────────────────────────────────────────────── */
+.co-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1rem 3rem;
+  background: #060e24;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.co-hero {
+  background: linear-gradient(135deg, #060e24 0%, #0c1a3e 100%);
+  padding: 4rem 1rem 3rem;
+  text-align: center;
+  border-bottom: 1px solid $border;
+}
+.co-hero-inner { max-width: 520px; margin: 0 auto; }
+.co-hero-icon {
+  width: 3.5rem; height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(14,165,233,.15);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+  svg { width: 1.75rem; height: 1.75rem; color: $accent; }
+}
+.co-hero h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  color: $text;
+  margin: 0 0 .5rem;
+}
+.co-hero p { color: $muted; font-size: .9375rem; margin: 0; }
+
+/* ── Body ─────────────────────────────────────────────────────────────── */
+.co-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+}
+.co-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  @media (min-width: 720px) { grid-template-columns: 1fr 1.4fr; }
+}
+.co-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $muted;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 0 0 1rem;
+}
+
+/* ── Order summary ────────────────────────────────────────────────────── */
+.co-summary-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: .875rem;
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.co-summary-icon {
+  flex-shrink: 0;
+  width: 2.75rem; height: 2.75rem;
+  border-radius: .625rem;
+  background: rgba(14,165,233,.12);
+  display: flex; align-items: center; justify-content: center;
+  svg { width: 1.25rem; height: 1.25rem; color: $accent; }
+}
+.co-summary-session {
+  font-weight: 700;
+  color: $text;
+  font-size: .9375rem;
+  margin: 0 0 .2rem;
+}
+.co-summary-swimmer {
+  font-size: .8125rem;
+  color: #7dd3fc;
+  margin: 0 0 .2rem;
+  strong { font-weight: 700; }
+}
+.co-summary-meta {
+  font-size: .8125rem;
+  color: $muted;
+  margin: 0 0 .15rem;
+}
+.co-price-row {
+  display: flex;
+  justify-content: space-between;
+  padding: .5rem 0;
+  color: $muted;
+  font-size: .875rem;
+  border-top: 1px solid $border;
+}
+.co-price-total {
+  display: flex;
+  justify-content: space-between;
+  padding: .75rem 0 0;
+  color: $text;
+  font-weight: 700;
+  font-size: .9375rem;
+}
+.co-price-total-val { color: $accent; font-size: 1.125rem; }
+.co-secure-badge {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: 1.25rem;
+  font-size: .75rem;
+  color: $muted;
+  padding: .75rem 1rem;
+  background: rgba(34,197,94,.06);
+  border: 1px solid rgba(34,197,94,.2);
+  border-radius: .625rem;
+  color: #86efac;
+}
+.co-secure-icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+/* ── Card form ────────────────────────────────────────────────────────── */
+.co-form-wrap {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 1rem;
+  padding: 1.75rem;
+}
+.co-field { margin-bottom: 1.25rem; }
+.co-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.co-label {
+  display: block;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: $muted;
+  margin-bottom: .4rem;
+  letter-spacing: .02em;
+}
+.co-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: .625rem;
+  padding: .7rem 1rem;
+  color: $text;
+  font-size: .9375rem;
+  outline: none;
+  transition: border-color .15s;
+  box-sizing: border-box;
+
+  &::placeholder { color: rgba(148,163,184,.5); }
+  &:focus { border-color: $accent; background: rgba(14,165,233,.05); }
+}
+.co-input-card { padding-right: 5.5rem; }
+.co-input-error { border-color: $red !important; }
+.co-field-err {
+  display: block;
+  font-size: .75rem;
+  color: #fca5a5;
+  margin-top: .3rem;
+}
+.co-card-input-wrap { position: relative; }
+.co-card-brands {
+  position: absolute;
+  right: .75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: .35rem;
+}
+.co-brand {
+  font-size: .6rem;
+  font-weight: 800;
+  padding: .15rem .35rem;
+  border-radius: 3px;
+  letter-spacing: .04em;
+}
+.co-brand-visa  { background: #1a1f71; color: #fff; }
+.co-brand-mc    { background: #eb001b; color: #fff; }
+
+.co-error-bar {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.3);
+  border-radius: .625rem;
+  padding: .75rem 1rem;
+  color: #fca5a5;
+  font-size: .875rem;
+  margin-bottom: 1.25rem;
+}
+.co-error-icon { width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
+
+/* ── Pay button ───────────────────────────────────────────────────────── */
+.co-pay-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .625rem;
+  padding: .9rem 1.5rem;
+  border-radius: .75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+  border: none;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  margin-top: .5rem;
+
+  &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+.co-pay-icon { width: 1.1rem; height: 1.1rem; }
+.co-spinner {
+  width: 1.1rem; height: 1.1rem;
+  animation: co-spin .9s linear infinite;
+}
+@keyframes co-spin { to { transform: rotate(360deg); } }
+
+.co-back-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: .8125rem;
+  a { color: $muted; text-decoration: none; &:hover { color: $accent; } }
+}
+
+/* ── Receipt screen ───────────────────────────────────────────────────── */
+.co-receipt {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+.co-receipt-check {
+  width: 4.5rem; height: 4.5rem;
+  border-radius: 50%;
+  background: rgba(34,197,94,.15);
+  border: 2px solid rgba(34,197,94,.4);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.5rem;
+  svg { width: 2rem; height: 2rem; color: $green; }
+}
+.co-receipt-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: $text;
+  margin: 0 0 .5rem;
+}
+.co-receipt-sub {
+  color: $muted;
+  font-size: .9375rem;
+  margin: 0 0 2rem;
+}
+.co-receipt-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+.co-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .5rem 0;
+  font-size: .875rem;
+}
+.co-receipt-label { color: $muted; }
+.co-receipt-val   { color: $text; font-weight: 600; }
+.co-mono          { font-family: monospace; letter-spacing: .05em; color: $accent; }
+.co-receipt-divider {
+  border: none;
+  border-top: 1px solid $border;
+  margin: .5rem 0;
+}
+.co-receipt-total {
+  padding-top: 1rem;
+  margin-top: .25rem;
+}
+.co-receipt-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: $green;
+}
+.co-receipt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.co-btn-primary {
+  display: block;
+  padding: .875rem;
+  border-radius: .75rem;
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+  color: #fff;
+  font-weight: 700;
+  font-size: .9375rem;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity .2s;
+  &:hover { opacity: .88; }
+}
+.co-btn-ghost {
+  display: block;
+  padding: .875rem;
+  border-radius: .75rem;
+  border: 1px solid $border;
+  color: $muted;
+  font-weight: 600;
+  font-size: .9375rem;
+  text-align: center;
+  text-decoration: none;
+  transition: border-color .2s, color .2s;
+  &:hover { border-color: $accent; color: $accent; }
+}

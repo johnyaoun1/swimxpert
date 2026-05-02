@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
-import { LevelFinderService, LevelFinderAnswers } from '../../services/level-finder.service';
+import { LevelFinderService, LevelFinderAnswers, AiLevelResult } from '../../services/level-finder.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
 
 @Component({
@@ -15,20 +15,23 @@ import { SwimLevelsService } from '../../services/swim-levels.service';
 })
 export class LevelFinderComponent implements OnInit {
   levelFinderForm: FormGroup;
-  showResult = signal(false);
+  showResult  = signal(false);
+  loading     = signal(false);
+  aiError     = signal('');
   determinedLevel = signal<number>(1);
-  levelInfo = signal<any>(null);
+  levelInfo   = signal<any>(null);
+  aiResult    = signal<AiLevelResult | null>(null);
 
   questions = [
-    { id: 1, key: 'q1', text: 'Can your child float independently on their back?' },
-    { id: 2, key: 'q2', text: 'Can your child kick on front and back with control?' },
-    { id: 3, key: 'q3', text: 'Can your child swim 5–10 meters independently?' },
-    { id: 4, key: 'q4', text: 'Can your child roll from front to back and swim back to the wall?' },
-    { id: 5, key: 'q5', text: 'Can your child swim 10–15 meters continuously with some breath control?' },
-    { id: 6, key: 'q6', text: 'Can your child swim freestyle with side breathing and coordinated arms?' },
-    { id: 7, key: 'q7', text: 'Can your child swim backstroke with proper arm movement?' },
-    { id: 8, key: 'q8', text: 'Can your child swim breaststroke with proper kick and glide?' },
-    { id: 9, key: 'q9', text: 'Can your child swim 25 meters or more continuously?' },
+    { id: 1,  key: 'q1',  text: 'Can your child float independently on their back?' },
+    { id: 2,  key: 'q2',  text: 'Can your child kick on front and back with control?' },
+    { id: 3,  key: 'q3',  text: 'Can your child swim 5–10 meters independently?' },
+    { id: 4,  key: 'q4',  text: 'Can your child roll from front to back and swim back to the wall?' },
+    { id: 5,  key: 'q5',  text: 'Can your child swim 10–15 meters continuously with some breath control?' },
+    { id: 6,  key: 'q6',  text: 'Can your child swim freestyle with side breathing and coordinated arms?' },
+    { id: 7,  key: 'q7',  text: 'Can your child swim backstroke with proper arm movement?' },
+    { id: 8,  key: 'q8',  text: 'Can your child swim breaststroke with proper kick and glide?' },
+    { id: 9,  key: 'q9',  text: 'Can your child swim 25 meters or more continuously?' },
     { id: 10, key: 'q10', text: 'Can your child tread water for 30–45 seconds?' },
     { id: 11, key: 'q11', text: 'Can your child perform a safe jump into the water and return to the wall?' },
     { id: 12, key: 'q12', text: 'Can your child perform flip turns or wall push-offs?' },
@@ -45,11 +48,7 @@ export class LevelFinderComponent implements OnInit {
     const formControls: any = {
       age: [null, [Validators.required, Validators.min(3), Validators.max(18)]]
     };
-
-    this.questions.forEach(q => {
-      formControls[q.key] = [null];
-    });
-
+    this.questions.forEach(q => { formControls[q.key] = [null]; });
     this.levelFinderForm = this.fb.group(formControls);
   }
 
@@ -62,34 +61,39 @@ export class LevelFinderComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.levelFinderForm.valid) {
-      const formValue = this.levelFinderForm.value;
-      const answers: LevelFinderAnswers = {
-        age: formValue.age,
-        q1: this.convertToBoolean(formValue.q1),
-        q2: this.convertToBoolean(formValue.q2),
-        q3: this.convertToBoolean(formValue.q3),
-        q4: this.convertToBoolean(formValue.q4),
-        q5: this.convertToBoolean(formValue.q5),
-        q6: this.convertToBoolean(formValue.q6),
-        q7: this.convertToBoolean(formValue.q7),
-        q8: this.convertToBoolean(formValue.q8),
-        q9: this.convertToBoolean(formValue.q9),
-        q10: this.convertToBoolean(formValue.q10),
-        q11: this.convertToBoolean(formValue.q11),
-        q12: this.convertToBoolean(formValue.q12),
-        q13: this.convertToBoolean(formValue.q13)
-      };
+    if (!this.levelFinderForm.valid) return;
 
-      const level = this.levelFinderService.determineLevel(answers);
-      this.determinedLevel.set(level);
-      this.levelInfo.set(this.swimLevelsService.getLevel(level));
-      this.showResult.set(true);
-    }
+    const formValue = this.levelFinderForm.value;
+
+    // Build question/answer pairs for the AI
+    const answers = this.questions.map(q => ({
+      question: q.text,
+      answer: this.convertToBoolean(formValue[q.key]) === true  ? 'Yes'
+            : this.convertToBoolean(formValue[q.key]) === false ? 'No'
+            : 'Not answered'
+    }));
+
+    this.loading.set(true);
+    this.aiError.set('');
+
+    this.levelFinderService.analyzeLevel({ age: formValue.age, answers }).subscribe({
+      next: (result) => {
+        this.aiResult.set(result);
+        const num = this.levelFinderService.levelNameToNumber(result.level);
+        this.determinedLevel.set(num);
+        this.levelInfo.set(this.swimLevelsService.getLevel(num));
+        this.loading.set(false);
+        this.showResult.set(true);
+      },
+      error: (err) => {
+        this.aiError.set(err?.message || 'AI assessment failed. Please try again.');
+        this.loading.set(false);
+      }
+    });
   }
 
   private convertToBoolean(value: any): boolean | null {
-    if (value === true || value === 'true') return true;
+    if (value === true  || value === 'true')  return true;
     if (value === false || value === 'false') return false;
     return null;
   }
@@ -97,6 +101,9 @@ export class LevelFinderComponent implements OnInit {
   resetForm(): void {
     this.levelFinderForm.reset();
     this.showResult.set(false);
+    this.loading.set(false);
+    this.aiError.set('');
+    this.aiResult.set(null);
     this.determinedLevel.set(1);
     this.levelInfo.set(null);
   }

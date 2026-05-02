@@ -1,0 +1,231 @@
+<!-- ── RECEIPT SCREEN ─────────────────────────────────────────────────── -->
+@if (receipt(); as r) {
+  <div class="co-page">
+    <div class="co-receipt">
+      <div class="co-receipt-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h1 class="co-receipt-title">Payment Confirmed</h1>
+      <p class="co-receipt-sub">Your session has been booked and your receipt is below.</p>
+
+      <div class="co-receipt-card">
+        <div class="co-receipt-row">
+          <span class="co-receipt-label">Receipt ID</span>
+          <span class="co-receipt-val co-mono">{{ r.receiptId }}</span>
+        </div>
+        <div class="co-receipt-divider"></div>
+        <div class="co-receipt-row">
+          <span class="co-receipt-label">Swimmer</span>
+          <span class="co-receipt-val">{{ r.swimmerName }}</span>
+        </div>
+        <div class="co-receipt-row">
+          <span class="co-receipt-label">Date</span>
+          <span class="co-receipt-val">{{ formatDate(r.date) }}</span>
+        </div>
+        <div class="co-receipt-row">
+          <span class="co-receipt-label">Time</span>
+          <span class="co-receipt-val">{{ r.startLocal }} – {{ r.endLocal }}</span>
+        </div>
+        <div class="co-receipt-row">
+          <span class="co-receipt-label">Duration</span>
+          <span class="co-receipt-val">45 minutes</span>
+        </div>
+        <div class="co-receipt-divider"></div>
+        <div class="co-receipt-row">
+          <span class="co-receipt-label">Card</span>
+          <span class="co-receipt-val">{{ r.cardHolder }} •••• {{ r.cardLastFour }}</span>
+        </div>
+        <div class="co-receipt-row co-receipt-total">
+          <span class="co-receipt-label">Total Paid</span>
+          <span class="co-receipt-amount">${{ r.amount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="co-receipt-actions">
+        <a routerLink="/my-sessions" class="co-btn-primary">View My Sessions</a>
+        <a routerLink="/sessions/available" class="co-btn-ghost">Book Another</a>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── CHECKOUT FORM ──────────────────────────────────────────────────── -->
+@if (!receipt()) {
+
+  <!-- Hero -->
+  <div class="co-hero">
+    <div class="co-hero-inner">
+      <div class="co-hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+      </div>
+      <h1>Secure Checkout</h1>
+      <p>Complete your payment to confirm your swimming session</p>
+    </div>
+  </div>
+
+  <div class="co-body">
+    <div class="co-grid">
+
+      <!-- Left: Order summary -->
+      <div class="co-summary">
+        <h2 class="co-section-title">Session Summary</h2>
+        <div class="co-summary-card">
+          <div class="co-summary-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <div class="co-summary-details">
+            <p class="co-summary-session">1-on-1 Swimming Session</p>
+            @if (swimmerName) {
+              <p class="co-summary-swimmer">For: <strong>{{ swimmerName }}</strong></p>
+            }
+            <p class="co-summary-meta">{{ formatDate(date) }}</p>
+            <p class="co-summary-meta">{{ startLocal }} – {{ endLocal }} · 45 min</p>
+          </div>
+        </div>
+
+        <div class="co-price-row">
+          <span>Session fee</span>
+          <span>${{ price }}.00</span>
+        </div>
+        <div class="co-price-total">
+          <span>Total</span>
+          <span class="co-price-total-val">${{ price }}.00</span>
+        </div>
+
+        <div class="co-secure-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="co-secure-icon">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          256-bit SSL encrypted · Payments are secure
+        </div>
+      </div>
+
+      <!-- Right: Card form -->
+      <div class="co-form-wrap">
+        <h2 class="co-section-title">Payment Details</h2>
+
+        @if (errorMsg()) {
+          <div class="co-error-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="co-error-icon">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ errorMsg() }}
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="pay()" autocomplete="off" novalidate>
+
+          <!-- Card holder -->
+          <div class="co-field">
+            <label class="co-label">Cardholder Name</label>
+            <input
+              class="co-input"
+              [class.co-input-error]="f['cardHolder'].invalid && f['cardHolder'].touched"
+              type="text"
+              formControlName="cardHolder"
+              placeholder="John Doe"
+              autocomplete="cc-name"
+            />
+            @if (f['cardHolder'].invalid && f['cardHolder'].touched) {
+              <span class="co-field-err">Please enter the cardholder name</span>
+            }
+          </div>
+
+          <!-- Card number -->
+          <div class="co-field">
+            <label class="co-label">Card Number</label>
+            <div class="co-card-input-wrap">
+              <input
+                class="co-input co-input-card"
+                [class.co-input-error]="f['cardNumber'].invalid && f['cardNumber'].touched"
+                type="text"
+                formControlName="cardNumber"
+                placeholder="1234 5678 9012 3456"
+                maxlength="19"
+                autocomplete="cc-number"
+                inputmode="numeric"
+                (input)="formatCardNumber($event)"
+              />
+              <div class="co-card-brands">
+                <span class="co-brand co-brand-visa">VISA</span>
+                <span class="co-brand co-brand-mc">MC</span>
+              </div>
+            </div>
+            @if (f['cardNumber'].invalid && f['cardNumber'].touched) {
+              <span class="co-field-err">Enter a valid 16-digit card number</span>
+            }
+          </div>
+
+          <!-- Expiry + CVV -->
+          <div class="co-field-row">
+            <div class="co-field">
+              <label class="co-label">Expiry Date</label>
+              <input
+                class="co-input"
+                [class.co-input-error]="f['expiry'].invalid && f['expiry'].touched"
+                type="text"
+                formControlName="expiry"
+                placeholder="MM/YY"
+                maxlength="5"
+                autocomplete="cc-exp"
+                inputmode="numeric"
+                (input)="formatExpiry($event)"
+              />
+              @if (f['expiry'].invalid && f['expiry'].touched) {
+                <span class="co-field-err">Use MM/YY format</span>
+              }
+            </div>
+            <div class="co-field">
+              <label class="co-label">CVV</label>
+              <input
+                class="co-input"
+                [class.co-input-error]="f['cvv'].invalid && f['cvv'].touched"
+                type="password"
+                formControlName="cvv"
+                placeholder="•••"
+                maxlength="4"
+                autocomplete="cc-csc"
+                inputmode="numeric"
+              />
+              @if (f['cvv'].invalid && f['cvv'].touched) {
+                <span class="co-field-err">3 or 4 digits</span>
+              }
+            </div>
+          </div>
+
+          <!-- Pay button -->
+          <button type="submit" class="co-pay-btn" [disabled]="submitting()">
+            @if (submitting()) {
+              <svg class="co-spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity:.25"/>
+                <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" style="opacity:.8"/>
+              </svg>
+              Processing…
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="co-pay-icon">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              Pay ${{ price }}.00
+            }
+          </button>
+
+          <p class="co-back-link">
+            <a routerLink="/sessions/available">← Back to available sessions</a>
+          </p>
+
+        </form>
+      </div>
+    </div>
+  </div>
+}

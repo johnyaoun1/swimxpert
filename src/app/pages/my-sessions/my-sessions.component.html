@@ -1,38 +1,81 @@
 <section class="section-padding bg-gray-50 min-h-screen">
   <div class="container mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">My Sessions</h1>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">My Sessions</h1>
+      <a routerLink="/sessions/available" class="btn-primary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 4v16m8-8H4"/>
+        </svg>
+        Book a Session
+      </a>
+    </div>
 
     @if (loading) {
-      <div class="premium-container">Loading...</div>
+      <div class="premium-container animate-pulse">
+        <div class="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
+        @for (i of [1,2,3]; track i) {
+          <div class="p-3 bg-gray-100 rounded-lg mb-2 h-14"></div>
+        }
+      </div>
     } @else {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="premium-container">
-          <h2 class="text-xl font-bold mb-4">Upcoming</h2>
+          <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
+            Upcoming
+            @if (futureSessions.length) {
+              <span class="ml-auto text-sm font-normal text-gray-500">{{ futureSessions.length }} booked</span>
+            }
+          </h2>
           @for (s of futureSessions; track s.id) {
-            <div class="p-3 bg-gray-50 rounded-lg mb-2 flex items-center justify-between">
+            <div class="p-3 bg-white border border-gray-200 rounded-lg mb-2 flex items-center justify-between shadow-sm">
               <div>
-                <p class="font-semibold">Session #{{ s.sessionId }}</p>
-                <p class="text-sm text-gray-600">{{ s.date }}</p>
+                <p class="font-semibold text-gray-800">{{ s.notes || 'Training Session' }}</p>
+                <p class="text-sm text-gray-500">{{ s.date }}</p>
               </div>
-              <button class="btn-secondary" (click)="cancel(s.id)">Cancel</button>
+              <button class="btn-secondary text-sm py-1.5 px-3" (click)="cancel(s.id)">Cancel</button>
             </div>
+          }
+          @if (!futureSessions.length) {
+            <p class="text-gray-500 text-sm py-4">No upcoming sessions.
+              <a routerLink="/sessions/available" class="text-primary-600 underline font-medium">Browse available →</a>
+            </p>
           }
         </div>
 
         <div class="premium-container">
-          <h2 class="text-xl font-bold mb-4">Past Sessions</h2>
+          <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+            Past Sessions
+            @if (pastSessions.length) {
+              <span class="ml-auto text-sm font-normal text-gray-500">{{ pastSessions.length }} total</span>
+            }
+          </h2>
           @for (s of pastSessions; track s.id) {
-            <div class="p-3 bg-gray-50 rounded-lg mb-2">
-              <p class="font-semibold">Session #{{ s.sessionId }}</p>
-              <p class="text-sm text-gray-600">{{ s.date }} • {{ s.status }}</p>
+            <div class="p-3 bg-gray-50 border border-gray-100 rounded-lg mb-2">
+              <p class="font-semibold text-gray-700">{{ s.notes || 'Training Session' }}</p>
+              <p class="text-sm text-gray-500">{{ s.date }}
+                @if (s.status === 'present') { <span class="text-green-600"> · Present</span> }
+                @else { <span class="text-gray-400"> · {{ s.status }}</span> }
+              </p>
             </div>
+          }
+          @if (!pastSessions.length) {
+            <p class="text-gray-500 text-sm py-4">No past sessions yet.</p>
           }
         </div>
       </div>
     }
 
     @if (errorMessage) {
-      <div class="premium-container text-red-600 mt-4">{{ errorMessage }}</div>
+      <div class="premium-container text-red-600 mt-4 flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ errorMessage }}
+      </div>
     }
   </div>
 </section>

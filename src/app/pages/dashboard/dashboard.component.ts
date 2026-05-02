@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { AuthService, Child } from '../../services/auth.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
@@ -11,7 +11,7 @@ import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ProfilePictureUploadComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, ProfilePictureUploadComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

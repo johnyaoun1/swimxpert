@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Title, Meta, DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { environment } from '../../../environments/environment';
+import { Title, Meta } from '@angular/platform-browser';
 import { ContactService } from '../../services/contact.service';
 
 @Component({
@@ -16,28 +15,19 @@ export class ContactComponent implements OnInit {
   contactForm: FormGroup;
   submitting = false;
   submitted = false;
-  /** Trusted iframe src when `googleCalendarEmbedUrl` is set. */
-  calendarEmbedSrc: SafeResourceUrl | null = null;
-  /** Same URL as plain string for “open in new tab” fallback. */
-  calendarEmbedRawUrl = '';
+  submitError = '';
 
   constructor(
     private fb: FormBuilder,
     private contactService: ContactService,
     private title: Title,
-    private meta: Meta,
-    private sanitizer: DomSanitizer
+    private meta: Meta
   ) {
     this.contactForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       message: ['', Validators.required]
     });
-    const cal = (environment.googleCalendarEmbedUrl || '').trim();
-    if (cal) {
-      this.calendarEmbedRawUrl = cal;
-      this.calendarEmbedSrc = this.sanitizer.bypassSecurityTrustResourceUrl(cal);
-    }
   }
 
   ngOnInit(): void {
@@ -47,8 +37,6 @@ export class ContactComponent implements OnInit {
       content: 'Get in touch with SwimXpert for swimming lessons in Lebanon. Book a trial session or ask about our programs for children and adults.'
     });
   }
-
-  submitError = '';
 
   onSubmit(): void {
     if (this.contactForm.valid) {

@@ -19,11 +19,12 @@ export class SwimmerDashboardComponent implements OnInit {
   constructor(private attendanceService: AttendanceService, private authService: AuthService) {}
 
   ngOnInit(): void {
-    const userId = this.authService.getCurrentUser()?.id;
-    if (!userId) return;
+    const children = this.authService.getCurrentUser()?.children ?? [];
+    if (children.length === 0) return;
 
     this.loading = true;
-    this.attendanceService.getMySessions(userId).subscribe({
+    // Use the first child's swimmer ID (not the parent user ID)
+    this.attendanceService.getMySessions(children[0].id).subscribe({
       next: (rows) => {
         const now = new Date();
         this.registrations = rows.filter((r) => new Date(r.date) >= now);

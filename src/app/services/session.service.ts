@@ -1,12 +1,20 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, EMPTY } from 'rxjs';
 import { map, switchMap, tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { toDate } from 'date-fns-tz';
 import { BEIRUT_TZ } from '../utils/beirut-week';
 
 export type SessionStatus = 'scheduled' | 'completed' | 'canceled';
+
+export interface AvailableSlot {
+  date: string;       // "2026-04-30"
+  startLocal: string; // "09:00"
+  endLocal: string;   // "09:45"
+  startUtc: string;   // ISO
+  endUtc: string;     // ISO
+}
 
 export interface Session {
   id: string;
@@ -71,7 +79,8 @@ export class SessionService {
   sessions = signal<Session[]>([]);
 
   constructor(private http: HttpClient) {
-    this.getSessions().subscribe();
+    // Only Coach/Admin can fetch full sessions; silently skip for clients.
+    this.getSessions().pipe(catchError(() => EMPTY)).subscribe();
   }
 
   getSessions(filters?: { status?: string; from?: string; to?: string }): Observable<Session[]> {
@@ -230,6 +239,19 @@ export class SessionService {
     else if (scope === 'allEvents') params = params.set('scope', 'allInSeries');
 
     return this.http.delete<void>(`${this.apiUrl}/${sessionId}`, { params });
+  }
+
+  /** Returns free 45-minute slots (9 AM–8 PM Beirut) for the next N days. */
+  getAvailableSlots(days = 14): Observable<AvailableSlot[]> {
+    return this.http.get<AvailableSlot[]>(`${this.apiUrl}/available`, { params: { days: String(days) } });
+  }
+
+  /** Books a free slot for a swimmer. Creates the session and registration. */
+  bookSlot(startUtc: string, swimmerId: number): Observable<{ message: string; registrationId: number; date: string; startLocal: string; endLocal: string }> {
+    return this.http.post<{ message: string; registrationId: number; date: string; startLocal: string; endLocal: string }>(
+      `${this.apiUrl}/book-slot`,
+      { startUtc, swimmerId }
+    );
   }
 
   /** Clone this session forward by 7 days per week (same price, location, registrations). */

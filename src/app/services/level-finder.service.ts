@@ -1,4 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface LevelFinderAnswers {
   age: number;
@@ -17,67 +20,37 @@ export interface LevelFinderAnswers {
   q13: boolean | null;
 }
 
+export interface AiLevelRequest {
+  age: number;
+  answers: { question: string; answer: string }[];
+}
+
+export interface AiLevelResult {
+  level: 'Beginner' | 'Intermediate' | 'Advanced' | 'Elite';
+  explanation: string;
+  recommendations: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class LevelFinderService {
-  determineLevel(answers: LevelFinderAnswers): number {
-    const { age, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q12, q13 } = answers;
+  private http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/level-finder`;
 
-    // Age 3 → Level 1 automatically
-    if (age === 3) {
-      return 1;
-    }
+  analyzeLevel(request: AiLevelRequest): Observable<AiLevelResult> {
+    return this.http.post<AiLevelResult>(`${this.apiUrl}/analyze`, request);
+  }
 
-    // For age 4+
-    if (q1 === false || q1 === null) {
-      return 1;
-    }
-
-    if (q1 === true && (q2 === false || q2 === null)) {
-      return 2;
-    }
-
-    if (q2 === true && (q3 === false || q3 === null)) {
-      return 2;
-    }
-
-    if (q3 === true && (q4 === false || q4 === null)) {
-      return 3;
-    }
-
-    if (q4 === true && (q5 === false || q5 === null)) {
-      return 3;
-    }
-
-    // Q5 = YES & (Q6 = NO & Q7 = NO) → Level 4
-    if (q5 === true && (q6 === false || q6 === null) && (q7 === false || q7 === null)) {
-      return 4;
-    }
-
-    // Q6 = YES or Q7 = YES → Level 4
-    if (q6 === true || q7 === true) {
-      // Q6 + Q7 + Q8 ≥ 2 YES & Q9 = NO → Level 5
-      const advancedSkills = [q6, q7, q8].filter(q => q === true).length;
-      if (advancedSkills >= 2 && (q9 === false || q9 === null)) {
-        return 5;
-      }
-      
-      // Q9 = YES & Q10 = YES & (Q12 = YES or Q13 = YES) → Level 6
-      if (q9 === true && q10 === true && (q12 === true || q13 === true)) {
-        return 6;
-      }
-      
-      // If Q9 is true but doesn't meet Level 6 criteria, check for Level 5
-      if (q9 === true && advancedSkills >= 2) {
-        return 5;
-      }
-      
-      return 4;
-    }
-
-    // Default fallback
-    return 4;
+  /** Maps AI level name to a 1-6 number for the star/badge display. */
+  levelNameToNumber(level: string): number {
+    const map: { [k: string]: number } = {
+      Beginner: 2,
+      Intermediate: 4,
+      Advanced: 5,
+      Elite: 6,
+    };
+    return map[level] ?? 3;
   }
 
   getLevelDescription(level: number): string {
