@@ -157,7 +157,9 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
             {
                 a.Id,
                 a.TrainingSessionId,
-                sessionTitle = a.TrainingSession.Title,
+                // Coaches/admins see the real title; clients get a generic label so session
+                // titles cannot leak other clients' names or schedule details.
+                sessionTitle = isAdminOrCoach ? a.TrainingSession.Title : "Swimming Session",
                 startTime = a.TrainingSession.StartTime,
                 endTime = a.TrainingSession.EndTime,
                 a.IsPresent,

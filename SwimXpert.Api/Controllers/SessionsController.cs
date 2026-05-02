@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,10 +52,10 @@ public class SessionsController(
     }
 
     /// <summary>
-    /// Returns all sessions with optional filters.
+    /// Returns all sessions with optional filters. Coach/Admin only — contains client names and full registration data.
     /// </summary>
     [HttpGet]
-    [Authorize]
+    [Authorize(Roles = "Coach,Admin")]
     public async Task<IActionResult> GetSessions([FromQuery] string? status, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
         var query = dbContext.TrainingSessions.AsQueryable();
@@ -84,11 +85,155 @@ public class SessionsController(
         return Ok(sessions.Select(ToSessionDto));
     }
 
+    // Beirut is UTC+3 (no DST)
+    private static readonly TimeSpan BeirutOffset = TimeSpan.FromHours(3);
+    private static readonly TimeSpan SlotDuration = TimeSpan.FromMinutes(45);
+    private static readonly TimeSpan DayStart = TimeSpan.FromHours(9);   // 9:00 AM
+    private static readonly TimeSpan DayEnd   = TimeSpan.FromHours(20);  // 8:00 PM
+
     /// <summary>
-    /// Returns future sessions ordered by start time.
+    /// Returns free 45-minute time slots (9 AM–8 PM Beirut) for the next <paramref name="days"/> days.
+    /// A slot is free when no existing TrainingSession overlaps it.
+    /// Client-safe: no session titles, client names, or registration data exposed.
+    /// </summary>
+    [HttpGet("available")]
+    [Authorize]
+    public async Task<IActionResult> GetAvailableSlots([FromQuery] int days = 14)
+    {
+        days = Math.Clamp(days, 1, 30);
+        var now = DateTime.UtcNow;
+
+        // Date range to query
+        var rangeStartUtc = now;
+        var rangeEndUtc   = now.AddDays(days);
+
+        // Load all existing sessions that fall within the window (only need start/end times)
+        var blocked = await dbContext.TrainingSessions
+            .Where(s => s.EndTime > rangeStartUtc && s.StartTime < rangeEndUtc)
+            .Select(s => new { s.StartTime, s.EndTime })
+            .ToListAsync();
+
+        var todayBeirut = (now + BeirutOffset).Date;
+        var result = new List<object>();
+
+        for (var d = 0; d < days; d++)
+        {
+            var dateBeirut = todayBeirut.AddDays(d);
+            var slotStart  = DayStart;
+
+            while (slotStart + SlotDuration <= DayEnd)
+            {
+                var startUtc = dateBeirut + slotStart - BeirutOffset;
+                var endUtc   = startUtc + SlotDuration;
+
+                // Skip slots already in the past
+                if (endUtc <= now)
+                {
+                    slotStart += SlotDuration;
+                    continue;
+                }
+
+                // Skip if any existing session overlaps this slot
+                var isBlocked = blocked.Any(s => s.StartTime < endUtc && s.EndTime > startUtc);
+                if (!isBlocked)
+                {
+                    result.Add(new
+                    {
+                        date       = dateBeirut.ToString("yyyy-MM-dd"),
+                        startLocal = (dateBeirut + slotStart).ToString("HH:mm"),
+                        endLocal   = (dateBeirut + slotStart + SlotDuration).ToString("HH:mm"),
+                        startUtc   = startUtc.ToString("O"),
+                        endUtc     = endUtc.ToString("O")
+                    });
+                }
+
+                slotStart += SlotDuration;
+            }
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Books a free 45-minute slot for a swimmer. Creates the TrainingSession and Attendance in one step.
+    /// The slot must not overlap any existing session and must be within 9 AM–8 PM Beirut time.
+    /// </summary>
+    [HttpPost("book-slot")]
+    [Authorize]
+    public async Task<IActionResult> BookSlot([FromBody] BookSlotRequest request, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var startUtc = request.StartUtc.ToUniversalTime();
+        var endUtc   = startUtc + SlotDuration;
+
+        if (startUtc <= DateTime.UtcNow)
+            return BadRequest(new { message = "This slot is in the past." });
+
+        // Validate slot falls within 9 AM–8 PM Beirut
+        var startBeirut = startUtc + BeirutOffset;
+        var timeOfDay   = startBeirut.TimeOfDay;
+        if (timeOfDay < DayStart || timeOfDay + SlotDuration > DayEnd)
+            return BadRequest(new { message = "Slot is outside working hours (9 AM–8 PM)." });
+
+        var swimmer = await dbContext.Swimmers.FindAsync(request.SwimmerId);
+        if (swimmer is null)
+            return NotFound(new { message = "Swimmer not found." });
+
+        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+            return Forbid();
+
+        // Check the slot is still free
+        var overlaps = await dbContext.TrainingSessions.AnyAsync(
+            s => s.StartTime < endUtc && s.EndTime > startUtc, cancellationToken);
+        if (overlaps)
+            return Conflict(new { message = "This slot has just been taken. Please pick another." });
+
+        // Create the session
+        var session = new TrainingSession
+        {
+            Title     = $"{swimmer.Name} Session",
+            StartTime = startUtc,
+            EndTime   = endUtc,
+            Capacity  = 1,
+            Status    = "Scheduled",
+            Price     = 0,
+            IsPaid    = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        dbContext.TrainingSessions.Add(session);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Register the swimmer
+        var attendance = new Attendance
+        {
+            SwimmerId         = request.SwimmerId,
+            TrainingSessionId = session.Id,
+            SessionDate       = startUtc.Date,
+            IsPresent         = false,
+            CreatedAt         = DateTime.UtcNow
+        };
+        dbContext.Attendances.Add(attendance);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(new
+        {
+            message        = "Slot booked successfully.",
+            registrationId = attendance.Id,
+            date           = startBeirut.ToString("yyyy-MM-dd"),
+            startLocal     = startBeirut.ToString("HH:mm"),
+            endLocal       = (startBeirut + SlotDuration).ToString("HH:mm")
+        });
+    }
+
+    /// <summary>
+    /// Returns future sessions ordered by start time. Coach/Admin only — contains client names and full registration data.
     /// </summary>
     [HttpGet("upcoming")]
-    [Authorize]
+    [Authorize(Roles = "Coach,Admin")]
     public async Task<IActionResult> GetUpcomingSessions()
     {
         var now = DateTime.UtcNow;
@@ -104,10 +249,10 @@ public class SessionsController(
     }
 
     /// <summary>
-    /// Returns one session by id.
+    /// Returns one session by id. Coach/Admin only — contains client names and full registration data.
     /// </summary>
     [HttpGet("{id:int}")]
-    [Authorize]
+    [Authorize(Roles = "Coach,Admin")]
     public async Task<IActionResult> GetSessionById(int id)
     {
         var session = await dbContext.TrainingSessions
@@ -430,4 +575,15 @@ public class RepeatWeeklyRequest
 {
     /// <summary>Number of future weekly occurrences to add (not including this session).</summary>
     public int Weeks { get; set; }
+}
+
+public class BookSessionRequest
+{
+    public int SwimmerId { get; set; }
+}
+
+public class BookSlotRequest
+{
+    public DateTime StartUtc { get; set; }
+    public int SwimmerId { get; set; }
 }
