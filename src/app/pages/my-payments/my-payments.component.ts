@@ -24,7 +24,7 @@ export class MyPaymentsComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.errorMessage = error?.message || 'Failed to load payment history';
+        this.errorMessage = error?.error?.message || error?.message || 'Failed to load payment history';
         this.loading = false;
       }
     });

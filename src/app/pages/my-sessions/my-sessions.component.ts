@@ -22,17 +22,33 @@ export class MySessionsComponent implements OnInit {
   constructor(private attendanceService: AttendanceService, private authService: AuthService) {}
 
   ngOnInit(): void {
+    this.loading = true;
     const children = this.authService.getCurrentUser()?.children ?? [];
+
     if (children.length === 0) {
+      // Children might not be synced yet — try fetching from API before giving up
+      this.authService.fetchMe().subscribe({
+        next: () => this.loadSessions(),
+        error: () => { this.loading = false; }
+      });
       return;
     }
 
-    this.loading = true;
+    this.loadSessions();
+  }
+
+  private loadSessions(): void {
+    const children = this.authService.getCurrentUser()?.children ?? [];
+    if (children.length === 0) {
+      this.loading = false;
+      return;
+    }
 
     const requests = children.map((child) =>
       this.attendanceService.getMySessions(child.id).pipe(catchError(() => of([] as Attendance[])))
     );
 
+    this.loading = true;
     forkJoin(requests).subscribe({
       next: (results) => {
         const today = new Date();
