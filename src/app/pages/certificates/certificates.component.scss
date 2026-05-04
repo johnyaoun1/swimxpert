@@ -1,5 +1,35 @@
 // Certificates component styles
 
+// ============================================================
+// LEVEL GROUP HEADERS
+// ============================================================
+
+.cert-group-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.cert-group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1d9bf0;
+  white-space: nowrap;
+  padding: 0.35rem 1rem;
+  border: 1px solid rgba(29, 155, 240, 0.3);
+  border-radius: 20px;
+  background: rgba(29, 155, 240, 0.07);
+}
+
+.cert-group-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(29, 155, 240, 0.25), transparent);
+}
+
 .certificate-card {
   position: relative;
   background: linear-gradient(135deg, #0f1e3d 0%, #0a1225 100%);

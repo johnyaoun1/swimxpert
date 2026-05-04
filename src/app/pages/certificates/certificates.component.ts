@@ -28,13 +28,38 @@ export class CertificatesComponent {
   showViewer = false;
 
   
-  certificates: Certificate[] = [
-    { id: 1, title: 'SwimXpert Certificate', description: 'Official SwimXpert swimming certificate.', filePath: 'assets/certificates/SWIM.jpg', type: 'image' },
-    { id: 2, title: 'Intermediate — Girl', description: 'SwimXpert Intermediate certificate for girls. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/intermediate-girl.jpg', type: 'image' },
-    { id: 3, title: 'Intermediate — Boy', description: 'SwimXpert Intermediate certificate for boys. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/intermediate-boy.jpg', type: 'image' },
-    { id: 4, title: 'Advanced — Girl', description: 'SwimXpert Advanced certificate for girls. Coordinated strokes, stamina, and refined technique.', filePath: 'assets/certificates/advanced-girl.jpg', type: 'image' },
-    { id: 5, title: 'Advanced — Boy', description: 'SwimXpert Advanced certificate for boys. Coordinated strokes, stamina, and refined technique.', filePath: 'assets/certificates/advanced-boy.jpg', type: 'image' }
+  certificateGroups: { level: string; items: Certificate[] }[] = [
+    {
+      level: 'Beginner',
+      items: [
+        { id: 1, title: 'Beginner — Boy', description: 'SwimXpert Beginner certificate for boys. Foundational water confidence, floating, and basic kicking skills.', filePath: 'assets/certificates/beginner-boy.jpg', type: 'image' },
+        { id: 2, title: 'Beginner — Girl', description: 'SwimXpert Beginner certificate for girls. Foundational water confidence, floating, and basic kicking skills.', filePath: 'assets/certificates/beginner-girl.jpg', type: 'image' },
+      ]
+    },
+    {
+      level: 'Intermediate',
+      items: [
+        { id: 3, title: 'Intermediate — Boy', description: 'SwimXpert Intermediate certificate for boys. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/intermediate-boy.jpg', type: 'image' },
+        { id: 4, title: 'Intermediate — Girl', description: 'SwimXpert Intermediate certificate for girls. Independent buoyancy, glides, and simple strokes.', filePath: 'assets/certificates/intermediate-girl.jpg', type: 'image' },
+      ]
+    },
+    {
+      level: 'Advanced',
+      items: [
+        { id: 5, title: 'Advanced', description: 'SwimXpert Advanced certificate. Coordinated strokes, stamina, and refined technique across all disciplines.', filePath: 'assets/certificates/advanced-boy.jpg', type: 'image' },
+      ]
+    },
+    {
+      level: 'Voucher',
+      items: [
+        { id: 6, title: 'SwimXpert Voucher', description: 'Official SwimXpert swimming voucher. Redeemable for any SwimXpert lesson or programme.', filePath: 'assets/certificates/voucher.jpg', type: 'image', hideCertifiedBadge: true },
+      ]
+    },
   ];
+
+  get certificates(): Certificate[] {
+    return this.certificateGroups.flatMap(g => g.items);
+  }
 
   viewCertificate(certificate: Certificate): void {
     this.selectedCertificate = certificate;
