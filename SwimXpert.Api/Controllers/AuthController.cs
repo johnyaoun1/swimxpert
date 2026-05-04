@@ -16,7 +16,7 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService) : ControllerBase
+public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService, IWebHostEnvironment env) : ControllerBase
 {
     private const int BcryptWorkFactor = 12;
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
@@ -40,6 +40,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         var verificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var verificationHash = HashToken(verificationToken);
 
+        bool isDev = env.IsDevelopment();
         var user = new User
         {
             Email = email,
@@ -47,9 +48,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             FullName = fullName,
             Role = "Parent",
             CreatedAt = DateTime.UtcNow,
-            EmailVerified = false,
-            EmailVerificationTokenHash = verificationHash,
-            EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
+            EmailVerified = isDev,   // auto-verified in dev so demo signups work immediately
+            EmailVerificationTokenHash = isDev ? null : verificationHash,
+            EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24)
         };
 
         dbContext.Users.Add(user);
@@ -98,7 +99,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         user.FailedLoginAttempts = 0;
         user.LockoutUntil = null;
         await dbContext.SaveChangesAsync();
-        if (!user.EmailVerified)
+        if (!user.EmailVerified && !env.IsDevelopment())
             return StatusCode(403, new { message = "Please verify your email.", code = "email_not_verified" });
         if (user.TwoFactorEnabled)
             return StatusCode(202, new { message = "2FA required.", code = "2fa_required", email = user.Email });
