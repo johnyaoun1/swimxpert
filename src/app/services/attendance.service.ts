@@ -15,6 +15,10 @@ export interface Attendance {
   clientName: string;
   date: string;
   status: AttendanceStatus;
+  /** Pending | Confirmed — admin approval status */
+  bookingStatus?: 'Pending' | 'Confirmed';
+  startTime?: string;
+  endTime?: string;
   checkInTime?: string;
   notes?: string;
   createdAt: string;
@@ -180,6 +184,9 @@ export class AttendanceService {
       clientName: '',
       date: row.sessionDate ? new Date(row.sessionDate).toISOString().split('T')[0] : '',
       status: row.isPresent ? 'present' : 'absent',
+      bookingStatus: row.bookingStatus ?? 'Confirmed',
+      startTime: row.startTime ? new Date(row.startTime).toISOString().slice(11, 16) : undefined,
+      endTime: row.endTime ? new Date(row.endTime).toISOString().slice(11, 16) : undefined,
       createdAt: new Date().toISOString(),
       notes: row.sessionTitle
     };

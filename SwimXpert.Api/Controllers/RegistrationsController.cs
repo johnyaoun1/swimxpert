@@ -14,7 +14,7 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
 {
    
     [HttpGet]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll()
     {
         var registrations = await dbContext.Attendances
@@ -55,8 +55,8 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         if (swimmer is null)
             return NotFound(new { message = "Swimmer not found." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && swimmer.ParentUserId != currentUserId)
             return Forbid();
 
         var session = await dbContext.TrainingSessions.FindAsync(request.TrainingSessionId);
@@ -108,12 +108,12 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         if (!int.TryParse(userIdClaim, out var currentUserId))
             return Unauthorized(new { message = "Invalid user context." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
+        var isAdmin = User.IsInRole("Admin");
 
         IQueryable<Attendance> query = dbContext.Attendances
             .Where(a => a.TrainingSessionId == sessionId);
 
-        if (!isAdminOrCoach)
+        if (!isAdmin)
             query = query.Where(a => a.Swimmer.ParentUserId == currentUserId);
 
         var attendees = await query
@@ -145,8 +145,8 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         if (swimmer is null)
             return NotFound(new { message = "Swimmer not found." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && swimmer.ParentUserId != currentUserId)
             return Forbid();
 
         var registrations = await dbContext.Attendances
@@ -157,13 +157,14 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
             {
                 a.Id,
                 a.TrainingSessionId,
-                // Coaches/admins see the real title; clients get a generic label so session
+                // Admins see the real title; clients get a generic label so session
                 // titles cannot leak other clients' names or schedule details.
-                sessionTitle = isAdminOrCoach ? a.TrainingSession.Title : "Swimming Session",
+                sessionTitle = isAdmin ? a.TrainingSession.Title : "Swimming Session",
                 startTime = a.TrainingSession.StartTime,
                 endTime = a.TrainingSession.EndTime,
                 a.IsPresent,
-                a.SessionDate
+                a.SessionDate,
+                a.BookingStatus
             })
             .ToListAsync();
 
@@ -172,7 +173,7 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
 
    
     [HttpPut("{id:int}/attendance")]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> MarkAttendance(int id, [FromBody] MarkAttendanceRequest request)
     {
         var registration = await dbContext.Attendances.FindAsync(id);
@@ -207,8 +208,8 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         if (registration is null)
             return NotFound(new { message = "Registration not found." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isAdminOrCoach && registration.Swimmer.ParentUserId != currentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && registration.Swimmer.ParentUserId != currentUserId)
             return Forbid();
 
         dbContext.Attendances.Remove(registration);
@@ -233,8 +234,8 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         if (registration is null)
             return NotFound(new { message = "Registration not found." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isAdminOrCoach && registration.Swimmer.ParentUserId != currentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && registration.Swimmer.ParentUserId != currentUserId)
             return Forbid();
 
         return Ok(new

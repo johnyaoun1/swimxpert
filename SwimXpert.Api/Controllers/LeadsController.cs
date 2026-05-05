@@ -81,19 +81,31 @@ public class LeadsController(ApplicationDbContext dbContext) : ControllerBase
             .OrderByDescending(l => l.CreatedAt)
             .Select(l => new
             {
-                l.Id,
-                l.Name,
-                l.Email,
-                l.Phone,
-                l.SourcePage,
-                l.SourceAction,
-                l.IsContacted,
-                l.ContactedAt,
-                l.CreatedAt
+                id          = l.Id,
+                name        = l.Name,
+                email       = l.Email,
+                phone       = l.Phone,
+                sourcePage  = l.SourcePage,
+                sourceAction = l.SourceAction,
+                isContacted = l.IsContacted,
+                contactedAt = l.ContactedAt,
+                createdAt   = l.CreatedAt
             })
             .ToListAsync();
 
         return Ok(leads);
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteLead(int id)
+    {
+        var lead = await dbContext.LeadCaptures.FirstOrDefaultAsync(l => l.Id == id);
+        if (lead is null)
+            return NotFound(new { message = "Lead not found." });
+        dbContext.LeadCaptures.Remove(lead);
+        await dbContext.SaveChangesAsync();
+        return Ok(new { message = "Lead deleted." });
     }
 
     [HttpPut("{id:int}/status")]
@@ -112,9 +124,9 @@ public class LeadsController(ApplicationDbContext dbContext) : ControllerBase
 
         return Ok(new
         {
-            lead.Id,
-            lead.IsContacted,
-            lead.ContactedAt
+            id          = lead.Id,
+            isContacted = lead.IsContacted,
+            contactedAt = lead.ContactedAt
         });
     }
 }

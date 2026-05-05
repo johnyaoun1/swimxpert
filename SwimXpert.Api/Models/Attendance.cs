@@ -9,8 +9,10 @@ public class Attendance
 
     public int TrainingSessionId { get; set; }
     public TrainingSession TrainingSession { get; set; } = null!;
-
+    
     public DateTime SessionDate { get; set; }
     public bool IsPresent { get; set; }
+    /// <summary>Pending | Confirmed | Rejected</summary>
+    public string BookingStatus { get; set; } = "Confirmed";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

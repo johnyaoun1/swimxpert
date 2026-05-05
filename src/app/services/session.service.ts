@@ -41,6 +41,12 @@ export interface Session {
   googleEventId?: string;
   /** Same id for all sessions in a weekly package (repeat weekly). */
   recurrenceSeriesId?: string;
+  /** ID of the coach user assigned to this session by the admin. */
+  coachUserId?: number;
+  /** null = pending response, true = accepted, false = declined */
+  coachAccepted?: boolean | null;
+  /** Present when coach declined (shown to admin). */
+  coachDeclineReason?: string | null;
   createdAt: string;
 }
 
@@ -66,6 +72,9 @@ interface ApiSession {
   isPaid?: boolean;
   googleEventId?: string;
   recurrenceSeriesId?: string;
+  coachUserId?: number;
+  coachAccepted?: boolean | null;
+  coachDeclineReason?: string | null;
   registrations?: ApiRegistrationRow[];
 }
 
@@ -210,6 +219,10 @@ export class SessionService {
           price: merged.price ?? 0,
           isPaid: !!merged.isPaid
         };
+        if ('coachUserId' in updates) {
+          if (updates.coachUserId == null) payload['clearCoach'] = true;
+          else payload['coachUserId'] = updates.coachUserId;
+        }
         if (recurrenceApply && recurrenceApply !== 'single') {
           payload['recurrenceApply'] = recurrenceApply;
         }
@@ -320,6 +333,9 @@ export class SessionService {
       endTimeUtc: api.endTime,
       googleEventId: api.googleEventId || undefined,
       recurrenceSeriesId: api.recurrenceSeriesId != null ? String(api.recurrenceSeriesId) : undefined,
+      coachUserId: api.coachUserId ?? undefined,
+      coachAccepted: api.coachAccepted ?? null,
+      coachDeclineReason: api.coachDeclineReason ?? null,
       createdAt: api.createdAt
     };
   }

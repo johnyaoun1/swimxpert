@@ -263,101 +263,114 @@
       }
     </div>
 
-    <!-- Lead Captures -->
+    <!-- ── Pending Bookings ──────────────────────────────────── -->
     <div class="premium-container mb-8">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-gray-800">Lead Captures</h2>
-        <div class="flex items-center gap-2">
-          <p class="text-sm text-gray-600">{{ leads().length }} total</p>
-          <button (click)="exportLeadsCsv()" class="btn-secondary text-sm py-2 px-4" [disabled]="leads().length === 0">
-            Export CSV
-          </button>
-        </div>
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          Pending Bookings
+          @if (pendingBookings().length > 0) {
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+              style="background:#f59e0b">{{ pendingBookings().length }}</span>
+          }
+        </h2>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
-        <label for="lead-search" class="sr-only">Search leads by name, email, or phone</label>
-        <input
-          id="lead-search"
-          [value]="leadSearch()"
-          (input)="leadSearch.set($any($event.target).value); onLeadFiltersChanged()"
-          type="text"
-          placeholder="Search name, email, phone..."
-          class="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg"
-        />
-        <label for="lead-status-filter" class="sr-only">Filter by lead status</label>
-        <select
-          id="lead-status-filter"
-          [value]="leadStatusFilter()"
-          (change)="leadStatusFilter.set($any($event.target).value); onLeadFiltersChanged()"
-          class="px-3 py-2 border border-gray-300 rounded-lg"
-        >
-          <option value="all">All Statuses</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-        </select>
-        <label for="lead-from-date" class="sr-only">Filter leads from date</label>
-        <input
-          id="lead-from-date"
-          [value]="leadFromDate()"
-          (input)="leadFromDate.set($any($event.target).value); onLeadFiltersChanged()"
-          type="date"
-          aria-label="From date"
-          class="px-3 py-2 border border-gray-300 rounded-lg"
-        />
-        <div class="flex gap-2">
-          <label for="lead-to-date" class="sr-only">Filter leads to date</label>
-          <input
-            id="lead-to-date"
-            [value]="leadToDate()"
-            (input)="leadToDate.set($any($event.target).value); onLeadFiltersChanged()"
-            type="date"
-            aria-label="To date"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <button (click)="clearLeadFilters()" class="btn-secondary text-sm px-3 py-2 whitespace-nowrap" aria-label="Clear all lead filters">Clear</button>
-        </div>
-      </div>
-      @if (leads().length === 0) {
-        <p class="text-gray-500">No leads yet. Once visitors submit the popup form, they will appear here.</p>
+
+      @if (pendingBookings().length === 0) {
+        <p class="text-gray-500 text-sm py-2">No pending bookings. All caught up!</p>
       } @else {
         <div class="overflow-x-auto">
-          <table class="w-full" aria-label="Lead captures list">
-            <caption class="sr-only">All lead captures with contact status</caption>
+          <table class="w-full" aria-label="Pending bookings">
             <thead>
               <tr class="border-b border-gray-200">
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Source</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Created At</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Time</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Payment ($30)</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
-              @for (lead of leads(); track lead.id) {
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                  <td class="py-3 px-4 font-semibold text-gray-800">{{ lead.name }}</td>
-                  <td class="py-3 px-4">{{ lead.email || '-' }}</td>
-                  <td class="py-3 px-4">{{ lead.phone || '-' }}</td>
-                  <td class="py-3 px-4 text-sm text-gray-600">{{ lead.sourcePage || '-' }}</td>
-                  <td class="py-3 px-4 text-sm text-gray-600">{{ lead.sourceAction || '-' }}</td>
+              @for (b of pendingBookings(); track b.id) {
+                <tr class="border-b border-gray-100 hover:bg-amber-50">
+                  <td class="py-3 px-4">
+                    <p class="font-semibold text-gray-800 text-sm">{{ b.client.fullName }}</p>
+                    <p class="text-xs text-gray-500">{{ b.client.email }}</p>
+                  </td>
+                  <td class="py-3 px-4">
+                    <p class="text-sm font-medium text-gray-700">{{ b.swimmer.name }}</p>
+                    @if (b.swimmer.level) {
+                      <span class="text-xs text-gray-500">Level {{ b.swimmer.level }}</span>
+                    }
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-700">
+                    {{ b.sessionDate | slice:0:10 }}
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-700">
+                    {{ formatBookingTime(b.session.startTime, b.session.endTime) }}
+                  </td>
+                  <!-- Payment column -->
+                  <td class="py-3 px-4">
+                    @if (getBookingPaymentState(b.id) === 'done') {
+                      <span class="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        Paid
+                      </span>
+                    } @else {
+                      <div class="flex items-center gap-1.5">
+                        <select
+                          class="text-xs border border-gray-300 rounded px-1.5 py-1 bg-white"
+                          [(ngModel)]="bookingPaymentMethod[b.id]"
+                        >
+                          <option value="Cash">Cash</option>
+                          <option value="Card">Card</option>
+                          <option value="WhatsApp">WhatsApp</option>
+                          <option value="Transfer">Transfer</option>
+                        </select>
+                        <button
+                          (click)="recordBookingPayment(b)"
+                          [disabled]="getBookingPaymentState(b.id) === 'recording'"
+                          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white disabled:opacity-50 whitespace-nowrap"
+                          style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"
+                        >
+                          @if (getBookingPaymentState(b.id) === 'recording') {
+                            <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                          } @else {
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                          }
+                          $30
+                        </button>
+                      </div>
+                    }
+                  </td>
                   <td class="py-3 px-4">
                     <div class="flex items-center gap-2">
-                      <span [class]="lead.isContacted ? 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-700' : 'px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700'">
-                        {{ lead.isContacted ? 'Contacted' : 'New' }}
-                      </span>
                       <button
-                        (click)="toggleLeadContacted(lead.id, !lead.isContacted)"
-                        [disabled]="isUpdatingLead(lead.id)"
-                        [attr.aria-label]="(lead.isContacted ? 'Mark ' : 'Mark contacted: ') + lead.name"
-                        class="text-xs text-primary-600 hover:text-primary-700 disabled:opacity-60"
+                        (click)="approveBooking(b.id)"
+                        [disabled]="isProcessingBooking(b.id)"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
+                        style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 2px 8px rgba(34,197,94,.3)"
+                        aria-label="Approve booking"
                       >
-                        {{ lead.isContacted ? 'Mark New' : 'Mark Contacted' }}
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Approve
+                      </button>
+                      <button
+                        (click)="rejectBooking(b.id)"
+                        [disabled]="isProcessingBooking(b.id)"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
+                        style="background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 2px 8px rgba(239,68,68,.3)"
+                        aria-label="Reject booking"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Reject
                       </button>
                     </div>
                   </td>
-                  <td class="py-3 px-4 text-sm text-gray-600">{{ formatLeadDate(lead.createdAt) }}</td>
                 </tr>
               }
             </tbody>
@@ -366,10 +379,257 @@
       }
     </div>
 
-    <!-- Clients Section -->
+    <!-- Waiting List (booking requests only) -->
+    <div class="premium-container mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Waiting List</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Booking requests waiting for you to create their account</p>
+        </div>
+        @if (waitingList().length + pendingAccounts().length > 0) {
+          <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+            {{ waitingList().length + pendingAccounts().length }} pending
+          </span>
+        }
+      </div>
+
+      @if (waitingList().length === 0 && pendingAccounts().length === 0) {
+        <div class="text-center py-10 text-gray-400">
+          <svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <p class="font-medium">Nothing pending</p>
+          <p class="text-sm mt-1">Booking requests and self-registrations will appear here.</p>
+        </div>
+      }
+
+      <!-- Self-Registered Pending Accounts -->
+      @if (pendingAccounts().length > 0) {
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-bold uppercase tracking-widest text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">Self-Registered</span>
+            <span class="text-xs text-gray-400">{{ pendingAccounts().length }}</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full" aria-label="Pending self-registered accounts">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Registered</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (account of pendingAccounts(); track account.id) {
+                  <tr class="border-b border-gray-100 hover:bg-orange-50 transition-colors">
+                    <td class="py-3 px-4 font-semibold text-gray-800">{{ account.name }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ account.email }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ account.phone || '-' }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-500">{{ formatLeadDate(account.createdAt) }}</td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2">
+                        <button
+                          (click)="openAcceptModal(account)"
+                          [disabled]="rejectingUserId() === account.id"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
+                          style="background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 2px 8px rgba(22,163,74,.3)"
+                        >
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                          </svg>
+                          Accept &amp; Set Password
+                        </button>
+                        <button
+                          (click)="rejectPendingAccount(account.id)"
+                          [disabled]="rejectingUserId() === account.id"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
+                          style="background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 2px 8px rgba(220,38,38,.3)"
+                        >
+                          @if (rejectingUserId() === account.id) {
+                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                          } @else {
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                          }
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        @if (waitingList().length > 0) {
+          <hr class="border-gray-200 mb-6">
+        }
+      }
+
+      <!-- Booking Requests -->
+      @if (waitingList().length > 0) {
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-bold uppercase tracking-widest text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">Booking Requests</span>
+            <span class="text-xs text-gray-400">{{ waitingList().length }}</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full" aria-label="Booking requests">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Child &amp; Session</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Received</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lead of waitingList(); track lead.id) {
+                  <tr class="border-b border-gray-100 hover:bg-amber-50 transition-colors">
+                    <td class="py-3 px-4 font-semibold text-gray-800">{{ lead.name }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ lead.email || '-' }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ lead.phone || '-' }}</td>
+                    <td class="py-3 px-4 text-sm text-blue-700 font-medium max-w-xs">
+                      <span class="inline-flex items-start gap-1">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        {{ lead.sourceAction }}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-500">{{ formatLeadDate(lead.createdAt) }}</td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2">
+                        <button
+                          (click)="createAccountFromLead(lead)"
+                          [disabled]="deletingLeadId() === lead.id"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
+                          style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 2px 8px rgba(124,58,237,.3)"
+                          [attr.aria-label]="'Create account for ' + lead.name"
+                        >
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                          </svg>
+                          Create Account
+                        </button>
+                        <button
+                          (click)="deleteLead(lead.id)"
+                          [disabled]="deletingLeadId() === lead.id"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
+                          style="background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 2px 8px rgba(220,38,38,.3)"
+                          [attr.aria-label]="'Delete request from ' + lead.name"
+                        >
+                          @if (deletingLeadId() === lead.id) {
+                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                          } @else {
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                          }
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+
+    </div>
+
+    <!-- Coaches (staff — separate from clients) -->
+    <div class="premium-container mb-8 border-t-4 border-emerald-500/60">
+      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Coaches</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Staff accounts — assign them in Schedule. They only see My Schedule and revenue.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            (click)="openCreateCoachModal()"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
+            style="background:linear-gradient(135deg,#059669,#047857);box-shadow:0 2px 8px rgba(5,150,105,.3)"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New Coach
+          </button>
+          <input
+            type="text"
+            [value]="coachSearch()"
+            (input)="coachSearch.set($any($event.target).value)"
+            placeholder="Search coaches..."
+            class="px-3 py-2 border border-gray-300 rounded-lg w-48 text-sm"
+            aria-label="Search coaches"
+          />
+        </div>
+      </div>
+      @if (adminDashboardCoaches().length === 0) {
+        <p class="text-sm text-gray-500 py-6 text-center rounded-xl bg-emerald-50/50 border border-emerald-100">No coach accounts yet. Use <strong>New Coach</strong> to add one.</p>
+      } @else if (getFilteredCoaches().length === 0) {
+        <p class="text-sm text-gray-500 py-4 text-center">No coaches match your search.</p>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          @for (coach of getFilteredCoaches(); track coach.id) {
+            <div class="rounded-xl border-2 border-emerald-100 bg-gradient-to-br from-white to-emerald-50/40 p-4 shadow-sm flex flex-col gap-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="font-bold text-gray-900 truncate">{{ coach.name }}</p>
+                  <p class="text-sm text-gray-600 truncate">{{ coach.email }}</p>
+                </div>
+                <button
+                  type="button"
+                  (click)="openEditCoachModal(coach)"
+                  class="flex-shrink-0 p-2 rounded-lg text-emerald-700 hover:bg-emerald-100 transition-colors"
+                  title="Edit coach email, phone or password"
+                  [attr.aria-label]="'Edit ' + coach.name"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+              </div>
+              <dl class="text-xs space-y-1 text-gray-700">
+                @if (coach.username) {
+                  <div><span class="font-semibold text-gray-500">Username</span> {{ coach.username }}</div>
+                }
+                <div><span class="font-semibold text-gray-500">Phone</span> {{ coach.phone || '—' }}</div>
+              </dl>
+              <p class="text-[11px] text-gray-500 leading-snug mt-1">Password is never shown after creation — use Edit to set a new password and copy it.</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Real Clients -->
     <div class="premium-container mb-8">
       <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <h2 class="text-2xl font-bold text-gray-800">All Clients</h2>
+        <h2 class="text-2xl font-bold text-gray-800">Real Clients</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            (click)="openCreateClientModal()"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-white"
+            style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 2px 8px rgba(124,58,237,.3)"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New Client
+          </button>
+        </div>
         <div class="flex items-center gap-2">
           <label for="client-search" class="sr-only">Search clients</label>
           <input
@@ -412,11 +672,23 @@
                       <span class="text-lg font-bold text-primary-600">{{ client.name.charAt(0) }}</span>
                     </div>
                   }
-                  <div class="flex-1">
-                    <p class="font-semibold text-gray-800">{{ client.name }}</p>
-                    <p class="text-sm text-gray-600">{{ client.email }}</p>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800 truncate">{{ client.name }}</p>
+                    <p class="text-sm text-gray-600 truncate">{{ client.email }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ client.phone || 'No phone' }}</p>
                     <p class="text-xs text-gray-500 mt-1">{{ client.children.length }} child(ren)</p>
                   </div>
+                  <button
+                    (click)="openEditClientModal(client); $event.stopPropagation()"
+                    class="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    title="Edit client"
+                    [attr.aria-label]="'Edit ' + client.name"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             }
@@ -429,10 +701,56 @@
             @if (getSelectedClient(); as client) {
               <div class="premium-container">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">{{ client.name }}</h3>
+
+                <!-- Login / contact (password cannot be read — only reset via Edit) -->
+                <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <h4 class="text-sm font-bold text-slate-600 uppercase tracking-wide mb-3">Account & login</h4>
+                  <dl class="grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</dt>
+                      <dd class="mt-0.5 font-medium text-slate-900 break-all">{{ client.email }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Phone</dt>
+                      <dd class="mt-0.5 font-medium text-slate-900">{{ client.phone || '—' }}</dd>
+                    </div>
+                    @if (client.username) {
+                      <div class="sm:col-span-2">
+                        <dt class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Username</dt>
+                        <dd class="mt-0.5 font-mono font-medium text-slate-900">{{ client.username }}</dd>
+                      </div>
+                    }
+                    <div class="sm:col-span-2">
+                      <dt class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Password</dt>
+                      <dd class="mt-0.5 text-slate-700 leading-snug">
+                        Stored encrypted — it cannot be displayed. Use <strong>Edit account</strong> to set a new password; it will be shown once after you save.
+                      </dd>
+                    </div>
+                  </dl>
+                  <button
+                    type="button"
+                    (click)="openEditClientModal(client)"
+                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                    style="background:linear-gradient(135deg,#7c3aed,#6d28d9)"
+                  >
+                    Edit email, phone & password
+                  </button>
+                </div>
                 
                 <!-- Children (Aqua Cards style) -->
                 <div class="mb-6">
-                  <h4 class="text-lg font-semibold text-gray-700 mb-3">Enrolled Children — click stars to mark skills passed</h4>
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-lg font-semibold text-gray-700">Enrolled Children — click stars to mark skills passed</h4>
+                    <button
+                      (click)="openAddChildModal(client); $event.stopPropagation()"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+                      style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"
+                      title="Add a child to this client"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                      Add Child
+                    </button>
+                  </div>
                   <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     @for (child of client.children; track child.id) {
                       <div class="bg-white rounded-2xl p-5 border-2 border-sky-100 shadow-lg overflow-hidden">
@@ -594,64 +912,6 @@
       </div>
     </div>
 
-    <!-- All Sessions -->
-    <div class="premium-container mb-8">
-      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <h2 class="text-2xl font-bold text-gray-800">All Sessions</h2>
-        <label for="session-search" class="sr-only">Search sessions</label>
-        <input
-          id="session-search"
-          [value]="sessionSearch()"
-          (input)="sessionSearch.set($any($event.target).value)"
-          type="text"
-          placeholder="Search by client, child, status..."
-          class="px-3 py-2 border border-gray-300 rounded-lg w-64"
-        />
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full" aria-label="All training sessions">
-          <caption class="sr-only">List of all training sessions with status and actions</caption>
-          <thead>
-            <tr class="border-b border-gray-200">
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Client</th>
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Date &amp; Time</th>
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Level</th>
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Price</th>
-              <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (session of getFilteredSessions(); track session.id) {
-              <tr class="border-b border-gray-100 hover:bg-gray-50">
-                <td class="py-3 px-4">{{ session.clientName }}</td>
-                <td class="py-3 px-4">{{ session.childName }}</td>
-                <td class="py-3 px-4">{{ session.date }} {{ session.time }}</td>
-                <td class="py-3 px-4">Level {{ session.level }}</td>
-                <td class="py-3 px-4">
-                  <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' + getStatusColor(session.status)">
-                    {{ session.status }}
-                  </span>
-                </td>
-                <td class="py-3 px-4 font-semibold">${{ session.price }}</td>
-                <td class="py-3 px-4">
-                  @if (session.status === 'scheduled' || session.status === 'completed') {
-                    <button 
-                      (click)="openAttendanceForm(session.id)"
-                      [attr.aria-label]="'Record attendance for ' + session.childName + ' on ' + session.date"
-                      class="text-primary-600 hover:text-primary-700 text-sm font-semibold"
-                    >
-                      Record attendance
-                    </button>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
 
     <!-- Attendance History -->
     <div class="premium-container">
@@ -885,3 +1145,418 @@
   </div>
 }
 </div>
+
+<!-- ════ CREATE CLIENT MODAL ════ -->
+@if (showCreateClientModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeCreateClientModal()">
+    <div class="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">New Client Account</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Credentials are generated — share manually via WhatsApp</p>
+        </div>
+        <button (click)="closeCreateClientModal()" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      @if (createClientResult(); as res) {
+        <!-- Success state -->
+        <div class="p-6 text-center">
+          <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <p class="text-lg font-bold text-gray-800 mb-1">Account Created!</p>
+          <p class="text-sm text-gray-500 mb-5">Copy credentials and send via WhatsApp</p>
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left space-y-3 mb-5">
+            <div class="flex items-center justify-between gap-3">
+              <div><p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Username</p><p class="font-mono font-bold text-gray-800">{{ res.username }}</p></div>
+              <button (click)="copyToClipboardDash(res.username)" class="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div><p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Password</p><p class="font-mono font-bold text-gray-800">{{ res.password }}</p></div>
+              <button (click)="copyToClipboardDash(res.password)" class="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium">Copy</button>
+            </div>
+          </div>
+          <p class="text-xs text-amber-600 font-medium mb-4">⚠ Save these now — the password won't be shown again.</p>
+          <button (click)="closeCreateClientModal()" class="px-6 py-2 rounded-lg font-semibold text-white" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">Done</button>
+        </div>
+      } @else {
+        <!-- Form -->
+        <div class="p-6 space-y-4">
+          @if (createClientError()) {
+            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ createClientError() }}</div>
+          }
+          <!-- Parent info -->
+          <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Parent / Guardian</p>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+            <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" placeholder="e.g. John Yaoun" [(ngModel)]="createClientForm.fullName" [disabled]="createClientLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+            <input type="email" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" placeholder="parent@email.com" [(ngModel)]="createClientForm.email" [disabled]="createClientLoading()" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+              <input type="tel" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" placeholder="+961 xx xxx xxx" [(ngModel)]="createClientForm.phone" [disabled]="createClientLoading()" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+              <div class="flex gap-1">
+                <input [type]="showCreateClientPw ? 'text' : 'password'" class="flex-1 min-w-0 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 font-mono" placeholder="or generate →" [(ngModel)]="createClientForm.password" [disabled]="createClientLoading()" autocomplete="new-password" />
+                <button type="button" (click)="generateCreateClientPw()" [disabled]="createClientLoading()" class="px-2 py-1 text-xs font-semibold rounded-lg border border-violet-300 text-violet-700 hover:bg-violet-50 whitespace-nowrap">Gen</button>
+              </div>
+            </div>
+          </div>
+          <!-- Child info -->
+          <div class="border-t border-gray-100 pt-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Child Profile <span class="text-gray-400 font-normal normal-case">(optional)</span></p>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Child's Full Name</label>
+              <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" placeholder="Child's name" [(ngModel)]="createClientForm.childName" [disabled]="createClientLoading()" />
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Age</label>
+                <input type="number" min="1" max="30" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" placeholder="e.g. 8" [(ngModel)]="createClientForm.childAge" [disabled]="createClientLoading()" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Level</label>
+                <select class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" [(ngModel)]="createClientForm.childLevel" [disabled]="createClientLoading()">
+                  <option value="">— Select —</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Elite">Elite</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 px-6 pb-6">
+          <button (click)="closeCreateClientModal()" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50" [disabled]="createClientLoading()">Cancel</button>
+          <button (click)="submitCreateClient()" [disabled]="createClientLoading()" class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+            @if (createClientLoading()) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              Creating…
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+              Generate Account
+            }
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ════ CREATE COACH MODAL ════ -->
+@if (showCreateCoachModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeCreateCoachModal()">
+    <div class="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">New Coach Account</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Set login credentials — share manually (same as clients)</p>
+        </div>
+        <button (click)="closeCreateCoachModal()" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      @if (createCoachResult(); as res) {
+        <div class="p-6 text-center">
+          <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <p class="text-lg font-bold text-gray-800 mb-1">Coach Created!</p>
+          <p class="text-sm text-gray-500 mb-5">Coach logs in with email + password below</p>
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left space-y-3 mb-5">
+            <div class="flex items-center justify-between gap-3">
+              <div><p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Username</p><p class="font-mono font-bold text-gray-800">{{ res.username }}</p></div>
+              <button (click)="copyToClipboardDash(res.username)" class="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div><p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Email</p><p class="font-mono font-bold text-gray-800">{{ res.email }}</p></div>
+              <button (click)="copyToClipboardDash(res.email)" class="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div><p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Password</p><p class="font-mono font-bold text-gray-800">{{ res.password }}</p></div>
+              <button (click)="copyToClipboardDash(res.password)" class="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium">Copy</button>
+            </div>
+          </div>
+          <p class="text-xs text-amber-600 font-medium mb-4">⚠ Save these now — the password won't be shown again.</p>
+          <button (click)="closeCreateCoachModal()" class="px-6 py-2 rounded-lg font-semibold text-white" style="background:linear-gradient(135deg,#059669,#047857)">Done</button>
+        </div>
+      } @else {
+        <div class="p-6 space-y-4">
+          @if (createCoachError()) {
+            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ createCoachError() }}</div>
+          }
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+            <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" placeholder="Coach name" [(ngModel)]="createCoachForm.fullName" [disabled]="createCoachLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Email (login) <span class="text-red-500">*</span></label>
+            <input type="email" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" placeholder="coach@email.com" [(ngModel)]="createCoachForm.email" [disabled]="createCoachLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+            <input type="tel" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400" placeholder="+961 xx xxx xxx" [(ngModel)]="createCoachForm.phone" [disabled]="createCoachLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Password <span class="text-gray-400 font-normal">(min 6 chars, or Gen)</span></label>
+            <div class="flex gap-2">
+              <input [type]="showCreateCoachPw ? 'text' : 'password'" class="flex-1 min-w-0 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono" placeholder="or generate →" [(ngModel)]="createCoachForm.password" [disabled]="createCoachLoading()" autocomplete="new-password" />
+              <button type="button" (click)="generateCreateCoachPw()" [disabled]="createCoachLoading()" class="px-2 py-1 text-xs font-semibold rounded-lg border border-emerald-300 text-emerald-700 hover:bg-emerald-50 whitespace-nowrap">Gen</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 px-6 pb-6">
+          <button (click)="closeCreateCoachModal()" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50" [disabled]="createCoachLoading()">Cancel</button>
+          <button (click)="submitCreateCoach()" [disabled]="createCoachLoading()" class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white" style="background:linear-gradient(135deg,#059669,#047857)">
+            @if (createCoachLoading()) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              Creating…
+            } @else {
+              Create Coach Account
+            }
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ════ EDIT CLIENT MODAL ════ -->
+@if (showEditClientModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeEditClientModal()">
+    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl" (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Edit Client</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Update name, email, phone or reset password</p>
+        </div>
+        <button (click)="closeEditClientModal()" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      @if (editClientSuccess()) {
+        <div class="p-6">
+          <div class="text-center mb-4">
+            <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+              <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <p class="text-lg font-bold text-gray-800 mb-1">Saved!</p>
+            <p class="text-sm text-gray-500">Client profile has been updated.</p>
+          </div>
+          @if (editClientSavedPw()) {
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
+              <p class="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">New Password (share with client)</p>
+              <div class="flex items-center gap-2">
+                <code class="flex-1 font-mono text-base font-bold text-gray-900 bg-white px-3 py-2 rounded border border-amber-200 tracking-widest select-all">{{ editClientSavedPw() }}</code>
+                <button type="button" (click)="copyToClipboardDash(editClientSavedPw())" class="px-3 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-semibold transition-colors whitespace-nowrap">Copy</button>
+              </div>
+            </div>
+          }
+          <div class="text-center">
+            <button (click)="closeEditClientModal()" class="px-6 py-2 rounded-lg font-semibold text-white" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">Close</button>
+          </div>
+        </div>
+      } @else {
+        <div class="p-6 space-y-4">
+          @if (editClientError()) {
+            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ editClientError() }}</div>
+          }
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+            <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" [(ngModel)]="editClientForm.fullName" [disabled]="editClientLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+            <input type="email" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" [(ngModel)]="editClientForm.email" [disabled]="editClientLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+            <input type="tel" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400" placeholder="+961 xx xxx xxx" [(ngModel)]="editClientForm.phone" [disabled]="editClientLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">New Password <span class="text-gray-400 font-normal">(leave blank to keep current)</span></label>
+            <div class="flex gap-2">
+              <input [type]="showEditPw ? 'text' : 'password'" class="flex-1 min-w-0 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 font-mono" placeholder="Enter new password" [(ngModel)]="editClientForm.newPassword" [disabled]="editClientLoading()" autocomplete="new-password" />
+              <button type="button" (click)="showEditPw = !showEditPw" class="px-2 py-1 border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50 text-sm">
+                {{ showEditPw ? 'Hide' : 'Show' }}
+              </button>
+              <button type="button" (click)="generateEditPw()" [disabled]="editClientLoading()" class="px-3 py-1 text-xs font-semibold rounded-lg border border-violet-300 text-violet-700 hover:bg-violet-50 whitespace-nowrap">Generate</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 px-6 pb-6">
+          <button (click)="closeEditClientModal()" [disabled]="editClientLoading()" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button (click)="submitEditClient()" [disabled]="editClientLoading()" class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+            @if (editClientLoading()) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              Saving…
+            } @else {
+              Save Changes
+            }
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ── Add Child Modal ─────────────────────────────────────── -->
+@if (showAddChildModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeAddChildModal()">
+    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl" (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Add Child</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Adding child for <span class="font-semibold text-sky-600">{{ addChildClientName() }}</span></p>
+        </div>
+        <button (click)="closeAddChildModal()" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      @if (addChildSuccess()) {
+        <div class="p-6 text-center">
+          <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <p class="text-lg font-bold text-gray-800 mb-1">Child Added!</p>
+          <p class="text-sm text-gray-500 mb-5">The child has been added to the client's profile.</p>
+          <button (click)="closeAddChildModal()" class="px-6 py-2 rounded-lg font-semibold text-white" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">Close</button>
+        </div>
+      } @else {
+        <div class="p-6 space-y-4">
+          @if (addChildError()) {
+            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ addChildError() }}</div>
+          }
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Child Full Name <span class="text-red-500">*</span></label>
+            <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="e.g. Lara Doe" [(ngModel)]="addChildForm.name" [disabled]="addChildLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Age <span class="text-red-500">*</span></label>
+            <input type="number" min="1" max="30" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" placeholder="e.g. 8" [(ngModel)]="addChildForm.age" [disabled]="addChildLoading()" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Swimming Level</label>
+            <select class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white" [(ngModel)]="addChildForm.level" [disabled]="addChildLoading()">
+              <option value="1">1 — Beginner</option>
+              <option value="2">2 — Intermediate</option>
+              <option value="3">3 — Advanced</option>
+              <option value="4">4 — Elite</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 px-6 pb-6">
+          <button (click)="closeAddChildModal()" [disabled]="addChildLoading()" class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button (click)="submitAddChild()" [disabled]="addChildLoading()" class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+            @if (addChildLoading()) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              Adding…
+            } @else {
+              Add Child
+            }
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ── Accept Self-Registered: Set Password Modal ──────────────── -->
+@if (showAcceptModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.6)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <!-- Header -->
+      <div class="px-6 pt-6 pb-4 border-b border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:rgba(22,163,74,.1)">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Accept Account</h3>
+            <p class="text-sm text-gray-500">Set a password for <strong>{{ acceptTarget()?.name }}</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-5">
+        @if (acceptSuccess()) {
+          <div class="text-center py-4">
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <p class="font-semibold text-gray-800 mb-1">Account accepted!</p>
+            <p class="text-sm text-gray-500 mb-3">Share these credentials with <strong>{{ acceptTarget()?.name }}</strong>:</p>
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left space-y-1.5 mb-4">
+              <p class="text-sm"><span class="font-semibold text-gray-600">Email:</span> <span class="text-gray-800">{{ acceptTarget()?.email }}</span></p>
+              <p class="text-sm"><span class="font-semibold text-gray-600">Password:</span> <span class="font-mono text-blue-700 font-bold">{{ acceptSuccess() }}</span></p>
+            </div>
+            <button (click)="closeAcceptModal()" class="w-full py-2.5 rounded-xl font-semibold text-white text-sm" style="background:linear-gradient(135deg,#16a34a,#15803d)">Done</button>
+          </div>
+        } @else {
+          <div class="space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-sm font-medium text-gray-700">New Password *</label>
+                <button type="button" (click)="generateAcceptPassword()"
+                  class="text-xs font-semibold px-2.5 py-1 rounded-lg text-white"
+                  style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+                  ⚡ Generate
+                </button>
+              </div>
+              <input type="text" [(ngModel)]="acceptPassword" placeholder="Min. 6 characters"
+                class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
+              <input type="text" [(ngModel)]="acceptConfirmPw" placeholder="Repeat the password"
+                class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"/>
+            </div>
+            @if (acceptError()) {
+              <p class="text-sm text-red-600 font-medium">{{ acceptError() }}</p>
+            }
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button (click)="closeAcceptModal()" [disabled]="acceptLoading()"
+              class="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+            <button (click)="submitAcceptAccount()" [disabled]="acceptLoading()"
+              class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+              style="background:linear-gradient(135deg,#16a34a,#15803d)">
+              @if (acceptLoading()) {
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                Accepting…
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Accept Account
+              }
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

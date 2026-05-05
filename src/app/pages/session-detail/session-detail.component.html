@@ -11,7 +11,6 @@
           <p><strong>Date:</strong> {{ session.date }}</p>
           <p><strong>Start Time:</strong> {{ session.time }}</p>
           <p><strong>End Time:</strong> {{ session.endTime || '-' }}</p>
-          <p><strong>Coach:</strong> {{ session.instructor || '-' }}</p>
           <p><strong>Status:</strong>
             <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold"
                   [class.bg-blue-100]="session.status === 'scheduled'"
@@ -44,7 +43,7 @@
               </div>
               <div class="flex gap-2">
                 <button class="btn-secondary text-sm" (click)="unregister(a.id)">Unregister</button>
-                @if (isCoachOrAdmin()) {
+                @if (isAdmin()) {
                   <button class="btn-secondary text-sm" (click)="markAttendance(a.id, true)">Present</button>
                   <button class="btn-secondary text-sm" (click)="markAttendance(a.id, false)">Absent</button>
                 }

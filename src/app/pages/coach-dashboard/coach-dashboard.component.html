@@ -1,26 +1,288 @@
-<section class="section-padding bg-gray-50 min-h-screen">
-  <div class="container mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Coach Dashboard</h1>
-      <a routerLink="/sessions/create" class="btn-primary">Create Session</a>
+<div class="coach-shell" style="padding-top:72px; min-height:100vh; background:#f0fdf4;">
+
+  <!-- ─── Header bar ──────────────────────────────────────────────── -->
+  <header class="coach-topbar">
+    <div class="coach-topbar__inner">
+      <div class="coach-topbar__left">
+        <svg class="w-7 h-7 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <div>
+          <h1 class="coach-topbar__title">My Schedule</h1>
+          <p class="coach-topbar__sub">Accept or decline sessions assigned by the admin.</p>
+        </div>
+      </div>
+
+      <!-- Revenue cards -->
+      <div class="coach-stats">
+        <div class="coach-stat coach-stat--pending">
+          <span class="coach-stat__num">{{ revenue().pendingCount }}</span>
+          <span class="coach-stat__label">Pending</span>
+        </div>
+        <div class="coach-stat coach-stat--accepted">
+          <span class="coach-stat__num">{{ revenue().acceptedCount }}</span>
+          <span class="coach-stat__label">Accepted</span>
+        </div>
+        <div class="coach-stat coach-stat--revenue">
+          <span class="coach-stat__num">${{ revenue().totalRevenue | number:'1.2-2' }}</span>
+          <span class="coach-stat__label">Revenue (paid)</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Calendar nav ────────────────────────────────────────────── -->
+  <div class="cal-nav">
+    <div class="cal-nav__inner">
+      <button type="button" (click)="prevWeek()" class="cal-nav__btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <span class="cal-nav__label">{{ weekLabel() }}</span>
+      <button type="button" (click)="nextWeek()" class="cal-nav__btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+      <button type="button" (click)="goToday()" class="cal-nav__today">Today</button>
+    </div>
+  </div>
+
+  <!-- ─── Legend ──────────────────────────────────────────────────── -->
+  <div class="cal-legend">
+    <span class="cal-legend__item cal-legend__item--pending">Awaiting response</span>
+    <span class="cal-legend__item cal-legend__item--accepted">Accepted (yellow)</span>
+    <span class="cal-legend__item cal-legend__item--declined">Declined</span>
+  </div>
+
+  <!-- ─── Loading / Error ─────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="loading-state">
+      <svg class="animate-spin w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      <span>Loading sessions…</span>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">{{ error() }}</div>
+  } @else {
+
+    <!-- ─── Weekly calendar grid ───────────────────────────────────── -->
+    <div class="cal-scroll-wrap">
+      <div class="cal-grid">
+
+        <!-- Time column -->
+        <div class="cal-time-col">
+          <div class="cal-time-header"></div>
+          @for (t of timeLabels; track t) {
+            <div class="cal-time-slot">{{ t }}</div>
+          }
+        </div>
+
+        <!-- Day columns -->
+        <div class="cal-days">
+
+          <!-- Day headers -->
+          <div class="cal-day-headers">
+            <div></div><!-- spacer for time col -->
+            @for (h of dayHeaders(); track h.ymd) {
+              <div class="cal-day-header" [class.cal-day-header--today]="h.isToday">
+                <span class="cal-day-header__name">{{ h.label }}</span>
+                <span class="cal-day-header__num" [class.cal-day-header__num--today]="h.isToday">{{ h.dateNum }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Grid body -->
+          <div class="cal-body">
+            <!-- Hour lines -->
+            @for (t of timeLabels; track t) {
+              <div class="cal-hour-line"></div>
+            }
+
+            <!-- Day tracks -->
+            <div class="cal-day-tracks">
+              @for (h of dayHeaders(); track h.ymd; let col = $index) {
+                <div class="cal-day-track" [class.cal-day-track--today]="h.isToday">
+                  @for (s of sessionsForDay(col); track s.id) {
+                    <button
+                      type="button"
+                      class="coach-block"
+                      [class.block--pending]="s.coachAccepted == null"
+                      [class.block--accepted]="s.coachAccepted === true"
+                      [class.block--declined]="s.coachAccepted === false"
+                      [class.block--canceled]="s.status === 'canceled'"
+                      [class.block--compact]="isCompactBlock(s)"
+                      [style.top.%]="topPct(s)"
+                      [style.height.%]="heightPct(s)"
+                      (click)="openSession(s)"
+                      [attr.title]="sessionTimeLabel(s)"
+                    >
+                      @if (isCompactBlock(s)) {
+                        <span class="block__single-line">{{ s.title }} · {{ sessionTimeLabel(s) }}</span>
+                      } @else {
+                        <div class="block__title">{{ s.title }}</div>
+                        <div class="block__time">{{ sessionTimeLabel(s) }}</div>
+                        <div class="block__price">${{ s.price | number:'1.2-2' }}</div>
+                        @if (s.poolLocation) {
+                          <div class="block__loc">{{ s.poolLocation }}</div>
+                        }
+                        <div class="block__status-hint">
+                          @if (s.coachAccepted === true) { <span>✓ Accepted</span> }
+                          @else if (s.coachAccepted === false) { <span>✕ Declined</span> }
+                          @else { <span>Tap to respond</span> }
+                        </div>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    @if (loading) {
-      <div class="premium-container">Loading...</div>
-    } @else if (errorMessage) {
-      <div class="premium-container text-red-600">{{ errorMessage }}</div>
-    } @else {
-      <div class="space-y-3">
-        @for (s of sessions; track s.id) {
-          <div class="premium-container flex items-center justify-between">
-            <div>
-              <p class="font-semibold">{{ s.childName || 'Open Session' }}</p>
-              <p class="text-sm text-gray-600">{{ s.date }} • {{ s.time }}</p>
-            </div>
-            <button class="btn-secondary" (click)="markAttendance(s.id)">Mark All Present</button>
+    @if (sessionsInWeek().length === 0) {
+      <div class="empty-week">No sessions assigned to you this week.</div>
+    }
+  }
+
+  <!-- ─── Session detail panel ────────────────────────────────────── -->
+  @if (selectedSession()) {
+    <div class="panel-overlay" (click)="closePanel()"></div>
+    <aside class="session-panel">
+      <button type="button" class="panel-close" (click)="closePanel()" aria-label="Close">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <h2 class="panel-title">{{ selectedSession()!.title }}</h2>
+
+      <div class="panel-detail-rows">
+        <div class="panel-row">
+          <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <span>{{ selectedSession()!.date }}</span>
+        </div>
+        <div class="panel-row">
+          <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>{{ sessionTimeLabel(selectedSession()!) }}</span>
+        </div>
+        <div class="panel-row">
+          <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>${{ selectedSession()!.price | number:'1.2-2' }}</span>
+        </div>
+        @if (selectedSession()!.poolLocation) {
+          <div class="panel-row">
+            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>{{ selectedSession()!.poolLocation }}</span>
           </div>
         }
       </div>
-    }
-  </div>
-</section>
+
+      @if (selectedSession()!.coachAccepted === false && selectedSession()!.coachDeclineReason) {
+        <div class="panel-decline-note">
+          <p class="panel-decline-note__label">Your reason</p>
+          <p class="panel-decline-note__text">{{ selectedSession()!.coachDeclineReason }}</p>
+        </div>
+      }
+
+      <!-- Current status badge -->
+      <div class="panel-status-row">
+        @if (selectedSession()!.coachAccepted === true) {
+          <span class="status-badge status-badge--accepted">✓ You accepted this session</span>
+        } @else if (selectedSession()!.coachAccepted === false) {
+          <span class="status-badge status-badge--declined">✕ You declined this session</span>
+        } @else {
+          <span class="status-badge status-badge--pending">Awaiting your response</span>
+        }
+      </div>
+
+      <!-- Response message -->
+      @if (responseMsg()) {
+        <div class="panel-msg" [class.panel-msg--success]="responseMsg().includes('!')" [class.panel-msg--info]="responseMsg().includes('.')">
+          {{ responseMsg() }}
+        </div>
+      }
+
+      <!-- Actions -->
+      @if (selectedSession()!.status !== 'canceled') {
+        <div class="panel-actions">
+          <button
+            type="button"
+            [disabled]="responding() || selectedSession()!.coachAccepted === true"
+            (click)="accept()"
+            class="panel-btn panel-btn--accept"
+          >
+            @if (responding()) {
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            }
+            Accept
+          </button>
+          <button
+            type="button"
+            [disabled]="responding() || selectedSession()!.coachAccepted === false"
+            (click)="openDeclineModal()"
+            class="panel-btn panel-btn--decline"
+          >
+            @if (responding()) {
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            }
+            Decline
+          </button>
+        </div>
+      }
+    </aside>
+  }
+
+  <!-- Decline reason modal -->
+  @if (showDeclineModal() && selectedSession()) {
+    <div class="decline-modal-overlay" (click)="closeDeclineModal()" role="presentation"></div>
+    <div class="decline-modal" role="dialog" aria-labelledby="decline-modal-title">
+      <h3 id="decline-modal-title" class="decline-modal__title">Decline session</h3>
+      <p class="decline-modal__hint">{{ selectedSession()!.title }} · {{ sessionTimeLabel(selectedSession()!) }}</p>
+      <label class="decline-modal__label" for="decline-reason">Reason <span class="text-red-600">*</span></label>
+      @if (declineModalError()) {
+        <p class="decline-modal__err">{{ declineModalError() }}</p>
+      }
+      <textarea
+        id="decline-reason"
+        rows="4"
+        class="decline-modal__textarea"
+        [(ngModel)]="declineReasonDraft"
+        placeholder="Explain why you can't cover this session (visible to admin)."
+        [disabled]="responding()"
+      ></textarea>
+      <div class="decline-modal__actions">
+        <button type="button" class="decline-modal__btn decline-modal__btn--muted" (click)="closeDeclineModal()" [disabled]="responding()">Cancel</button>
+        <button type="button" class="decline-modal__btn decline-modal__btn--danger" (click)="submitDecline()" [disabled]="responding()">
+          @if (responding()) {
+            <svg class="animate-spin w-4 h-4 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+          }
+          Submit decline
+        </button>
+      </div>
+    </div>
+  }
+</div>

@@ -259,10 +259,11 @@
 
         <!-- CTAs -->
         <div class="lf-result-actions">
-          <a routerLink="/sessions/available"
+          <a [routerLink]="['/sessions/available']"
+             [queryParams]="{ startBooking: '1' }"
              class="lf-btn-cta"
-             aria-label="Browse available swimming sessions">
-            Browse Available Sessions →
+             aria-label="Book a swimming session">
+            Book a Session →
           </a>
           <button type="button"
                   (click)="resetForm()"

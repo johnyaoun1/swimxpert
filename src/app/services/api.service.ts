@@ -17,24 +17,26 @@ export class ApiService {
   }
 
   private handleError(error: HttpErrorResponse) {
-    let errorMessage = 'An unknown error occurred';
-    
-    if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      errorMessage = `Error: ${error.error.message}`;
-    } else {
-      // Server-side error
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.error?.message || error.message}`;
+    // Extract the human-readable message from the server response, falling back gracefully
+    const message: string =
+      error.error?.message ||
+      error.error?.title  ||
+      error.message       ||
+      'Something went wrong. Please try again.';
+
+    if (!environment.production) {
+      console.error(`API error [${error.status}]:`, message, error);
     }
-    
-    if (!environment.production) { console.error(errorMessage); }
-    return throwError(() => new Error(errorMessage));
+
+    const out = new Error(message) as Error & { status: number };
+    out.status = error.status;
+    return throwError(() => out);
   }
 
   // ========== AUTH ENDPOINTS ==========
   
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, { email, password }).pipe(
+  login(identifier: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/login`, { identifier, password }).pipe(
       catchError((err) => throwError(() => err))
     );
   }
@@ -162,6 +164,12 @@ export class ApiService {
     }).pipe(catchError(this.handleError));
   }
 
+  deleteLead(leadId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/leads/${leadId}`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
   // ========== ADMIN USERS ENDPOINTS ==========
 
   getAdminUsers(): Observable<any[]> {
@@ -180,6 +188,84 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/admin/users/${userId}`, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
+  }
+
+  // ========== PENDING BOOKINGS (Admin) ==========
+
+  getPendingBookings(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/sessions/bookings/pending`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  approveBooking(attendanceId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/sessions/bookings/${attendanceId}/approve`, {}, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  rejectBooking(attendanceId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/sessions/bookings/${attendanceId}/reject`, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  // ========== DIRECT SLOT BOOKING (Client) ==========
+
+  bookSlot(startUtc: string, swimmerId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/sessions/book-slot`, { startUtc, swimmerId }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  createClientAccount(payload: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    password?: string;
+    childName?: string;
+    childAge?: number;
+    childLevel?: string;
+  }): Observable<{ username: string; password: string; email: string }> {
+    return this.http.post<{ username: string; password: string; email: string }>(
+      `${this.apiUrl}/admin/users/create-client`, payload, { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  createCoachAccount(payload: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    password?: string;
+  }): Observable<{ username: string; password: string; email: string }> {
+    return this.http.post<{ username: string; password: string; email: string }>(
+      `${this.apiUrl}/admin/users/create-coach`, payload, { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  approveUser(id: number, newPassword: string): Observable<{ message: string; password: string }> {
+    return this.http.put<{ message: string; password: string }>(
+      `${this.apiUrl}/admin/users/${id}/approve`,
+      { newPassword },
+      { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  rejectPendingUser(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.apiUrl}/admin/users/${id}/reject`, { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  updateClientProfile(id: number, payload: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    newPassword?: string;
+  }): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${this.apiUrl}/admin/users/${id}/update-profile`, payload, { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
   }
 
   // ========== SWIMMERS / SKILLS ENDPOINTS ==========

@@ -5,6 +5,9 @@ import { Router, RouterModule } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { AuthService, Child } from '../../services/auth.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
+import { AttendanceService, Attendance } from '../../services/attendance.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ProfilePictureUploadComponent } from '../../shared/profile-picture-upload/profile-picture-upload.component';
 import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 
@@ -17,6 +20,7 @@ import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 })
 export class DashboardComponent implements OnInit {
   user = this.authService.currentUser;
+  pendingSessions = signal<Attendance[]>([]);
   showAddChildForm = signal(false);
   showProgressForm = signal(false);
   showEditChildForm = signal(false);
@@ -32,6 +36,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private swimLevelsService: SwimLevelsService,
+    private attendanceService: AttendanceService,
     private fb: FormBuilder,
     private router: Router,
     private title: Title,
@@ -72,7 +77,9 @@ export class DashboardComponent implements OnInit {
         this.router.navigate(['/login']);
         return;
       }
-      this.authService.syncChildrenFromApi().subscribe();
+      this.authService.syncChildrenFromApi().subscribe({
+        next: () => this.loadPendingSessions()
+      });
     });
   }
 
@@ -195,6 +202,21 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         this.editChildError.set(err?.message || 'Failed to update profile.');
       }
+    });
+  }
+
+  private loadPendingSessions(): void {
+    const children = this.authService.getCurrentUser()?.children ?? [];
+    if (children.length === 0) return;
+    const reqs = children.map((c) =>
+      this.attendanceService.getMySessions(c.id).pipe(catchError(() => of([] as Attendance[])))
+    );
+    forkJoin(reqs).subscribe({
+      next: (results) => {
+        const pending = results.flat().filter((a) => a.bookingStatus === 'Pending');
+        this.pendingSessions.set(pending);
+      },
+      error: () => {}
     });
   }
 

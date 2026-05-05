@@ -6,10 +6,9 @@
     </div>
 
     <div class="premium-container mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input [(ngModel)]="filters.date" (ngModelChange)="applyFilters()" type="date" class="px-4 py-3 border rounded-lg" />
         <input [(ngModel)]="filters.pool" (ngModelChange)="applyFilters()" type="text" placeholder="Filter by pool" class="px-4 py-3 border rounded-lg" />
-        <input [(ngModel)]="filters.coach" (ngModelChange)="applyFilters()" type="text" placeholder="Filter by coach" class="px-4 py-3 border rounded-lg" />
       </div>
     </div>
 
@@ -23,7 +22,6 @@
           <button class="premium-container text-left hover:shadow-lg transition" (click)="openSession(session.id)">
             <p class="text-lg font-semibold text-gray-800">{{ session.childName || 'Training Session' }}</p>
             <p class="text-sm text-gray-600">{{ session.date }} • {{ session.time }}</p>
-            <p class="text-sm text-gray-600">Coach: {{ session.instructor || '-' }}</p>
             <p class="text-sm text-gray-600">Status: {{ session.status }}</p>
           </button>
         }

@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 import { ApiService } from '../../services/api.service';
 import { AuthService, User } from '../../services/auth.service';
 import { Session, SessionService, SessionStatus } from '../../services/session.service';
+import { RevenueService } from '../../services/revenue.service';
 import { BEIRUT_TZ, formatBeirutWeekRangeLabel, getBeirutWeekDayHeaders, getBeirutWeekIntervalIso } from '../../utils/beirut-week';
 import { of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -39,6 +40,7 @@ export class AdminScheduleComponent implements OnInit {
   weekAnchor = signal(new Date());
   sessions = signal<Session[]>([]);
   clients = signal<User[]>([]);
+  coaches = signal<{ id: string; name: string }[]>([]);
   loading = signal(true);
   error = signal('');
   /** Shown after e.g. weekly repeat success (green banner). */
@@ -64,6 +66,17 @@ export class AdminScheduleComponent implements OnInit {
     repeatWeeks: 8
   };
 
+  // ── Coach assignment for calendar sessions ───────────────────
+  sessionOptionsForm_coachId = '';
+  assigningCoach = signal(false);
+  coachAssignMsg = signal('');
+
+  // ── Payment recording for calendar sessions ──────────────────
+  sessionPaymentForm = { clientId: '', payAmount: 30, payMethod: 'Cash' };
+  recordingPayment = signal(false);
+  paymentRecorded = signal(false);
+  paymentError = signal('');
+
   /** Google-style: this event | this and following | all (in weekly package). */
   showCalendarScopeModal = signal(false);
   calendarScopeHeading = signal('');
@@ -85,6 +98,7 @@ export class AdminScheduleComponent implements OnInit {
     private authService: AuthService,
     private apiService: ApiService,
     private sessionService: SessionService,
+    private revenueService: RevenueService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -204,8 +218,12 @@ export class AdminScheduleComponent implements OnInit {
             quizResults: []
           }));
         this.clients.set(clients);
+        const coaches = (users || [])
+          .filter((u: { role?: string }) => (u?.role || '').toLowerCase() === 'coach')
+          .map((u: any) => ({ id: String(u.id), name: u.fullName || u.email || 'Coach' }));
+        this.coaches.set(coaches);
       },
-      error: () => this.clients.set([])
+      error: () => { this.clients.set([]); this.coaches.set([]); }
     });
   }
 
@@ -268,9 +286,71 @@ export class AdminScheduleComponent implements OnInit {
       repeatWeekly: false,
       repeatWeeks: 8
     };
+    // Reset coach assignment form
+    this.sessionOptionsForm_coachId = s.coachUserId != null ? String(s.coachUserId) : '';
+    this.assigningCoach.set(false);
+    this.coachAssignMsg.set('');
+    // Reset payment form — pre-select the client if the session already has one
+    this.sessionPaymentForm = {
+      clientId: String(s.clientId || ''),
+      payAmount: 30,
+      payMethod: 'Cash'
+    };
+    this.recordingPayment.set(false);
+    this.paymentRecorded.set(false);
+    this.paymentError.set('');
     this.error.set('');
     this.scheduleNotice.set('');
     this.showSessionOptions.set(true);
+  }
+
+  recordPaymentForSession(): void {
+    const { clientId, payAmount, payMethod } = this.sessionPaymentForm;
+    if (!clientId) {
+      this.paymentError.set('Select a client first.');
+      return;
+    }
+    if (!payAmount || payAmount <= 0) {
+      this.paymentError.set('Enter a valid amount.');
+      return;
+    }
+    const opt = this.selectedSession();
+    const reference = opt ? `Session ${opt.date ?? ''} ${opt.time ?? ''}`.trim() : undefined;
+    this.recordingPayment.set(true);
+    this.paymentError.set('');
+    this.revenueService.processPayment(payAmount, payMethod, clientId, undefined, reference).subscribe({
+      next: () => {
+        this.recordingPayment.set(false);
+        this.paymentRecorded.set(true);
+      },
+      error: (e: unknown) => {
+        this.recordingPayment.set(false);
+        this.paymentError.set(this.apiErrorMessage(e) || 'Could not record payment.');
+      }
+    });
+  }
+
+  assignCoach(): void {
+    const session = this.selectedSession();
+    if (!session) return;
+    const coachId = this.sessionOptionsForm_coachId ? Number(this.sessionOptionsForm_coachId) : undefined;
+    this.assigningCoach.set(true);
+    this.coachAssignMsg.set('');
+    // Setting coachUserId to undefined signals "remove coach" in updateSession
+    const update: Partial<Session> = {};
+    (update as Record<string, unknown>)['coachUserId'] = coachId || undefined;
+    this.sessionService.updateSession(session.id, update).subscribe({
+      next: (updated) => {
+        this.sessions.update((ss) => ss.map((s) => s.id === updated.id ? updated : s));
+        this.selectedSession.set(updated);
+        this.assigningCoach.set(false);
+        this.coachAssignMsg.set(coachId ? 'Coach assigned!' : 'Coach removed.');
+      },
+      error: () => {
+        this.assigningCoach.set(false);
+        this.coachAssignMsg.set('Failed to update. Try again.');
+      }
+    });
   }
 
   closeSessionOptions(): void {

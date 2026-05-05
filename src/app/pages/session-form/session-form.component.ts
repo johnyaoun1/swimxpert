@@ -22,8 +22,7 @@ export class SessionFormComponent implements OnInit {
     startTime: '10:00',
     endTime: '11:00',
     maxSwimmers: 10,
-    skillLevel: 1,
-    coach: ''
+    skillLevel: 1
   };
 
   private sessionId: string | null = null;
@@ -44,7 +43,6 @@ export class SessionFormComponent implements OnInit {
           this.form.date = s.date;
           this.form.startTime = s.time;
           this.form.endTime = s.endTime || '11:00';
-          this.form.coach = s.instructor || '';
           this.form.skillLevel = s.level;
           this.form.poolLocation = s.poolLocation || '';
           this.form.maxSwimmers = s.maxSwimmers ?? 10;
@@ -66,7 +64,6 @@ export class SessionFormComponent implements OnInit {
       endTime: this.form.endTime,
       level: this.form.skillLevel,
       status: 'scheduled' as const,
-      instructor: this.form.coach,
       poolLocation: this.form.poolLocation,
       maxSwimmers: this.form.maxSwimmers,
       price: 0,

@@ -76,6 +76,10 @@ export class MySessionsComponent implements OnInit {
     });
   }
 
+  hasPending(sessions: Attendance[]): boolean {
+    return sessions.some(s => s.bookingStatus === 'Pending');
+  }
+
   cancel(id: string): void {
     this.attendanceService.cancelRegistration(id).subscribe({
       next: () => this.futureSessions = this.futureSessions.filter((s) => s.id !== id),

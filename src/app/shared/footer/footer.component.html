@@ -25,8 +25,10 @@
         <ul class="space-y-2" style="color:#64748b;">
           <li><a routerLink="/gallery" class="transition-colors hover:text-primary-400">Gallery</a></li>
           <li><a routerLink="/certificates" class="transition-colors hover:text-primary-400">Certificates</a></li>
-          <li><a routerLink="/quizzes" class="transition-colors hover:text-primary-400">Quizzes</a></li>
-          <li><a routerLink="/leaderboard" class="transition-colors hover:text-primary-400">Leaderboard</a></li>
+          @if (authService.isApprovedClient()) {
+            <li><a routerLink="/quizzes" class="transition-colors hover:text-primary-400">Quizzes</a></li>
+            <li><a routerLink="/leaderboard" class="transition-colors hover:text-primary-400">Leaderboard</a></li>
+          }
           <li><a routerLink="/contact" class="transition-colors hover:text-primary-400">Contact Us</a></li>
           <li><a routerLink="/login" class="transition-colors hover:text-primary-400">Login</a></li>
           <li><a routerLink="/signup" class="transition-colors hover:text-primary-400">Sign Up</a></li>

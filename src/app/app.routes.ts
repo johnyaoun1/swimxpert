@@ -1,7 +1,48 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, CanActivateFn } from '@angular/router';
+import { Router } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { roleGuard } from './guards/role.guard';
+import { AuthService } from './services/auth.service';
+
+// Prevents admins AND coaches from accessing the client dashboard
+const clientOnlyGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router      = inject(Router);
+  if (authService.isAdmin())  return router.createUrlTree(['/admin']);
+  if (authService.isCoach())  return router.createUrlTree(['/coach/dashboard']);
+  return true;
+};
+
+// Allows only approved real clients (IsApproved = true) to access quiz / leaderboard
+const approvedClientGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router      = inject(Router);
+  if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
+  if (authService.isCoach()) return router.createUrlTree(['/coach/dashboard']);
+  const user = authService.currentUser();
+  if (!user?.isApproved) return router.createUrlTree(['/dashboard']);
+  return true;
+};
+
+// Coaches cannot use parent/guest booking flows when logged in as coach
+const blockCoachGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (authService.isAuthenticatedSync() && authService.isCoach())
+    return router.createUrlTree(['/coach/dashboard']);
+  return true;
+};
+
+// Allows only Coach (and Admin for preview) to access coach routes
+const coachGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router      = inject(Router);
+  if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
+  if (!authService.isCoach() && !authService.isAdmin()) return router.createUrlTree(['/']);
+  return true;
+};
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent), title: 'Home - SwimXpert' },
@@ -12,32 +53,32 @@ export const routes: Routes = [
   { path: 'contact', loadComponent: () => import('./pages/contact/contact.component').then((m) => m.ContactComponent), title: 'Contact Us - SwimXpert' },
   { path: 'gallery', loadComponent: () => import('./pages/gallery/gallery.component').then((m) => m.GalleryComponent), title: 'Gallery - SwimXpert' },
   { path: 'certificates', loadComponent: () => import('./pages/certificates/certificates.component').then((m) => m.CertificatesComponent), title: 'Certificates - SwimXpert' },
-  { path: 'quizzes', loadComponent: () => import('./pages/quizzes/quizzes.component').then((m) => m.QuizzesComponent), title: 'Swimming Quiz - SwimXpert', canActivate: [authGuard] },
-  { path: 'leaderboard', loadComponent: () => import('./pages/leaderboard/leaderboard.component').then((m) => m.LeaderboardComponent), title: 'Leaderboard - SwimXpert', canActivate: [authGuard] },
+  { path: 'quizzes', loadComponent: () => import('./pages/quizzes/quizzes.component').then((m) => m.QuizzesComponent), title: 'Swimming Quiz - SwimXpert', canActivate: [approvedClientGuard] },
+  { path: 'leaderboard', loadComponent: () => import('./pages/leaderboard/leaderboard.component').then((m) => m.LeaderboardComponent), title: 'Leaderboard - SwimXpert', canActivate: [approvedClientGuard] },
   { path: 'login', loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent), title: 'Login - SwimXpert' },
   { path: 'signup', loadComponent: () => import('./pages/signup/signup.component').then((m) => m.SignupComponent), title: 'Sign Up - SwimXpert' },
   { path: 'verify-email', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent), title: 'Verify Email - SwimXpert' },
   { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent), title: 'Forgot Password - SwimXpert' },
   { path: 'reset-password', loadComponent: () => import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent), title: 'Reset Password - SwimXpert' },
-  { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent), title: 'Dashboard - SwimXpert', canActivate: [authGuard] },
+  { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent), title: 'Dashboard - SwimXpert', canActivate: [authGuard, clientOnlyGuard] },
   { path: 'admin', loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent), title: 'Admin Dashboard - SwimXpert', canActivate: [adminGuard] },
   { path: 'admin/schedule', loadComponent: () => import('./pages/admin-schedule/admin-schedule.component').then((m) => m.AdminScheduleComponent), title: 'Schedule - SwimXpert', canActivate: [adminGuard] },
 
-  // Sessions — full list/detail is Coach/Admin only (contains client names & registration data)
-  { path: 'sessions', loadComponent: () => import('./pages/sessions-list/sessions-list.component').then((m) => m.SessionsListComponent), title: 'Sessions - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
-  { path: 'sessions/available', loadComponent: () => import('./pages/available-sessions/available-sessions.component').then((m) => m.AvailableSessionsComponent), title: 'Book a Session - SwimXpert', canActivate: [authGuard] },
-  { path: 'checkout', loadComponent: () => import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent), title: 'Checkout - SwimXpert', canActivate: [authGuard] },
-  { path: 'chat', loadComponent: () => import('./pages/chat/chat.component').then((m) => m.ChatComponent), title: 'AI Assistant - SwimXpert', canActivate: [authGuard] },
-  { path: 'sessions/create', loadComponent: () => import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent), title: 'Create Session - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
-  { path: 'sessions/edit/:id', loadComponent: () => import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent), title: 'Edit Session - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
-  { path: 'sessions/:id', loadComponent: () => import('./pages/session-detail/session-detail.component').then((m) => m.SessionDetailComponent), title: 'Session Detail - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
+  // Sessions — Admin only (contains client names & registration data)
+  { path: 'sessions', loadComponent: () => import('./pages/sessions-list/sessions-list.component').then((m) => m.SessionsListComponent), title: 'Sessions - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
+  { path: 'sessions/available', loadComponent: () => import('./pages/available-sessions/available-sessions.component').then((m) => m.AvailableSessionsComponent), title: 'Book a Session - SwimXpert', canActivate: [blockCoachGuard] },
+  { path: 'checkout', loadComponent: () => import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent), title: 'Checkout - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
+  { path: 'chat', loadComponent: () => import('./pages/chat/chat.component').then((m) => m.ChatComponent), title: 'AI Assistant - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
+  { path: 'sessions/create', loadComponent: () => import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent), title: 'Create Session - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
+  { path: 'sessions/edit/:id', loadComponent: () => import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent), title: 'Edit Session - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
+  { path: 'sessions/:id', loadComponent: () => import('./pages/session-detail/session-detail.component').then((m) => m.SessionDetailComponent), title: 'Session Detail - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
 
   // Coach
-  { path: 'coach/dashboard', loadComponent: () => import('./pages/coach-dashboard/coach-dashboard.component').then((m) => m.CoachDashboardComponent), title: 'Coach Dashboard - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
+  { path: 'coach/dashboard', loadComponent: () => import('./pages/coach-dashboard/coach-dashboard.component').then((m) => m.CoachDashboardComponent), title: 'Coach Dashboard - SwimXpert', canActivate: [coachGuard] },
 
   // Swimmer
-  { path: 'swimmer/dashboard', loadComponent: () => import('./pages/swimmer-dashboard/swimmer-dashboard.component').then((m) => m.SwimmerDashboardComponent), title: 'Swimmer Dashboard - SwimXpert', canActivate: [authGuard] },
-  { path: 'my-sessions', loadComponent: () => import('./pages/my-sessions/my-sessions.component').then((m) => m.MySessionsComponent), title: 'My Sessions - SwimXpert', canActivate: [authGuard] },
+  { path: 'swimmer/dashboard', loadComponent: () => import('./pages/swimmer-dashboard/swimmer-dashboard.component').then((m) => m.SwimmerDashboardComponent), title: 'Swimmer Dashboard - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
+  { path: 'my-sessions', loadComponent: () => import('./pages/my-sessions/my-sessions.component').then((m) => m.MySessionsComponent), title: 'My Sessions - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
 
   // Admin
   { path: 'admin/users', loadComponent: () => import('./pages/admin-users/admin-users.component').then((m) => m.AdminUsersComponent), title: 'Admin Users - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
@@ -45,8 +86,8 @@ export const routes: Routes = [
   { path: 'admin/security', loadComponent: () => import('./pages/admin-security/admin-security.component').then((m) => m.AdminSecurityComponent), title: 'Security & 2FA - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
 
   // Payments
-  { path: 'payments/record', loadComponent: () => import('./pages/record-payment/record-payment.component').then((m) => m.RecordPaymentComponent), title: 'Record Payment - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Coach', 'Admin'] } },
-  { path: 'payments/history', loadComponent: () => import('./pages/my-payments/my-payments.component').then((m) => m.MyPaymentsComponent), title: 'My Payments - SwimXpert', canActivate: [authGuard] },
+  { path: 'payments/record', loadComponent: () => import('./pages/record-payment/record-payment.component').then((m) => m.RecordPaymentComponent), title: 'Record Payment - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
+  { path: 'payments/history', loadComponent: () => import('./pages/my-payments/my-payments.component').then((m) => m.MyPaymentsComponent), title: 'My Payments - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
 
   { path: '**', redirectTo: '' }
 ];

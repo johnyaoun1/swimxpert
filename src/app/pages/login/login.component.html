@@ -34,19 +34,20 @@
       }
       <div class="rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,0.1);">
         <div>
-          <label for="email" class="sr-only">Email address</label>
+          <label for="username" class="sr-only">Username</label>
           <input
-            id="email"
-            name="email"
-            type="email"
-            formControlName="email"
+            id="username"
+            name="username"
+            type="text"
+            formControlName="username"
             required
+            autocomplete="username"
             class="appearance-none relative block w-full px-4 py-3 text-sm"
             style="background:#0d1b3e; color:#f1f5f9; border-bottom:1px solid rgba(255,255,255,0.07); border-radius:0.75rem 0.75rem 0 0;"
-            placeholder="Email address"
+            placeholder="Username"
           />
-          @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-            <p id="email-error" role="alert" class="text-red-400 mt-1 text-sm px-4">Valid email is required</p>
+          @if (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) {
+            <p id="username-error" role="alert" class="text-red-400 mt-1 text-sm px-4">Username is required</p>
           }
         </div>
         <div>

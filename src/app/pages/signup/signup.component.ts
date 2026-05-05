@@ -34,13 +34,12 @@ export class SignupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title.setTitle('Join SwimXpert | Start Swimming Lessons in Lebanon');
+    this.title.setTitle('Join SwimXpert | Start Swimming Lessons');
     this.meta.updateTag({
       name: 'description',
-      content: 'Create your SwimXpert account and start your swimming journey in Lebanon. Register today for professional coaching tailored to your level.'
+      content: 'Create your SwimXpert account and start your swimming journey.'
     });
 
-    // Capture returnUrl from query params (in case signup is linked with one)
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
       sessionStorage.setItem('auth_return_url', returnUrl);
@@ -61,7 +60,6 @@ export class SignupComponent implements OnInit {
     if (this.signupForm.valid) {
       this.loading = true;
       this.errorMessage = '';
-      
       const { name, email, password } = this.signupForm.value;
       this.authService.signup(email, password, name).subscribe({
         next: (response) => {
@@ -81,7 +79,6 @@ export class SignupComponent implements OnInit {
   }
 
   private redirectAfterAuth(): void {
-    // Priority 1: a specific page the user was trying to reach
     const storedReturn = sessionStorage.getItem('auth_return_url');
     const queryReturn  = this.route.snapshot.queryParamMap.get('returnUrl');
     const target = storedReturn || queryReturn;
@@ -92,7 +89,6 @@ export class SignupComponent implements OnInit {
       return;
     }
 
-    // Priority 2: pending level-finder result — show it first
     if (localStorage.getItem('lf_pending_result')) {
       sessionStorage.removeItem('auth_return_url');
       this.router.navigate(['/level-finder'], { queryParams: { restore: '1' } });

@@ -212,6 +212,11 @@ using (var scope = app.Services.CreateScope())
         );
         CREATE INDEX IF NOT EXISTS "IX_QuizResults_UserId" ON "QuizResults" ("UserId");
     """);
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"Username\" character varying(100);");
+    await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS \"IX_Users_Username\" ON \"Users\" (\"Username\") WHERE \"Username\" IS NOT NULL;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"Phone\" character varying(30);");
+    // IsApproved: default true so all existing accounts stay accessible; new self-registrations explicitly set false.
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsApproved\" boolean NOT NULL DEFAULT true;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"EmailVerified\" boolean NOT NULL DEFAULT true;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"EmailVerificationTokenHash\" character varying(64);");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"EmailVerificationTokenExpiry\" timestamp with time zone;");
@@ -250,6 +255,11 @@ using (var scope = app.Services.CreateScope())
         CREATE INDEX IF NOT EXISTS "IX_AuditLogs_Action" ON "AuditLogs" ("Action");
     """);
 
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"CoachUserId\" integer;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"CoachAccepted\" boolean;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"CoachDeclineReason\" character varying(2000);");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Attendances\" ADD COLUMN IF NOT EXISTS \"BookingStatus\" character varying(20) NOT NULL DEFAULT 'Confirmed';");
+    await db.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS \"IX_Attendances_BookingStatus\" ON \"Attendances\" (\"BookingStatus\");");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"PoolLocation\" character varying(200);");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"Price\" numeric(18,2) NOT NULL DEFAULT 0;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"TrainingSessions\" ADD COLUMN IF NOT EXISTS \"IsPaid\" boolean NOT NULL DEFAULT FALSE;");

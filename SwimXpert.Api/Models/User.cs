@@ -20,11 +20,20 @@ public class User
     [MaxLength(255)]
     public string FullName { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    public string? Username { get; set; }
+
+    [MaxLength(30)]
+    public string? Phone { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string Role { get; set; } = "Parent";
 
     public bool IsActive { get; set; } = true;
+
+    /// <summary>False for self-registered users until an admin explicitly approves them.</summary>
+    public bool IsApproved { get; set; } = false;
 
     public bool EmailVerified { get; set; }
     [MaxLength(64)]

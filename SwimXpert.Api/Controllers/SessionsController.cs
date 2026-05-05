@@ -16,10 +16,10 @@ public class SessionsController(
     IGoogleCalendarMutationsService googleCalendarMutations) : ControllerBase
 {
     /// <summary>
-    /// Creates a new training session. Requires Coach or Admin role.
+    /// Creates a new training session. Requires Admin role.
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateSession([FromBody] CreateSessionRequest request)
     {
         if (request.EndTime <= request.StartTime)
@@ -37,6 +37,7 @@ public class SessionsController(
             Status = string.IsNullOrWhiteSpace(request.Status) ? "Scheduled" : request.Status,
             Price = request.Price < 0 ? 0 : request.Price,
             IsPaid = request.IsPaid,
+            CoachUserId = request.CoachUserId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -52,10 +53,10 @@ public class SessionsController(
     }
 
     /// <summary>
-    /// Returns all sessions with optional filters. Coach/Admin only — contains client names and full registration data.
+    /// Returns all sessions with optional filters. Admin only — contains client names and full registration data.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetSessions([FromQuery] string? status, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
         var query = dbContext.TrainingSessions.AsQueryable();
@@ -182,8 +183,8 @@ public class SessionsController(
         if (swimmer is null)
             return NotFound(new { message = "Swimmer not found." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && swimmer.ParentUserId != currentUserId)
             return Forbid();
 
         // Check the slot is still free
@@ -207,13 +208,15 @@ public class SessionsController(
         dbContext.TrainingSessions.Add(session);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        // Register the swimmer
+        // Register the swimmer — clients get Pending, admins/coaches get Confirmed immediately
+        var isAdminBooking = User.IsInRole("Admin");
         var attendance = new Attendance
         {
             SwimmerId         = request.SwimmerId,
             TrainingSessionId = session.Id,
             SessionDate       = startUtc.Date,
             IsPresent         = false,
+            BookingStatus     = isAdminBooking ? "Confirmed" : "Pending",
             CreatedAt         = DateTime.UtcNow
         };
         dbContext.Attendances.Add(attendance);
@@ -221,8 +224,9 @@ public class SessionsController(
 
         return Ok(new
         {
-            message        = "Slot booked successfully.",
+            message        = isAdminBooking ? "Slot booked successfully." : "Booking request submitted. Awaiting admin confirmation.",
             registrationId = attendance.Id,
+            bookingStatus  = attendance.BookingStatus,
             date           = startBeirut.ToString("yyyy-MM-dd"),
             startLocal     = startBeirut.ToString("HH:mm"),
             endLocal       = (startBeirut + SlotDuration).ToString("HH:mm")
@@ -230,10 +234,79 @@ public class SessionsController(
     }
 
     /// <summary>
-    /// Returns future sessions ordered by start time. Coach/Admin only — contains client names and full registration data.
+    /// Returns all Pending bookings — for admin approval queue.
+    /// </summary>
+    [HttpGet("bookings/pending")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetPendingBookings()
+    {
+        var pending = await dbContext.Attendances
+            .Where(a => a.BookingStatus == "Pending" && a.Swimmer.ParentUser!.IsApproved)
+            .Include(a => a.TrainingSession)
+            .Include(a => a.Swimmer)
+                .ThenInclude(sw => sw.ParentUser)
+            .OrderBy(a => a.TrainingSession.StartTime)
+            .Select(a => new
+            {
+                a.Id,
+                a.BookingStatus,
+                swimmer = new { a.Swimmer.Id, a.Swimmer.Name, a.Swimmer.Level },
+                client  = new { a.Swimmer.ParentUser!.Id, a.Swimmer.ParentUser.FullName, a.Swimmer.ParentUser.Email },
+                session = new
+                {
+                    a.TrainingSession.Id,
+                    a.TrainingSession.Title,
+                    startTime = a.TrainingSession.StartTime,
+                    endTime   = a.TrainingSession.EndTime
+                },
+                a.SessionDate,
+                a.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(pending);
+    }
+
+    /// <summary>
+    /// Admin approves a pending booking.
+    /// </summary>
+    [HttpPut("bookings/{id:int}/approve")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ApproveBooking(int id)
+    {
+        var attendance = await dbContext.Attendances.FindAsync(id);
+        if (attendance is null) return NotFound(new { message = "Booking not found." });
+        attendance.BookingStatus = "Confirmed";
+        await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("BookingApproved", "Attendance", id.ToString());
+        return Ok(new { message = "Booking confirmed.", bookingStatus = "Confirmed" });
+    }
+
+    /// <summary>
+    /// Admin rejects and removes a pending booking + its training session.
+    /// </summary>
+    [HttpDelete("bookings/{id:int}/reject")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RejectBooking(int id)
+    {
+        var attendance = await dbContext.Attendances
+            .Include(a => a.TrainingSession)
+            .FirstOrDefaultAsync(a => a.Id == id);
+        if (attendance is null) return NotFound(new { message = "Booking not found." });
+
+        var session = attendance.TrainingSession;
+        dbContext.Attendances.Remove(attendance);
+        if (session is not null) dbContext.TrainingSessions.Remove(session);
+        await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("BookingRejected", "Attendance", id.ToString());
+        return Ok(new { message = "Booking rejected and removed." });
+    }
+
+    /// <summary>
+    /// Returns future sessions ordered by start time. Admin only — contains client names and full registration data.
     /// </summary>
     [HttpGet("upcoming")]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetUpcomingSessions()
     {
         var now = DateTime.UtcNow;
@@ -249,10 +322,10 @@ public class SessionsController(
     }
 
     /// <summary>
-    /// Returns one session by id. Coach/Admin only — contains client names and full registration data.
+    /// Returns one session by id. Admin only — contains client names and full registration data.
     /// </summary>
     [HttpGet("{id:int}")]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetSessionById(int id)
     {
         var session = await dbContext.TrainingSessions
@@ -269,10 +342,10 @@ public class SessionsController(
     }
 
     /// <summary>
-    /// Updates an existing session. Requires Coach or Admin role.
+    /// Updates an existing session. Requires Admin role.
     /// </summary>
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateSession(int id, [FromBody] UpdateSessionRequest request, CancellationToken cancellationToken)
     {
         var session = await dbContext.TrainingSessions.FindAsync(new object[] { id }, cancellationToken);
@@ -294,6 +367,18 @@ public class SessionsController(
         session.Status = request.Status;
         session.Price = request.Price < 0 ? 0 : request.Price;
         session.IsPaid = request.IsPaid;
+        if (request.ClearCoach == true)
+        {
+            session.CoachUserId = null;
+            session.CoachAccepted = null;
+            session.CoachDeclineReason = null;
+        }
+        else if (request.CoachUserId.HasValue)
+        {
+            session.CoachUserId = request.CoachUserId;
+            session.CoachAccepted = null;
+            session.CoachDeclineReason = null;
+        }
 
         var apply = NormalizeRecurrenceApply(request.RecurrenceApply);
         var anchorUtc = session.StartTime;
@@ -381,7 +466,7 @@ public class SessionsController(
     /// Does not sync to Google; new rows have no GoogleEventId. Skips weeks where a session with the same title and start already exists.
     /// </summary>
     [HttpPost("{id:int}/repeat-weekly")]
-    [Authorize(Roles = "Coach,Admin")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RepeatWeekly(int id, [FromBody] RepeatWeeklyRequest? request, CancellationToken cancellationToken = default)
     {
         var weeks = request?.Weeks ?? 0;
@@ -538,6 +623,9 @@ public class SessionsController(
             isPaid = s.IsPaid,
             googleEventId = s.GoogleEventId,
             recurrenceSeriesId = s.RecurrenceSeriesId,
+            coachUserId           = s.CoachUserId,
+            coachAccepted         = s.CoachAccepted,
+            coachDeclineReason    = s.CoachDeclineReason,
             createdAt = s.CreatedAt,
             registrations
         };
@@ -554,6 +642,7 @@ public class CreateSessionRequest
     public string Status { get; set; } = "Scheduled";
     public decimal Price { get; set; }
     public bool IsPaid { get; set; }
+    public int? CoachUserId { get; set; }
 }
 
 public class UpdateSessionRequest
@@ -566,6 +655,8 @@ public class UpdateSessionRequest
     public string Status { get; set; } = "Scheduled";
     public decimal Price { get; set; }
     public bool IsPaid { get; set; }
+    public int? CoachUserId { get; set; }
+    public bool? ClearCoach { get; set; }
 
     /// <summary>single | thisAndFollowing | allInSeries — for recurring package sessions (same RecurrenceSeriesId).</summary>
     public string? RecurrenceApply { get; set; }

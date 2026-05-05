@@ -48,6 +48,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             FullName = fullName,
             Role = "Parent",
             CreatedAt = DateTime.UtcNow,
+            IsApproved = false,  // self-registered accounts require admin approval
             EmailVerified = isDev,   // auto-verified in dev so demo signups work immediately
             EmailVerificationTokenHash = isDev ? null : verificationHash,
             EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24)
@@ -68,15 +69,18 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            return Unauthorized(new { message = "Invalid email or password." });
+        // Accept either the new `identifier` field (username or email) or the legacy `email` field
+        var raw = (!string.IsNullOrWhiteSpace(request.Identifier) ? request.Identifier : request.Email ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw) || string.IsNullOrWhiteSpace(request.Password))
+            return Unauthorized(new { message = "Invalid credentials." });
 
-        var email = request.Email.Trim().ToLowerInvariant();
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        // Look up by username first (exact match), then fall back to email
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == raw)
+                ?? await dbContext.Users.FirstOrDefaultAsync(u => u.Email == raw.ToLowerInvariant());
         if (user is null)
         {
             logger.LogWarning("Failed login attempt from {RemoteIp} at {Time}", HttpContext.Connection.RemoteIpAddress, DateTime.UtcNow);
-            return Unauthorized(new { message = "Invalid email or password." });
+            return Unauthorized(new { message = "Invalid credentials." });
         }
         if (user.LockoutUntil.HasValue && user.LockoutUntil.Value > DateTime.UtcNow)
         {
@@ -322,14 +326,15 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         var role = User.FindFirstValue(ClaimTypes.Role);
         if (string.IsNullOrEmpty(id) || !int.TryParse(id, out var userId))
             return Unauthorized(new { message = "Not authenticated." });
-        var user = await dbContext.Users.AsNoTracking().Select(u => new { u.Id, u.TwoFactorEnabled }).FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await dbContext.Users.AsNoTracking().Select(u => new { u.Id, u.TwoFactorEnabled, u.IsApproved }).FirstOrDefaultAsync(u => u.Id == userId);
         return Ok(new
         {
             id = userId,
             email = email ?? "",
             fullName = fullName ?? "",
             role = role ?? "Parent",
-            twoFactorEnabled = user?.TwoFactorEnabled ?? false
+            twoFactorEnabled = user?.TwoFactorEnabled ?? false,
+            isApproved = user?.IsApproved ?? true
         });
     }
 
@@ -473,8 +478,12 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
 
 public class LoginRequest
 {
+    /// <summary>Username (preferred) or email address.</summary>
     [MaxLength(255)]
-    public string Email { get; set; } = string.Empty;
+    public string? Identifier { get; set; }
+    /// <summary>Legacy email field — kept for backward compatibility.</summary>
+    [MaxLength(255)]
+    public string? Email { get; set; }
     [MaxLength(128)]
     public string Password { get; set; } = string.Empty;
 }

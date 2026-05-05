@@ -79,8 +79,7 @@ export class SessionDetailComponent implements OnInit {
     });
   }
 
-  isCoachOrAdmin(): boolean {
-    const role = (this.authService.getCurrentUser()?.role || '').toLowerCase();
-    return role === 'admin' || role === 'coach';
+  isAdmin(): boolean {
+    return (this.authService.getCurrentUser()?.role || '').toLowerCase() === 'admin';
   }
 }

@@ -164,6 +164,20 @@
   opacity: 0.92;
 }
 
+.session-block--coach-pending {
+  border-left: 3px solid #3b82f6;
+}
+
+.session-block--coach-accepted {
+  border-left: 3px solid #f59e0b;
+  background: linear-gradient(135deg, #fefce8, #fef3c7);
+}
+
+.session-block--coach-declined {
+  border-left: 3px solid #ef4444;
+  opacity: 0.75;
+}
+
 .session-block__title {
   font-weight: 700;
   color: #1f2937;

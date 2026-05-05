@@ -93,6 +93,9 @@
                     class="session-block"
                     [class.session-block--canceled]="s.status === 'canceled'"
                     [class.session-block--compact]="isCompactBlock(s)"
+                    [class.session-block--coach-pending]="s.coachUserId && s.coachAccepted == null"
+                    [class.session-block--coach-accepted]="s.coachAccepted === true"
+                    [class.session-block--coach-declined]="s.coachAccepted === false"
                     [style.top.%]="topPct(s)"
                     [style.height.%]="heightPct(s)"
                     (click)="openSessionOptions(s)"
@@ -126,7 +129,13 @@
                       @if (s.poolLocation) {
                         <div class="session-block__meta session-block__loc">{{ s.poolLocation }}</div>
                       }
-                      @if (s.status === 'canceled') {
+                      @if (s.coachUserId) {
+                        <div class="session-block__hint">
+                          @if (s.coachAccepted === true) { <span class="text-yellow-700 font-semibold">✓ Coach accepted</span> }
+                          @else if (s.coachAccepted === false) { <span class="text-red-600 font-semibold">✕ Coach declined</span> }
+                          @else { <span class="text-blue-700">Coach assigned · pending</span> }
+                        </div>
+                      } @else if (s.status === 'canceled') {
                         <div class="session-block__hint">Canceled · click to edit</div>
                       } @else {
                         <div class="session-block__hint">Click to edit</div>
@@ -196,6 +205,135 @@
           {{ sessionOptionsSaving() ? 'Restoring…' : 'Restore session (undo cancel)' }}
         </button>
       }
+      <!-- ── Assign Coach ───────────────────────────────────────── -->
+      @if (coaches().length > 0) {
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-2">
+          <h3 class="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Assign Coach
+            @if (selectedSession()?.coachAccepted === true) {
+              <span class="ml-auto text-xs font-semibold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">✓ Accepted</span>
+            } @else if (selectedSession()?.coachAccepted === false) {
+              <span class="ml-auto text-xs font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">✕ Declined</span>
+            } @else if (selectedSession()?.coachUserId) {
+              <span class="ml-auto text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Pending</span>
+            }
+          </h3>
+          <div class="flex gap-2 items-end">
+            <div class="flex-1">
+              <label class="block text-xs font-medium text-emerald-800 mb-1">Coach</label>
+              <select [(ngModel)]="sessionOptionsForm_coachId" class="w-full border border-emerald-200 rounded-lg px-3 py-2 text-sm bg-white">
+                <option value="">— none —</option>
+                @for (c of coaches(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+            </div>
+            <button
+              type="button"
+              [disabled]="assigningCoach()"
+              (click)="assignCoach()"
+              class="px-3 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 whitespace-nowrap"
+              style="background:linear-gradient(135deg,#10b981,#059669)"
+            >
+              @if (assigningCoach()) {
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              } @else {
+                Save
+              }
+            </button>
+          </div>
+          @if (coachAssignMsg()) {
+            <p class="text-xs mt-1.5 font-medium" [class.text-emerald-700]="coachAssignMsg().includes('!')" [class.text-red-600]="!coachAssignMsg().includes('!')">{{ coachAssignMsg() }}</p>
+          }
+          @if (selectedSession()?.coachAccepted === false && selectedSession()?.coachDeclineReason) {
+            <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900">
+              <p class="font-bold mb-1">Coach decline reason</p>
+              <p class="whitespace-pre-wrap leading-relaxed">{{ selectedSession()!.coachDeclineReason }}</p>
+            </div>
+          }
+        </div>
+      }
+      <!-- ── Record Payment ──────────────────────────────────────── -->
+      <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-2">
+        <h3 class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+          </svg>
+          Record Payment for this Session
+        </h3>
+        @if (paymentRecorded()) {
+          <div class="flex items-center gap-2 text-green-800 bg-green-100 border border-green-200 rounded-lg px-3 py-2 text-sm font-semibold">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+            Payment recorded successfully!
+          </div>
+        } @else {
+          <div class="space-y-2">
+            <div>
+              <label class="block text-xs font-medium text-blue-800 mb-1">Client</label>
+              <select [(ngModel)]="sessionPaymentForm.clientId" class="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white">
+                <option value="">— select client —</option>
+                @for (c of clients(); track c.id) {
+                  <option [value]="c.id">{{ c.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-medium text-blue-800 mb-1">Amount ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [(ngModel)]="sessionPaymentForm.payAmount"
+                  class="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-blue-800 mb-1">Method</label>
+                <select [(ngModel)]="sessionPaymentForm.payMethod" class="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white">
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="WhatsApp">WhatsApp</option>
+                  <option value="Transfer">Transfer</option>
+                </select>
+              </div>
+            </div>
+            @if (paymentError()) {
+              <p class="text-xs text-red-600">{{ paymentError() }}</p>
+            }
+            <button
+              type="button"
+              [disabled]="recordingPayment()"
+              (click)="recordPaymentForSession()"
+              class="w-full py-2 px-4 rounded-lg text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+              style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"
+            >
+              @if (recordingPayment()) {
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Recording…
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                </svg>
+                Record ${{ sessionPaymentForm.payAmount }} Payment
+              }
+            </button>
+          </div>
+        }
+      </div>
+      <!-- ───────────────────────────────────────────────────────── -->
+
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Price (USD)</label>

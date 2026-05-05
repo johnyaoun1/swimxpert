@@ -1,6 +1,15 @@
 <section class="section-padding bg-gray-50 min-h-screen">
   <div class="container mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Users</h1>
+
+    <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+      <h1 class="text-3xl font-bold text-gray-800">Admin Users</h1>
+      <button class="create-client-btn" (click)="openCreateModal()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create Client Account
+      </button>
+    </div>
 
     @if (loading) {
       <div class="premium-container">Loading users...</div>
@@ -47,5 +56,237 @@
     @if (errorMessage) {
       <div class="premium-container text-red-600 mt-4">{{ errorMessage }}</div>
     }
+
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════
+     CREATE CLIENT MODAL
+═════════════════════════════════════════════════ -->
+@if (showCreateModal) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="modal-header-icon">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Create Client Account</h2>
+          <p class="modal-subtitle">A username and password will be generated — share them manually with the client.</p>
+        </div>
+        <button class="modal-close" (click)="closeCreateModal()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Success state -->
+      @if (createdCredentials) {
+        <div class="success-panel">
+          <div class="success-check">
+            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <p class="success-title">Account Created!</p>
+          <p class="success-sub">Share these credentials with the client (e.g. via WhatsApp)</p>
+
+          <div class="cred-grid">
+            <div class="cred-item">
+              <span class="cred-label">Username</span>
+              <div class="cred-row">
+                <span class="cred-value">{{ createdCredentials.username }}</span>
+                <button class="copy-btn" (click)="copyToClipboard(createdCredentials!.username, 'username')">
+                  @if (copiedField === 'username') {
+                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  } @else {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+            </div>
+            <div class="cred-item">
+              <span class="cred-label">Password</span>
+              <div class="cred-row">
+                <span class="cred-value cred-mono">{{ createdCredentials.password }}</span>
+                <button class="copy-btn" (click)="copyToClipboard(createdCredentials!.password, 'password')">
+                  @if (copiedField === 'password') {
+                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  } @else {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="cred-warning">
+            <svg class="w-4 h-4 inline mr-1 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            Copy these now and send via WhatsApp. The password will not be shown again.
+          </p>
+
+          <button class="modal-done-btn" (click)="closeCreateModal()">Done</button>
+        </div>
+
+      } @else {
+        <!-- Form state -->
+        <div class="modal-body">
+          @if (createError) {
+            <div class="form-error-banner">{{ createError }}</div>
+          }
+
+          <div class="form-field">
+            <label class="form-label">Full Name <span class="text-red-400">*</span></label>
+            <input
+              type="text"
+              class="form-input"
+              placeholder="e.g. John Yaoun"
+              [(ngModel)]="createForm.fullName"
+              [disabled]="createLoading"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Email Address <span class="text-red-400">*</span></label>
+            <input
+              type="email"
+              class="form-input"
+              placeholder="client@example.com"
+              [(ngModel)]="createForm.email"
+              [disabled]="createLoading"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Phone <span class="form-optional">(optional)</span></label>
+            <input
+              type="tel"
+              class="form-input"
+              placeholder="+961 xx xxx xxx"
+              [(ngModel)]="createForm.phone"
+              [disabled]="createLoading"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">
+              Password
+              <span class="form-optional">(leave blank to auto-generate)</span>
+            </label>
+            <div class="password-input-row">
+              <input
+                [type]="showCreatePassword ? 'text' : 'password'"
+                class="form-input"
+                placeholder="Set a password or generate one →"
+                [(ngModel)]="createForm.password"
+                [disabled]="createLoading"
+                autocomplete="new-password"
+              />
+              <button type="button" class="pw-toggle-btn" (click)="showCreatePassword = !showCreatePassword" [disabled]="createLoading" [attr.aria-label]="showCreatePassword ? 'Hide password' : 'Show password'">
+                @if (showCreatePassword) {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                }
+              </button>
+              <button type="button" class="pw-generate-btn" (click)="generatePassword()" [disabled]="createLoading">
+                Generate
+              </button>
+            </div>
+          </div>
+
+          <!-- Child / Swimmer section -->
+          <div class="child-section">
+            <p class="child-section-title">
+              <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Child Profile <span class="form-optional">(optional — created automatically)</span>
+            </p>
+            <div class="form-field">
+              <label class="form-label">Child's Full Name</label>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="Child's full name"
+                [(ngModel)]="createForm.childName"
+                [disabled]="createLoading"
+              />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem">
+              <div class="form-field">
+                <label class="form-label">Age</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  placeholder="e.g. 8"
+                  min="1" max="30"
+                  [(ngModel)]="createForm.childAge"
+                  [disabled]="createLoading"
+                />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Level</label>
+                <select class="form-input form-select" [(ngModel)]="createForm.childLevel" [disabled]="createLoading">
+                  <option value="">— Select —</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Elite">Elite</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-hint">
+            <svg class="w-4 h-4 flex-shrink-0 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>A secure username and password will be generated. Copy them and share with the client manually (WhatsApp, SMS, etc.).</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" (click)="closeCreateModal()" [disabled]="createLoading">Cancel</button>
+          <button class="modal-submit-btn" (click)="submitCreateClient()" [disabled]="createLoading">
+            @if (createLoading) {
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Generating…
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+              </svg>
+              Generate Account
+            }
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}

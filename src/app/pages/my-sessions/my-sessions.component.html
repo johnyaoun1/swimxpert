@@ -28,13 +28,50 @@
               <span class="ml-auto text-sm font-normal text-gray-500">{{ futureSessions.length }} booked</span>
             }
           </h2>
+          @if (hasPending(futureSessions)) {
+            <div class="mb-3 px-3 py-2.5 rounded-lg flex items-start gap-2"
+              style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25)">
+              <svg class="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="text-sm" style="color:#ca8a04">
+                Some bookings are <strong>awaiting admin confirmation</strong>. You'll be notified once approved.
+              </p>
+            </div>
+          }
           @for (s of futureSessions; track s.id) {
-            <div class="p-3 bg-white border border-gray-200 rounded-lg mb-2 flex items-center justify-between shadow-sm">
-              <div>
-                <p class="font-semibold text-gray-800">{{ s.notes || 'Training Session' }}</p>
-                <p class="text-sm text-gray-500">{{ s.date }}</p>
+            <div class="p-3 rounded-lg mb-2 flex items-center justify-between shadow-sm"
+              [class]="s.bookingStatus === 'Pending'
+                ? 'bg-yellow-50 border border-yellow-200'
+                : 'bg-white border border-gray-200'">
+              <div style="min-width:0">
+                <div class="flex items-center gap-2 flex-wrap mb-0.5">
+                  <p class="font-semibold text-gray-800">{{ s.notes || 'Training Session' }}</p>
+                  @if (s.bookingStatus === 'Pending') {
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style="background:rgba(234,179,8,.15);color:#92400e;border:1px solid rgba(234,179,8,.3)">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                      </svg>
+                      Pending Approval
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style="background:rgba(34,197,94,.12);color:#166534;border:1px solid rgba(34,197,94,.25)">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      Confirmed
+                    </span>
+                  }
+                </div>
+                <p class="text-sm text-gray-500">
+                  {{ s.date }}
+                  @if (s.startTime) { · {{ s.startTime }}–{{ s.endTime }} }
+                </p>
               </div>
-              <button class="btn-secondary text-sm py-1.5 px-3" (click)="cancel(s.id)">Cancel</button>
+              <button class="btn-secondary text-sm py-1.5 px-3 shrink-0" (click)="cancel(s.id)">Cancel</button>
             </div>
           }
           @if (!futureSessions.length) {

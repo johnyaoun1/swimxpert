@@ -34,6 +34,16 @@ public class TrainingSession
     /// <summary>Links weekly package sessions (same client/time pattern). Null = one-off session.</summary>
     public Guid? RecurrenceSeriesId { get; set; }
 
+    /// <summary>The coach user assigned to this session by the admin. Null means unassigned.</summary>
+    public int? CoachUserId { get; set; }
+
+    /// <summary>Null = not yet responded; true = coach accepted; false = coach declined.</summary>
+    public bool? CoachAccepted { get; set; }
+
+    /// <summary>Set when the assigned coach declines (required reason from coach).</summary>
+    [MaxLength(2000)]
+    public string? CoachDeclineReason { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<Attendance> Attendances { get; set; } = [];

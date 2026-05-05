@@ -26,7 +26,12 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
-  role?: 'user' | 'admin';
+  /** Parent/client accounts use `user`; staff roles preserved for routing. */
+  role?: 'user' | 'admin' | 'coach';
+  isApproved?: boolean;
+  /** Present when loaded from admin API (optional elsewhere). */
+  phone?: string;
+  username?: string;
   children: Child[];
   quizResults: QuizResult[];
 }
@@ -71,8 +76,8 @@ export class AuthService {
     this.fetchMe().subscribe();
   }
 
-  login(email: string, password: string): Observable<AuthApiResponse> {
-    return this.apiService.login(email, password).pipe(
+  login(identifier: string, password: string): Observable<AuthApiResponse> {
+    return this.apiService.login(identifier, password).pipe(
       tap((response: AuthApiResponse) => this.persistAuthResponse(response))
     );
   }
@@ -122,8 +127,15 @@ export class AuthService {
     );
   }
 
-  private meToUser(me: { id: number; email: string; fullName: string; role: string }): User {
-    const role = (me.role ?? 'Parent').toLowerCase() === 'admin' ? 'admin' : 'user';
+  private static normalizeUiRole(apiRole: string | undefined): 'admin' | 'coach' | 'user' {
+    const r = (apiRole ?? 'Parent').toLowerCase();
+    if (r === 'admin') return 'admin';
+    if (r === 'coach') return 'coach';
+    return 'user';
+  }
+
+  private meToUser(me: { id: number; email: string; fullName: string; role: string; isApproved?: boolean }): User {
+    const role = AuthService.normalizeUiRole(me.role);
     const name = me.fullName || me.email?.split('@')?.[0] || 'User';
     return {
       id: String(me.id),
@@ -131,6 +143,7 @@ export class AuthService {
       name,
       avatar: this.generateAvatar(name),
       role,
+      isApproved: me.isApproved ?? true,
       children: this.currentUser()?.children ?? [],
       quizResults: this.currentUser()?.quizResults ?? []
     };
@@ -139,6 +152,16 @@ export class AuthService {
   isAdmin(): boolean {
     const user = this.currentUser();
     return user?.role?.toLowerCase() === 'admin';
+  }
+
+  isCoach(): boolean {
+    const user = this.currentUser();
+    return user?.role?.toLowerCase() === 'coach';
+  }
+
+  isApprovedClient(): boolean {
+    const user = this.currentUser();
+    return !!user?.isApproved && !this.isAdmin() && !this.isCoach();
   }
 
   getAllClients(): User[] {
@@ -200,7 +223,7 @@ export class AuthService {
   }
 
   private persistAuthResponse(response: AuthApiResponse): void {
-    const role = (response?.role ?? 'Parent').toString().toLowerCase() === 'admin' ? 'admin' : 'user';
+    const role = AuthService.normalizeUiRole(response?.role);
     const name = response?.fullName || response?.email?.split('@')?.[0] || 'User';
     const user: User = {
       id: String(response?.id ?? ''),

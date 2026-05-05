@@ -46,6 +46,7 @@ public class UserProfileController(ApplicationDbContext dbContext) : ControllerB
     {
         var raw = await dbContext.QuizResults
             .Include(q => q.User)
+            .Where(q => q.User.IsApproved)
             .Select(q => new
             {
                 q.UserId,
@@ -109,6 +110,10 @@ public class UserProfileController(ApplicationDbContext dbContext) : ControllerB
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { message = "Invalid user context." });
+
+        var caller = await dbContext.Users.AsNoTracking().Select(u => new { u.Id, u.IsApproved }).FirstOrDefaultAsync(u => u.Id == userId);
+        if (caller is null || !caller.IsApproved)
+            return Forbid();
 
         var quizResult = new Models.QuizResult
         {

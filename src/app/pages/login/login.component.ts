@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit {
     private meta: Meta
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      username: ['', Validators.required],
       password: ['', Validators.required]
     });
 
@@ -63,8 +63,8 @@ export class LoginComponent implements OnInit {
       this.loading = true;
       this.errorMessage = '';
       
-      const { email, password } = this.loginForm.value;
-      this.authService.login(email, password).subscribe({
+      const { username, password } = this.loginForm.value;
+      this.authService.login(username, password).subscribe({
         next: (response) => {
           this.redirectAfterAuth();
           this.loading = false;
@@ -72,7 +72,7 @@ export class LoginComponent implements OnInit {
         error: (err: any) => {
           if (err?.status === 202 && err?.error?.code === '2fa_required') {
             this.show2FaInput = true;
-            this.emailFor2Fa = err?.error?.email ?? email;
+            this.emailFor2Fa = err?.error?.email ?? username;
             this.errorMessage = '';
             this.loading = false;
             return;
@@ -81,7 +81,7 @@ export class LoginComponent implements OnInit {
           if (err?.status === 403 && code === 'email_not_verified') {
             this.errorMessage = 'Please verify your email before logging in.';
             this.showResendVerification = true;
-            this.emailForResend = email;
+            this.emailForResend = username;
           } else {
             this.errorMessage = err?.error?.message || err?.message || 'Login failed. Please try again.';
           }
@@ -109,10 +109,22 @@ export class LoginComponent implements OnInit {
   }
 
   private redirectAfterAuth(): void {
-    // Priority 1: a specific page the user was trying to reach (stored by this page or in query params)
     const storedReturn = sessionStorage.getItem('auth_return_url');
     const queryReturn  = this.route.snapshot.queryParamMap.get('returnUrl');
     const target = storedReturn || queryReturn;
+
+    const role = this.authService.currentUser()?.role;
+
+    // Coaches: only coach dashboard (or explicit /coach/* return URLs)
+    if (role === 'coach') {
+      sessionStorage.removeItem('auth_return_url');
+      if (target && target.startsWith('/coach/')) {
+        this.router.navigateByUrl(target);
+        return;
+      }
+      this.router.navigate(['/coach/dashboard']);
+      return;
+    }
 
     if (target && target !== '/dashboard' && target !== '/login') {
       sessionStorage.removeItem('auth_return_url');
@@ -120,7 +132,6 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    // Priority 2: pending level-finder result — show it first
     if (localStorage.getItem('lf_pending_result')) {
       sessionStorage.removeItem('auth_return_url');
       this.router.navigate(['/level-finder'], { queryParams: { restore: '1' } });

@@ -21,14 +21,23 @@
     </div>
     <h1 class="text-4xl md:text-5xl font-extrabold mb-2 animate-slide-down">Book a Session</h1>
     <p class="text-lg animate-slide-up" style="color:#94a3b8">Pick any free 45-minute slot — 9 AM to 8 PM</p>
+    @if (!isLoggedIn()) {
+      <button class="hero-request-btn mt-4" (click)="openRequestModal()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        Request a Booking
+      </button>
+    }
   </div>
 </div>
 
 <section class="section-padding premium-section">
   <div class="container mx-auto">
 
-    <!-- Swimmer selector -->
-    @if (swimmers().length > 0) {
+    <!-- Swimmer selector (logged-in only) -->
+    @if (isLoggedIn() && swimmers().length > 0) {
       <div class="card mb-8">
         <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <span style="font-weight:600;color:#cbd5e1;display:flex;align-items:center;gap:.4rem;white-space:nowrap">
@@ -100,7 +109,9 @@
           </div>
           <h3 style="font-size:1.15rem;font-weight:700;color:#f1f5f9;margin-bottom:.5rem">No free slots in the next 14 days</h3>
           <p style="color:#94a3b8;margin-bottom:1.25rem">The schedule is fully booked. Check back soon.</p>
-          <a routerLink="/my-sessions" class="btn-secondary inline-block">View My Bookings</a>
+          @if (isLoggedIn()) {
+            <a routerLink="/my-sessions" class="btn-secondary inline-block">View My Bookings</a>
+          }
         </div>
       } @else {
 
@@ -122,37 +133,84 @@
             <!-- Slot buttons -->
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:.5rem">
               @for (slot of day.slots; track slot.startLocal) {
-                <button
-                  style="padding:.45rem .25rem;border-radius:.5rem;font-size:.8125rem;font-weight:700;text-align:center;cursor:pointer;background:#0ea5e9;color:#ffffff;border:none;transition:opacity .15s"
-                  (click)="book(slot)"
-                >
-                  {{ slot.startLocal }}
-                </button>
+                @if (isLoggedIn()) {
+                  <button
+                    class="slot-btn slot-booking"
+                    [disabled]="bookingInProgress()"
+                    (click)="book(slot)"
+                    title="Book this slot"
+                  >
+                    {{ slot.startLocal }}
+                  </button>
+                } @else {
+                  <button
+                    class="slot-request-btn"
+                    [disabled]="requestSubmitted()"
+                    (click)="openRequestModal(slot)"
+                    [title]="requestSubmitted() ? 'Request already submitted' : 'Request this slot'"
+                  >
+                    {{ slot.startLocal }}
+                  </button>
+                }
               }
             </div>
 
           </div>
         }
 
-        <div style="text-align:center;margin-top:1.5rem">
-          <a routerLink="/my-sessions" class="btn-secondary inline-block">View My Bookings →</a>
-        </div>
+        @if (isLoggedIn()) {
+          <div style="text-align:center;margin-top:1.5rem">
+            <a routerLink="/my-sessions" class="btn-secondary inline-block">View My Bookings →</a>
+          </div>
+        }
 
       }
 
-      <!-- No swimmers warning -->
-      @if (swimmers().length === 0) {
-        <div style="margin-top:1.5rem;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.07);border-radius:.75rem;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:.75rem">
-          <svg style="width:20px;height:20px;color:#fbbf24;flex-shrink:0;margin-top:2px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- No swimmers — invite them to add a child right here -->
+      @if (isLoggedIn() && swimmers().length === 0) {
+        <div style="margin-top:1.5rem;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.07);border-radius:.75rem;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+          <svg style="width:24px;height:24px;color:#34d399;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <div style="flex:1;min-width:0">
+            <p style="font-weight:700;color:#6ee7b7;margin:0 0 .2rem">Add your child to book a session</p>
+            <p style="font-size:.85rem;color:#a7f3d0;margin:0">You need to register your child before picking a slot.</p>
+          </div>
+          <button
+            (click)="openAddSwimmerModal()"
+            style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.25rem;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:700;font-size:.875rem;border:none;cursor:pointer;white-space:nowrap"
+          >
+            <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Child &amp; Book
+          </button>
+        </div>
+      }
+
+      <!-- Guest — request submitted success banner -->
+      @if (!isLoggedIn() && requestSubmitted()) {
+        <div class="guest-banner" style="background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.2)">
+          <svg style="width:20px;height:20px;color:#4ade80;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <div style="color:#86efac">
+            Your request is pending admin approval. We'll email your credentials once confirmed.
+          </div>
+        </div>
+      }
+
+      <!-- Guest — info banner -->
+      @if (!isLoggedIn() && !requestSubmitted()) {
+        <div class="guest-banner">
+          <svg style="width:20px;height:20px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           <div>
-            <p style="font-weight:600;color:#fcd34d;margin:0 0 .25rem">No swimmers registered yet</p>
-            <p style="font-size:.875rem;color:#fde68a;margin:0">
-              Add a child from your dashboard before booking.
-              <a routerLink="/dashboard" style="color:#7dd3fc;text-decoration:underline;font-weight:600">Go to Dashboard →</a>
-            </p>
+            Already have an account?
+            <a routerLink="/login" class="guest-login-link">Log in to book instantly.</a>
           </div>
         </div>
       }
@@ -160,3 +218,429 @@
     }
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════════════
+     ADD CHILD MODAL (logged-in client with no swimmer)
+═════════════════════════════════════════════════════════ -->
+@if (showAddSwimmerModal()) {
+  <!-- Backdrop -->
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:998" (click)="closeAddSwimmerModal()"></div>
+
+  <!-- Modal -->
+  <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;width:100%;max-width:440px;padding:0 1rem">
+    <div style="background:#0f172a;border:1px solid rgba(16,185,129,.25);border-radius:1.25rem;padding:2rem;box-shadow:0 25px 60px rgba(0,0,0,.5)">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;gap:.65rem">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(16,185,129,.15);display:flex;align-items:center;justify-content:center">
+            <svg style="width:18px;height:18px;color:#34d399" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 style="margin:0;font-size:1.05rem;font-weight:800;color:#f1f5f9">Add Your Child</h2>
+            <p style="margin:0;font-size:.78rem;color:#64748b">
+              @if (pendingSlot()) { After saving, we'll book the {{ pendingSlot()!.startLocal }} slot for you. }
+              @else { Register your child to start booking sessions. }
+            </p>
+          </div>
+        </div>
+        <button (click)="closeAddSwimmerModal()" style="background:none;border:none;color:#64748b;cursor:pointer;padding:.25rem">
+          <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <div style="display:flex;flex-direction:column;gap:1rem">
+
+        <!-- Child Name -->
+        <div>
+          <label style="display:block;font-size:.8rem;font-weight:600;color:#94a3b8;margin-bottom:.35rem">Child's Full Name *</label>
+          <input
+            type="text"
+            [(ngModel)]="addSwimmerForm.name"
+            placeholder="e.g. Lara Smith"
+            style="width:100%;padding:.6rem .9rem;border-radius:.6rem;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#f1f5f9;font-size:.9rem;outline:none;box-sizing:border-box"
+          />
+        </div>
+
+        <!-- Age + Level row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div>
+            <label style="display:block;font-size:.8rem;font-weight:600;color:#94a3b8;margin-bottom:.35rem">Age *</label>
+            <input
+              type="number"
+              min="1"
+              max="18"
+              [(ngModel)]="addSwimmerForm.age"
+              placeholder="e.g. 8"
+              style="width:100%;padding:.6rem .9rem;border-radius:.6rem;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#f1f5f9;font-size:.9rem;outline:none;box-sizing:border-box"
+            />
+          </div>
+          <div>
+            <label style="display:block;font-size:.8rem;font-weight:600;color:#94a3b8;margin-bottom:.35rem">Level</label>
+            <select
+              [(ngModel)]="addSwimmerForm.level"
+              style="width:100%;padding:.6rem .9rem;border-radius:.6rem;border:1px solid rgba(255,255,255,.1);background:#1e293b;color:#f1f5f9;font-size:.9rem;outline:none;box-sizing:border-box"
+            >
+              <option value="">Not sure</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+              <option value="Elite">Elite</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Error -->
+        @if (addSwimmerError()) {
+          <p style="color:#f87171;font-size:.83rem;font-weight:500;margin:0">{{ addSwimmerError() }}</p>
+        }
+
+        <!-- Pending slot info -->
+        @if (pendingSlot()) {
+          <div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;border-radius:.6rem;background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2)">
+            <svg style="width:16px;height:16px;color:#38bdf8;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span style="font-size:.82rem;color:#7dd3fc;font-weight:600">
+              Booking slot: {{ pendingSlot()!.date }} at {{ pendingSlot()!.startLocal }}
+            </span>
+          </div>
+        }
+
+        <!-- Submit -->
+        <button
+          (click)="saveSwimmerAndBook()"
+          [disabled]="addingSwimmer()"
+          style="width:100%;padding:.7rem;border-radius:.7rem;border:none;cursor:pointer;font-weight:700;font-size:.95rem;color:#fff;display:flex;align-items:center;justify-content:center;gap:.5rem;background:linear-gradient(135deg,#10b981,#059669);opacity:1;transition:opacity .15s"
+          [style.opacity]="addingSwimmer() ? '0.6' : '1'"
+        >
+          @if (addingSwimmer()) {
+            <svg style="width:18px;height:18px;animation:spin 1s linear infinite" fill="none" viewBox="0 0 24 24">
+              <circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            Saving…
+          } @else if (pendingSlot()) {
+            <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Save &amp; Book Session
+          } @else {
+            <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Child
+          }
+        </button>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ════════════════════════════════════════════════════════
+     4-STEP GUEST BOOKING REQUEST MODAL
+═════════════════════════════════════════════════════════ -->
+@if (showRequestModal()) {
+  <div class="req-overlay" (click)="closeRequestModal()">
+    <div class="req-box" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="req-header">
+        <div class="req-header-icon">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <h2 class="req-title">
+            @if (requestSubmitted()) { Booking Request Sent! }
+            @else if (requestStep() === 1) { Your Details }
+            @else if (requestStep() === 2) { Your Child's Info }
+            @else if (requestStep() === 3) { Pick a Session }
+            @else { Confirm &amp; Send }
+          </h2>
+          @if (!requestSubmitted()) {
+            <p class="req-subtitle">Step {{ requestStep() }} of 4</p>
+          }
+        </div>
+
+        <!-- Step dots (only while filling in) -->
+        @if (!requestSubmitted()) {
+          <div class="req-steps">
+            <span class="req-step-dot" [class.active]="requestStep() >= 1" [class.done]="requestStep() > 1">1</span>
+            <span class="req-step-line" [class.done]="requestStep() > 1"></span>
+            <span class="req-step-dot" [class.active]="requestStep() >= 2" [class.done]="requestStep() > 2">2</span>
+            <span class="req-step-line" [class.done]="requestStep() > 2"></span>
+            <span class="req-step-dot" [class.active]="requestStep() >= 3" [class.done]="requestStep() > 3">3</span>
+            <span class="req-step-line" [class.done]="requestStep() > 3"></span>
+            <span class="req-step-dot" [class.active]="requestStep() >= 4">4</span>
+          </div>
+        }
+
+        <button class="req-close" (click)="closeRequestModal()" aria-label="Close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ── SUCCESS STATE ─────────────────────────────────── -->
+      @if (requestSubmitted()) {
+        <div class="req-success">
+          <div class="req-success-icon">
+            <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#4ade80">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <p class="req-success-title">Request Received!</p>
+          <p class="req-success-body">
+            Your request has been received! We will contact you at
+            <strong style="color:#7dd3fc">{{ requestForm.email }}</strong>
+            with your login credentials.
+          </p>
+          <button class="req-done-btn" (click)="closeRequestModal()">Done</button>
+        </div>
+
+      } @else {
+
+        <!-- ── STEP 1: Personal Info ────────────────────────── -->
+        @if (requestStep() === 1) {
+          <div class="req-body">
+            @if (requestError()) {
+              <div class="req-error-banner">{{ requestError() }}</div>
+            }
+            <div class="req-field">
+              <label class="req-label">Full Name <span class="req-required">*</span></label>
+              <input type="text" class="req-input" placeholder="Your full name"
+                [(ngModel)]="requestForm.name" autocomplete="name" />
+            </div>
+            <div class="req-field">
+              <label class="req-label">Email Address <span class="req-required">*</span></label>
+              <input type="email" class="req-input" placeholder="your@email.com"
+                [(ngModel)]="requestForm.email" autocomplete="email" />
+            </div>
+            <div class="req-field">
+              <label class="req-label">Phone Number <span class="req-required">*</span></label>
+              <input type="tel" class="req-input" placeholder="+961 xx xxx xxx"
+                [(ngModel)]="requestForm.phone" autocomplete="tel" />
+            </div>
+          </div>
+          <div class="req-footer">
+            <button class="req-cancel" (click)="closeRequestModal()">Cancel</button>
+            <button class="req-submit" (click)="nextStep()">
+              Next
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        }
+
+        <!-- ── STEP 2: Child Info ──────────────────────────── -->
+        @if (requestStep() === 2) {
+          <div class="req-body">
+            @if (requestError()) {
+              <div class="req-error-banner">{{ requestError() }}</div>
+            }
+            <div class="req-field">
+              <label class="req-label">Child's Full Name <span class="req-required">*</span></label>
+              <input type="text" class="req-input" placeholder="Child's full name"
+                [(ngModel)]="requestForm.childName" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              <div class="req-field">
+                <label class="req-label">Age <span class="req-required">*</span></label>
+                <input type="number" class="req-input" placeholder="e.g. 8" min="2" max="18"
+                  [(ngModel)]="requestForm.childAge" />
+              </div>
+              <div class="req-field">
+                <label class="req-label">Swimming Level</label>
+                <select class="req-input req-select" [(ngModel)]="requestForm.childLevel">
+                  <option value="">— Select —</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Elite">Elite</option>
+                  <option value="Not sure">Not sure yet</option>
+                </select>
+              </div>
+            </div>
+            @if (requestForm.childLevel) {
+              <div class="req-level-badge">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                Level pre-filled: <strong>{{ requestForm.childLevel }}</strong>
+              </div>
+            }
+          </div>
+          <div class="req-footer">
+            <button class="req-cancel" (click)="prevStep()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              Back
+            </button>
+            <button class="req-submit" (click)="nextStep()">
+              Next
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        }
+
+        <!-- ── STEP 3: Pick a Session ──────────────────────── -->
+        @if (requestStep() === 3) {
+          <div class="req-session-picker-body">
+            @if (requestError()) {
+              <div class="req-error-banner" style="margin:0 1.25rem">{{ requestError() }}</div>
+            }
+
+            @if (loading()) {
+              <div style="text-align:center;padding:2rem;color:#94a3b8">
+                <svg class="w-6 h-6 animate-spin" style="margin:0 auto 0.5rem;display:block;color:#38bdf8" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Loading sessions…
+              </div>
+            } @else if (days().length === 0) {
+              <div style="text-align:center;padding:2rem;color:#94a3b8">
+                No available sessions right now. Check back soon.
+              </div>
+            } @else {
+              <div class="req-slot-scroll">
+                @for (day of days(); track day.date) {
+                  <div class="req-slot-day">
+                    <div class="req-slot-day-header">
+                      <span class="req-slot-day-num">{{ day.date.slice(8) }}</span>
+                      <span class="req-slot-day-label">{{ day.label }}</span>
+                    </div>
+                    <div class="req-slot-grid">
+                      @for (slot of day.slots; track slot.startLocal) {
+                        <button
+                          class="req-slot-pill"
+                          [class.selected]="requestSelectedSlot()?.startUtc === slot.startUtc"
+                          (click)="selectSlot(slot)"
+                        >
+                          <span class="req-slot-time">{{ slot.startLocal }}</span>
+                          <span class="req-slot-dur">45 min</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (requestSelectedSlot(); as picked) {
+              <div class="req-picked-slot">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Selected: <strong>{{ picked.date | slice:8 }} {{ picked.date | slice:5:7 | monthName }} · {{ picked.startLocal }}–{{ picked.endLocal }}</strong>
+              </div>
+            }
+          </div>
+          <div class="req-footer">
+            <button class="req-cancel" (click)="prevStep()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              Back
+            </button>
+            <button class="req-submit" (click)="nextStep()" [disabled]="!requestSelectedSlot()">
+              Next
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        }
+
+        <!-- ── STEP 4: Confirmation ────────────────────────── -->
+        @if (requestStep() === 4) {
+          <div class="req-body">
+            @if (requestError()) {
+              <div class="req-error-banner">{{ requestError() }}</div>
+            }
+
+            <div class="req-confirm-card">
+              <p class="req-confirm-title">Review your request</p>
+              <div class="req-confirm-row">
+                <span class="req-confirm-label">Your Name</span>
+                <span class="req-confirm-value">{{ requestForm.name }}</span>
+              </div>
+              @if (requestForm.phone) {
+                <div class="req-confirm-row">
+                  <span class="req-confirm-label">Phone</span>
+                  <span class="req-confirm-value">{{ requestForm.phone }}</span>
+                </div>
+              }
+              <div class="req-confirm-row">
+                <span class="req-confirm-label">Email</span>
+                <span class="req-confirm-value">{{ requestForm.email }}</span>
+              </div>
+              <div class="req-confirm-divider"></div>
+              <div class="req-confirm-row">
+                <span class="req-confirm-label">Child</span>
+                <span class="req-confirm-value">{{ requestForm.childName }}, age {{ requestForm.childAge }}</span>
+              </div>
+              @if (requestForm.childLevel) {
+                <div class="req-confirm-row">
+                  <span class="req-confirm-label">Level</span>
+                  <span class="req-confirm-value">{{ requestForm.childLevel }}</span>
+                </div>
+              }
+              <div class="req-confirm-divider"></div>
+              @if (requestSelectedSlot(); as s) {
+                <div class="req-confirm-row">
+                  <span class="req-confirm-label">Session</span>
+                  <span class="req-confirm-value">{{ s.date | slice:8 }} {{ s.date | slice:5:7 | monthName }} · {{ s.startLocal }}–{{ s.endLocal }}</span>
+                </div>
+              }
+            </div>
+
+            <p style="font-size:.8rem;color:#64748b;text-align:center;margin-top:.5rem">
+              We'll reach out at <strong style="color:#94a3b8">{{ requestForm.email }}</strong> with your login credentials.
+            </p>
+          </div>
+          <div class="req-footer">
+            <button class="req-cancel" (click)="prevStep()" [disabled]="requestLoading()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              Back
+            </button>
+            <button class="req-submit req-submit-final" (click)="submitGuestRequest()" [disabled]="requestLoading()">
+              @if (requestLoading()) {
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Sending…
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                Send Booking Request
+              }
+            </button>
+          </div>
+        }
+
+      }
+
+    </div>
+  </div>
+}

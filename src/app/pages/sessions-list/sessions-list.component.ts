@@ -29,8 +29,7 @@ export class SessionsListComponent implements OnInit, OnDestroy {
 
   filters = {
     date: '',
-    pool: '',
-    coach: ''
+    pool: ''
   };
 
   private breadcrumbScript: HTMLScriptElement | null = null;
@@ -85,13 +84,11 @@ export class SessionsListComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     const date = this.filters.date;
     const pool = this.filters.pool.toLowerCase();
-    const coach = this.filters.coach.toLowerCase();
 
     this.filteredSessions = this.sessions.filter((s) => {
       const dateMatch = !date || s.date === date;
       const poolMatch = !pool || (s.notes || '').toLowerCase().includes(`pool:${pool}`);
-      const coachMatch = !coach || (s.instructor || '').toLowerCase().includes(coach);
-      return dateMatch && poolMatch && coachMatch;
+      return dateMatch && poolMatch;
     });
   }
 

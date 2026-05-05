@@ -242,8 +242,8 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
         if (swimmer is null)
             return NotFound(new { message = "Swimmer not found." });
 
-        var isAdminOrCoach = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isAdminOrCoach && swimmer.ParentUserId != currentUserId)
+        var isAdmin = User.IsInRole("Admin");
+        if (!isAdmin && swimmer.ParentUserId != currentUserId)
             return Forbid();
 
         var overlaps = await dbContext.TrainingSessions.AnyAsync(
