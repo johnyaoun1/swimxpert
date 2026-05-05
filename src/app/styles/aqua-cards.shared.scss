@@ -1,0 +1,545 @@
+// Shared Aqua Cards UI (used by swimmer-dashboard and parent dashboard children section)
+
+.aqua-page {
+  min-height: 100vh;
+  background: var(--aqua-bg);
+  padding: 1rem 0.75rem 2rem;
+  box-sizing: border-box;
+}
+
+.aqua-page__inner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.aqua-topbar {
+  margin-bottom: 1rem;
+}
+
+.aqua-topbar__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.aqua-back {
+  color: #94a3b8;
+  padding: 0.35rem;
+  border-radius: 10px;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+  }
+}
+
+.aqua-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.aqua-topbar__spacer {
+  width: 2rem;
+}
+
+.aqua-tabs {
+  display: flex;
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.aqua-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.55rem 0.5rem;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+
+  &--active {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.12);
+    box-shadow: inset 0 -2px 0 #f87171;
+  }
+}
+
+.aqua-card {
+  background: var(--aqua-card-bg);
+  border-radius: 20px;
+  box-shadow: var(--aqua-card-shadow);
+  padding: 1.25rem 1.1rem 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+
+  &--idle,
+  &--error {
+    text-align: center;
+    padding: 2rem 1.25rem;
+  }
+
+  &--error {
+    margin-top: 1rem;
+    color: #b91c1c;
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+}
+
+.aqua-muted {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.aqua-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.aqua-arrow {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #e2e8f0;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.aqua-rings {
+  position: relative;
+  width: min(52vw, 220px);
+  height: min(52vw, 220px);
+  flex-shrink: 0;
+}
+
+.aqua-rings__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.aqua-ring-track {
+  stroke: #e8eef5;
+}
+
+.aqua-ring-prog {
+  transition: stroke-dasharray 0.6s ease-out;
+}
+
+.aqua-rings__photo {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 46%;
+  height: 46%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(145deg, #bae6fd, #7dd3fc);
+  border: 4px solid #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.aqua-rings__initial {
+  font-size: clamp(1.75rem, 8vw, 2.5rem);
+  font-weight: 800;
+  color: #0369a1;
+}
+
+.aqua-identity {
+  text-align: center;
+  margin-bottom: 0.65rem;
+}
+
+.aqua-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.aqua-badge {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+
+  &--beginner {
+    color: #fff;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  }
+
+  &--intermediate {
+    color: #fff;
+    background: linear-gradient(135deg, #34d399, #059669);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  }
+
+  &--advanced {
+    color: #fff;
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+  }
+
+  &--elite {
+    color: #fff;
+    background: linear-gradient(135deg, #f87171, #dc2626);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  }
+}
+
+.aqua-focus {
+  margin: 0.65rem auto 0;
+  max-width: 28rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.45;
+
+  &__label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #ef4444;
+    margin-bottom: 0.2rem;
+  }
+
+  &__hl {
+    color: #059669;
+    font-weight: 700;
+  }
+}
+
+.aqua-index {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.aqua-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem 1rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.85rem;
+}
+
+.aqua-dot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+
+  &--beginner {
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+  }
+
+  &--intermediate {
+    background: linear-gradient(135deg, #34d399, #059669);
+  }
+
+  &--advanced {
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+  }
+}
+
+.aqua-accordions {
+  max-height: min(42vh, 280px);
+  overflow-y: auto;
+  padding-right: 2px;
+  margin-bottom: 1rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.75rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+  }
+}
+
+.aqua-acc {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e2e8f0;
+
+  &--beginner .aqua-acc__head {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+  }
+
+  &--intermediate .aqua-acc__head {
+    background: linear-gradient(135deg, #34d399, #059669);
+  }
+
+  &--advanced .aqua-acc__head {
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+  }
+}
+
+.aqua-acc__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.aqua-acc__title {
+  flex: 1;
+}
+
+.aqua-acc__pct {
+  font-weight: 800;
+  opacity: 0.95;
+}
+
+.aqua-acc__chev {
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+
+  &--open {
+    transform: rotate(-180deg);
+  }
+}
+
+.aqua-acc__body {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0.5rem 0.55rem;
+  background: #f8fafc;
+}
+
+.aqua-skill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.38rem 0.35rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.aqua-skill__star {
+  flex-shrink: 0;
+  font-size: 1rem;
+  color: #cbd5e1;
+  line-height: 1;
+
+  &--on {
+    color: #eab308;
+    text-shadow: 0 0 1px rgba(234, 179, 8, 0.5);
+  }
+}
+
+.aqua-skill__name {
+  font-weight: 600;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.68rem;
+}
+
+.aqua-acc__empty {
+  padding: 0.75rem 0;
+}
+
+.aqua-sessions {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.85rem;
+}
+
+.aqua-sessions__title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.aqua-sessions__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aqua-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.aqua-session-row__id {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.aqua-session-row__meta {
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.aqua-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.aqua-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0284c7;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.aqua-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s;
+
+  &:hover {
+    opacity: 0.92;
+  }
+
+  &--primary {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: #fff;
+  }
+
+  &--secondary {
+    background: #f1f5f9;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+  }
+
+  &--ghost {
+    background: transparent;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+  }
+
+  &--danger-outline {
+    background: #fff;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.65rem;
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 480px) {
+  .aqua-page {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .aqua-card {
+    padding: 1.5rem 1.35rem 1.15rem;
+  }
+
+  .aqua-title {
+    font-size: 1.35rem;
+  }
+
+  .aqua-tab {
+    font-size: 0.875rem;
+    padding: 0.65rem 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .aqua-arrow {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.35rem;
+  }
+
+  .aqua-rings {
+    width: min(48vw, 180px);
+    height: min(48vw, 180px);
+  }
+}
