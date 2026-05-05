@@ -7,7 +7,7 @@ import { AuthService, Child } from '../../services/auth.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
 import { AttendanceService, Attendance } from '../../services/attendance.service';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { ProfilePictureUploadComponent } from '../../shared/profile-picture-upload/profile-picture-upload.component';
 import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 
@@ -21,11 +21,14 @@ import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 export class DashboardComponent implements OnInit {
   user = this.authService.currentUser;
   pendingSessions = signal<Attendance[]>([]);
+  readonly registrationsByChildId = signal<Record<string, Attendance[]>>({});
+  /** Accordion open levels keyed by child id */
+  readonly expandedLevelsByChildId = signal<Record<string, Set<number>>>({});
+  readonly ringRadii = { outer: 46, mid: 37, inner: 28 };
   showAddChildForm = signal(false);
   showProgressForm = signal(false);
   showEditChildForm = signal(false);
   selectedChildId = signal<string | null>(null);
-  selectedChildForProfile = signal<Child | null>(null);
   selectedChildForEdit = signal<Child | null>(null);
   levels = this.swimLevelsService.getLevels();
 
@@ -78,7 +81,10 @@ export class DashboardComponent implements OnInit {
         return;
       }
       this.authService.syncChildrenFromApi().subscribe({
-        next: () => this.loadPendingSessions()
+        next: () => {
+          this.loadPendingSessions();
+          this.loadSessionsForInProgressChildren();
+        }
       });
     });
   }
@@ -106,7 +112,9 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.childForm.reset({ level: 1 });
         this.showAddChildForm.set(false);
-        this.authService.syncChildrenFromApi().subscribe();
+        this.authService.syncChildrenFromApi().subscribe({
+          next: () => this.loadSessionsForInProgressChildren()
+        });
       },
       error: (err) => {
         this.addChildError.set(err?.message || 'Failed to add child. Please try again.');
@@ -152,19 +160,129 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  private loadSessionsForInProgressChildren(): void {
+    const kids = this.filteredChildren();
+    if (!kids.length) {
+      this.registrationsByChildId.set({});
+      return;
+    }
+    const now = new Date();
+    const reqs = kids.map((c) =>
+      this.attendanceService.getMySessions(c.id).pipe(
+        catchError(() => of([] as Attendance[])),
+        map((rows) => ({
+          id: c.id,
+          rows: rows.filter((r) => new Date(r.date) >= now)
+        }))
+      )
+    );
+    forkJoin(reqs).subscribe({
+      next: (results) => {
+        const map: Record<string, Attendance[]> = {};
+        for (const r of results) map[r.id] = r.rows;
+        this.registrationsByChildId.set(map);
+      },
+      error: () => {}
+    });
+  }
+
+  /** In-progress swimmers only (Level &lt; 4). */
+  filteredChildren(): Child[] {
+    const kids = this.user()?.children ?? [];
+    return kids.filter((c) => (c.level ?? 1) < 4);
+  }
+
+  gradientIdSafe(childId: string): string {
+    return childId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  }
+
+  sessionsForChild(childId: string): Attendance[] {
+    return this.registrationsByChildId()[childId] ?? [];
+  }
+
+  toggleSection(childId: string, level: number): void {
+    const prev = this.expandedLevelsByChildId();
+    const set = new Set(prev[childId] ?? []);
+    if (set.has(level)) set.delete(level);
+    else set.add(level);
+    this.expandedLevelsByChildId.set({ ...prev, [childId]: set });
+  }
+
+  sectionExpanded(childId: string, level: number): boolean {
+    return this.expandedLevelsByChildId()[childId]?.has(level) ?? false;
+  }
+
+  ringDash(pct: number, r: number): string {
+    const c = 2 * Math.PI * r;
+    const p = Math.min(100, Math.max(0, pct)) / 100;
+    return `${p * c} ${c}`;
+  }
+
+  ringStats(child: Child): { beginner: number; intermediate: number; advanced: number } {
+    const blocks = child.skillLevels ?? [];
+    let begSum = 0;
+    let begN = 0;
+    let inter = 0;
+    let adv = 0;
+    for (const b of blocks) {
+      if (b.level <= 2) {
+        begSum += b.completionPercent;
+        begN++;
+      } else if (b.level === 3) {
+        inter = b.completionPercent;
+      } else if (b.level >= 4) {
+        adv = Math.max(adv, b.completionPercent);
+      }
+    }
+    return {
+      beginner: begN ? Math.round(begSum / begN) : 0,
+      intermediate: inter,
+      advanced: adv
+    };
+  }
+
+  sectionHeading(level: number): string {
+    if (level <= 2) return 'Beginner skills';
+    if (level === 3) return 'Intermediate skills';
+    return 'Advanced skills';
+  }
+
+  headerTone(level: number): 'beginner' | 'intermediate' | 'advanced' {
+    if (level <= 2) return 'beginner';
+    if (level === 3) return 'intermediate';
+    return 'advanced';
+  }
+
+  levelBadgeClass(level: number): string {
+    if (level <= 2) return 'aqua-badge aqua-badge--beginner';
+    if (level === 3) return 'aqua-badge aqua-badge--intermediate';
+    if (level === 4) return 'aqua-badge aqua-badge--advanced';
+    return 'aqua-badge aqua-badge--elite';
+  }
+
+  levelFocus(child: Child): string {
+    return getLevelFocus(child.level);
+  }
+
+  cancelRegistration(childId: string, registrationId: string): void {
+    this.attendanceService.cancelRegistration(registrationId).subscribe({
+      next: () => {
+        const prev = this.registrationsByChildId();
+        const list = prev[childId] ?? [];
+        this.registrationsByChildId.set({
+          ...prev,
+          [childId]: list.filter((r) => r.id !== registrationId)
+        });
+      },
+      error: () => {}
+    });
+  }
+
   handleImageError(event: Event, childName: string): void {
     const img = event.target as HTMLImageElement;
     const firstLetter = childName.charAt(0).toUpperCase();
     const svgData = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23e5e7eb' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='40'%3E${firstLetter}%3C/text%3E%3C/svg%3E`;
     img.src = svgData;
-  }
-
-  openChildProfile(child: Child): void {
-    this.selectedChildForProfile.set(child);
-  }
-
-  closeChildProfile(): void {
-    this.selectedChildForProfile.set(null);
   }
 
   openEditChildProfile(child: Child): void {
@@ -198,6 +316,7 @@ export class DashboardComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.closeEditChildForm();
+        this.loadSessionsForInProgressChildren();
       },
       error: (err) => {
         this.editChildError.set(err?.message || 'Failed to update profile.');
@@ -220,6 +339,5 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  getLevelFocus = getLevelFocus;
   getChildInitial = getChildInitial;
 }
