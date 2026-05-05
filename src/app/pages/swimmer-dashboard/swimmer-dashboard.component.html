@@ -1,28 +1,183 @@
-<section class="section-padding bg-gray-50 min-h-screen">
-  <div class="container mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Swimmer Dashboard</h1>
-      <a routerLink="/sessions/available" class="btn-secondary">Browse & Book Sessions</a>
-    </div>
+<section class="aqua-page">
+  <div class="aqua-page__inner swimmer-aqua-stack">
+    <header class="aqua-topbar">
+      <div class="aqua-topbar__row">
+        <a routerLink="/dashboard" class="aqua-back" aria-label="Back to dashboard">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </a>
+        <h1 class="aqua-title">Aqua Cards</h1>
+        <span class="aqua-topbar__spacer"></span>
+      </div>
+      <p class="text-center text-sm mb-0 aqua-muted">In progress (Level 1–3) — one card per swimmer</p>
+    </header>
 
     @if (loading) {
-      <div class="premium-container">Loading...</div>
-    } @else {
-      <div class="space-y-3">
-        @for (r of registrations; track r.id) {
-          <div class="premium-container flex items-center justify-between">
-            <div>
-              <p class="font-semibold">Session #{{ r.sessionId }}</p>
-              <p class="text-sm text-gray-600">{{ r.date }} • status: {{ r.status }}</p>
-            </div>
-            <button class="btn-secondary" (click)="cancelRegistration(r.id)">Cancel</button>
-          </div>
+      <div class="aqua-card aqua-card--idle">
+        <p class="aqua-muted">Loading swimmer profile…</p>
+      </div>
+    } @else if (filteredChildren().length === 0) {
+      <div class="aqua-card aqua-card--idle">
+        @if ((authService.currentUser()?.children ?? []).length === 0) {
+          <p class="aqua-muted mb-3">No swimmers on your account yet.</p>
+          <a routerLink="/dashboard" class="aqua-btn aqua-btn--primary">Go to dashboard to add a child</a>
+        } @else {
+          <p class="aqua-muted mb-3">No swimmers in progress (under Level 4). Aqua Cards here only show swimmers Level 1–3.</p>
+          <a routerLink="/dashboard" class="aqua-btn aqua-btn--primary">Parent dashboard</a>
         }
       </div>
+    } @else {
+      @for (child of filteredChildren(); track child.id) {
+      <article class="aqua-card">
+        <div class="aqua-hero swimmer-aqua-hero--single">
+          <div class="aqua-rings" aria-hidden="true">
+            <svg class="aqua-rings__svg" viewBox="0 0 100 100">
+              <defs>
+                <linearGradient [attr.id]="'swimAquaAdv-' + gradientIdSafe(child.id)" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fb923c"/>
+                  <stop offset="100%" stop-color="#ea580c"/>
+                </linearGradient>
+                <linearGradient [attr.id]="'swimAquaMid-' + gradientIdSafe(child.id)" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#34d399"/>
+                  <stop offset="100%" stop-color="#059669"/>
+                </linearGradient>
+                <linearGradient [attr.id]="'swimAquaInn-' + gradientIdSafe(child.id)" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#38bdf8"/>
+                  <stop offset="100%" stop-color="#2563eb"/>
+                </linearGradient>
+              </defs>
+              <g transform="rotate(-90 50 50)">
+                <circle cx="50" cy="50" [attr.r]="ringRadii.outer" fill="none" class="aqua-ring-track" stroke-width="5"/>
+                <circle cx="50" cy="50" [attr.r]="ringRadii.mid" fill="none" class="aqua-ring-track" stroke-width="5"/>
+                <circle cx="50" cy="50" [attr.r]="ringRadii.inner" fill="none" class="aqua-ring-track" stroke-width="5"/>
+                <circle
+                  cx="50" cy="50"
+                  [attr.r]="ringRadii.outer"
+                  fill="none"
+                  [attr.stroke]="'url(#swimAquaAdv-' + gradientIdSafe(child.id) + ')'"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="ringDash(ringStats(child).advanced, ringRadii.outer)"
+                  class="aqua-ring-prog"
+                />
+                <circle
+                  cx="50" cy="50"
+                  [attr.r]="ringRadii.mid"
+                  fill="none"
+                  [attr.stroke]="'url(#swimAquaMid-' + gradientIdSafe(child.id) + ')'"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="ringDash(ringStats(child).intermediate, ringRadii.mid)"
+                  class="aqua-ring-prog"
+                />
+                <circle
+                  cx="50" cy="50"
+                  [attr.r]="ringRadii.inner"
+                  fill="none"
+                  [attr.stroke]="'url(#swimAquaInn-' + gradientIdSafe(child.id) + ')'"
+                  stroke-width="5"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="ringDash(ringStats(child).beginner, ringRadii.inner)"
+                  class="aqua-ring-prog"
+                />
+              </g>
+            </svg>
+
+            <div class="aqua-rings__photo">
+              @if (child.profilePicture) {
+                <img
+                  [src]="child.profilePicture"
+                  [alt]="child.name"
+                  (error)="handleImageError($event, child.name)"
+                />
+              } @else {
+                <span class="aqua-rings__initial">{{ getChildInitial(child.name) }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="aqua-identity">
+          <p class="aqua-name">{{ child.name }}</p>
+          <span [class]="levelBadgeClass(child.level)">Level {{ child.level }}</span>
+          @if (levelFocus(child)) {
+            <p class="aqua-focus">
+              <span class="aqua-focus__label">Skill set</span>
+              The focus of Level {{ child.level }} is
+              <strong class="aqua-focus__hl">{{ levelFocus(child) }}</strong>
+            </p>
+          }
+        </div>
+
+        <div class="aqua-legend">
+          <span><i class="aqua-dot aqua-dot--beginner"></i>Beginner {{ ringStats(child).beginner }}%</span>
+          <span><i class="aqua-dot aqua-dot--intermediate"></i>Intermediate {{ ringStats(child).intermediate }}%</span>
+          <span><i class="aqua-dot aqua-dot--advanced"></i>Advanced {{ ringStats(child).advanced }}%</span>
+        </div>
+
+        <div class="aqua-accordions">
+          @for (levelBlock of child.skillLevels || []; track levelBlock.level) {
+            <div [class]="'aqua-acc aqua-acc--' + headerTone(levelBlock.level)">
+              <button
+                type="button"
+                class="aqua-acc__head"
+                (click)="toggleSection(child.id, levelBlock.level)"
+                [attr.aria-expanded]="sectionExpanded(child.id, levelBlock.level)"
+              >
+                <span class="aqua-acc__title">{{ sectionHeading(levelBlock.level) }}</span>
+                <span class="aqua-acc__pct">{{ levelBlock.completionPercent }}%</span>
+                <span class="aqua-acc__chev" [class.aqua-acc__chev--open]="sectionExpanded(child.id, levelBlock.level)">⌄</span>
+              </button>
+              @if (sectionExpanded(child.id, levelBlock.level)) {
+                <ul class="aqua-acc__body">
+                  @for (skill of levelBlock.skills; track skill.name) {
+                    <li class="aqua-skill">
+                      <span class="aqua-skill__star" [class.aqua-skill__star--on]="skill.isUnlocked">
+                        {{ skill.isUnlocked ? '★' : '☆' }}
+                      </span>
+                      <span class="aqua-skill__name">{{ skill.name }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+          @if (!child.skillLevels || child.skillLevels.length === 0) {
+            <p class="aqua-muted aqua-acc__empty">Skill breakdown will appear here after your coach syncs progress.</p>
+          }
+        </div>
+
+        <div class="aqua-sessions">
+          <h2 class="aqua-sessions__title">Upcoming sessions</h2>
+          @if (sessionsForChild(child.id).length === 0) {
+            <p class="aqua-muted text-sm">No upcoming bookings for {{ child.name }}.</p>
+            <a routerLink="/sessions/available" class="aqua-btn aqua-btn--secondary mt-2 inline-block">Browse sessions</a>
+          } @else {
+            <ul class="aqua-sessions__list">
+              @for (r of sessionsForChild(child.id); track r.id) {
+                <li class="aqua-session-row">
+                  <div>
+                    <p class="aqua-session-row__id">Session #{{ r.sessionId }}</p>
+                    <p class="aqua-session-row__meta">{{ r.date }} · {{ r.status }}</p>
+                  </div>
+                  <button type="button" class="aqua-btn aqua-btn--danger-outline" (click)="cancelRegistration(child.id, r.id)">Cancel</button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <footer class="aqua-card__footer">
+          <a routerLink="/dashboard" class="aqua-link">Full parent dashboard</a>
+          <a routerLink="/sessions/available" class="aqua-link">Book a session</a>
+        </footer>
+      </article>
+      }
     }
 
     @if (errorMessage) {
-      <div class="premium-container text-red-600 mt-4">{{ errorMessage }}</div>
+      <div class="aqua-card aqua-card--error" role="alert">{{ errorMessage }}</div>
     }
   </div>
 </section>
