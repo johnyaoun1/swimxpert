@@ -268,6 +268,23 @@ export class ApiService {
     ).pipe(catchError(this.handleError));
   }
 
+  /** Decrypt admin AES backup of login password (requires server ADMIN_PASSWORD_REVEAL_KEY). */
+  revealClientLoginPassword(userId: number): Observable<{
+    vaultEnabled: boolean;
+    password: string | null;
+    message?: string;
+  }> {
+    return this.http.post<{
+      vaultEnabled: boolean;
+      password: string | null;
+      message?: string;
+    }>(
+      `${this.apiUrl}/admin/users/${userId}/reveal-password`,
+      {},
+      { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
   // ========== SWIMMERS / SKILLS ENDPOINTS ==========
 
   getMySwimmers(): Observable<any[]> {
