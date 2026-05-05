@@ -1,4 +1,33 @@
 // Ensure admin content is on top and all controls are clickable
+@use '../../styles/aqua-cards.shared' as *;
+
+.admin-aqua-skills {
+  .admin-aqua-accordions {
+    max-height: min(52vh, 380px);
+    margin-bottom: 0.5rem;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 0.65rem;
+  }
+}
+
+.admin-aqua-skill-toggle {
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
 .admin-dashboard-root {
   position: relative;
   z-index: 0;
