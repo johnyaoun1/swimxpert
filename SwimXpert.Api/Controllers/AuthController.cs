@@ -38,6 +38,8 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         if (string.IsNullOrWhiteSpace(fullName))
             return BadRequest(new { message = "Full name is required." });
 
+        var phone = SanitizePhone(request.Phone!);
+
         var verificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var verificationHash = HashToken(verificationToken);
 
@@ -52,7 +54,8 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             IsApproved = false,  // self-registered accounts require admin approval
             EmailVerified = isDev,   // auto-verified in dev so demo signups work immediately
             EmailVerificationTokenHash = isDev ? null : verificationHash,
-            EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24)
+            EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24),
+            Phone = phone
         };
         if (passwordRevealVault.TryEncrypt(request.Password!, out var enc))
             user.AdminPasswordRevealCipher = enc;
@@ -419,6 +422,11 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             return (false, "Password is required.");
         if (string.IsNullOrWhiteSpace(request.FullName))
             return (false, "Full name is required.");
+        if (string.IsNullOrWhiteSpace(request.Phone))
+            return (false, "Phone number is required.");
+        var phoneTrimmed = request.Phone.Trim();
+        if (phoneTrimmed.Length > 30)
+            return (false, "Phone number is too long.");
         if (request.Email.Length > 255)
             return (false, "Email is too long.");
         if (request.FullName.Length > 255)
@@ -437,6 +445,13 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         if (string.IsNullOrWhiteSpace(fullName)) return "";
         var normalized = Regex.Replace(fullName.Trim(), @"\s+", " ");
         return normalized.Length > 255 ? normalized[..255] : normalized;
+    }
+
+    private static string SanitizePhone(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return "";
+        var t = phone.Trim();
+        return t.Length > 30 ? t[..30] : t;
     }
 
     [Authorize]
@@ -500,6 +515,8 @@ public class RegisterRequest
     public string? Password { get; set; }
     [MaxLength(255)]
     public string? FullName { get; set; }
+    [MaxLength(30)]
+    public string? Phone { get; set; }
 }
 
 public record AuthResponse(int Id, string Email, string FullName, string Role);

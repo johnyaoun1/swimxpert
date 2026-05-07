@@ -88,8 +88,8 @@ export class AuthService {
     );
   }
 
-  signup(email: string, password: string, name: string): Observable<AuthApiResponse> {
-    return this.register(email, password, name);
+  signup(email: string, password: string, name: string, phone: string): Observable<AuthApiResponse> {
+    return this.register(email, password, name, phone);
   }
 
   fetchMe(): Observable<boolean> {

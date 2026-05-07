@@ -28,7 +28,8 @@ export class SignupComponent implements OnInit {
     this.signupForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      phone: ['', [Validators.required, Validators.maxLength(30)]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
@@ -60,8 +61,8 @@ export class SignupComponent implements OnInit {
     if (this.signupForm.valid) {
       this.loading = true;
       this.errorMessage = '';
-      const { name, email, password } = this.signupForm.value;
-      this.authService.signup(email, password, name).subscribe({
+      const { name, email, phone, password } = this.signupForm.value;
+      this.authService.signup(email, password, name, phone.trim()).subscribe({
         next: (response) => {
           if (response?.id != null) {
             this.redirectAfterAuth();
