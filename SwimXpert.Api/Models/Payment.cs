@@ -6,8 +6,13 @@ public class Payment
 {
     public int Id { get; set; }
 
-    public int UserId { get; set; }
-    public User User { get; set; } = null!;
+    /// <summary>Optional after the user row is removed (e.g. rejected signup); payment row kept for audit.</summary>
+    public int? UserId { get; set; }
+    public User? User { get; set; }
+
+    /// <summary>Set for client checkout while the booking awaits admin confirmation.</summary>
+    public int? AttendanceId { get; set; }
+    public Attendance? Attendance { get; set; }
 
     [Range(0.01, 1000000)]
     public decimal Amount { get; set; }
@@ -18,7 +23,7 @@ public class Payment
     public string Method { get; set; } = "Cash";
 
     [MaxLength(30)]
-    public string Status { get; set; } = "Completed"; // Completed | Pending | Failed
+    public string Status { get; set; } = "Completed"; // Completed | Pending | Failed | Refunded
 
     [MaxLength(100)]
     public string? Reference { get; set; }

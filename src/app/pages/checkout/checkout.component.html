@@ -2,13 +2,26 @@
 @if (receipt(); as r) {
   <div class="co-page">
     <div class="co-receipt">
-      <div class="co-receipt-check">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-        </svg>
-      </div>
-      <h1 class="co-receipt-title">Payment Confirmed</h1>
-      <p class="co-receipt-sub">Your session has been booked and your receipt is below.</p>
+      @if (r.paymentStatus === 'Pending') {
+        <div class="co-receipt-check co-receipt-check--pending">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h1 class="co-receipt-title">Payment on hold</h1>
+        <p class="co-receipt-sub">
+          Your card details were received. The amount stays pending until an admin approves your account (if you are new) and confirms this booking.
+          If the booking is declined, this hold is released (with a live payment processor, that is a refund to the card).
+        </p>
+      } @else {
+        <div class="co-receipt-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h1 class="co-receipt-title">Payment Confirmed</h1>
+        <p class="co-receipt-sub">Your session has been booked and your receipt is below.</p>
+      }
 
       <div class="co-receipt-card">
         <div class="co-receipt-row">
@@ -38,7 +51,7 @@
           <span class="co-receipt-val">{{ r.cardHolder }} •••• {{ r.cardLastFour }}</span>
         </div>
         <div class="co-receipt-row co-receipt-total">
-          <span class="co-receipt-label">Total Paid</span>
+          <span class="co-receipt-label">{{ r.paymentStatus === 'Pending' ? 'Amount (pending approval)' : 'Total Paid' }}</span>
           <span class="co-receipt-amount">${{ r.amount | number:'1.2-2' }}</span>
         </div>
       </div>

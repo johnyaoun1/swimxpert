@@ -31,6 +31,8 @@
                     [class.text-yellow-700]="p.status === 'Pending'"
                     [class.bg-red-100]="p.status === 'Failed'"
                     [class.text-red-700]="p.status === 'Failed'"
+                    [class.bg-slate-100]="p.status === 'Refunded'"
+                    [class.text-slate-700]="p.status === 'Refunded'"
                   >{{ p.status || 'Completed' }}</span>
                 </td>
               </tr>

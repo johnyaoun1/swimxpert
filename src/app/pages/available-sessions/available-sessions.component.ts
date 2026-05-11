@@ -44,7 +44,6 @@ export class AvailableSessionsComponent implements OnInit {
   selectedSwimmerId = signal<string>('');
   isLoggedIn        = signal(false);
   swimmers          = signal<SwimmerOption[]>([]);
-  bookingInProgress = signal(false);
 
   // ── Add-swimmer modal (logged-in client with no swimmer yet) ─
   showAddSwimmerModal = signal(false);
@@ -123,8 +122,8 @@ export class AvailableSessionsComponent implements OnInit {
     });
   }
 
-  // ── Logged-in client — book directly → Pending ───────────
-  book(slot: AvailableSlot): void {
+  // ── Logged-in client — checkout (session fee + pending confirmation) ──
+  goToCheckout(slot: AvailableSlot): void {
     if (this.swimmers().length === 0) {
       this.openAddSwimmerModal(slot);
       return;
@@ -134,19 +133,15 @@ export class AvailableSessionsComponent implements OnInit {
       this.showToast('Please select a swimmer first.', 'error');
       return;
     }
-    this.bookingInProgress.set(true);
-    this.apiService.bookSlot(slot.startUtc, swimmerId).subscribe({
-      next: (res) => {
-        this.bookingInProgress.set(false);
-        this.days.update(days => days.map(d => ({
-          ...d,
-          slots: d.slots.filter(s => s.startUtc !== slot.startUtc)
-        })).filter(d => d.slots.length > 0));
-        this.showToast(res.message || 'Booking submitted — awaiting admin confirmation.', 'success');
-      },
-      error: (err) => {
-        this.bookingInProgress.set(false);
-        this.showToast(err?.message || 'Failed to book. Please try again.', 'error');
+    const swimmer = this.swimmers().find(s => s.id === String(swimmerId));
+    this.router.navigate(['/checkout'], {
+      queryParams: {
+        startUtc: slot.startUtc,
+        swimmerId,
+        date: slot.date,
+        startLocal: slot.startLocal,
+        endLocal: slot.endLocal,
+        swimmerName: swimmer?.name ?? ''
       }
     });
   }
@@ -345,7 +340,7 @@ export class AvailableSessionsComponent implements OnInit {
         const slot = this.pendingSlot();
         if (slot) {
           this.pendingSlot.set(null);
-          this.book(slot);
+          this.goToCheckout(slot);
         }
       },
       error: (err: any) => {

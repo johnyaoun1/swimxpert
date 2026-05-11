@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 
 interface CheckoutReceipt {
   success: boolean;
+  paymentStatus: 'Completed' | 'Pending';
   receiptId: string;
   date: string;
   startLocal: string;
@@ -16,6 +17,7 @@ interface CheckoutReceipt {
   cardLastFour: string;
   cardHolder: string;
   swimmerName: string;
+  message?: string;
 }
 
 @Component({

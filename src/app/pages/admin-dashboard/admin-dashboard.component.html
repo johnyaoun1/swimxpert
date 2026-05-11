@@ -275,6 +275,10 @@
         </h2>
       </div>
 
+      @if (bookingActionError()) {
+        <p class="text-sm text-red-600 mb-3 px-1">{{ bookingActionError() }}</p>
+      }
+
       @if (pendingBookings().length === 0) {
         <p class="text-gray-500 text-sm py-2">No pending bookings. All caught up!</p>
       } @else {
@@ -286,7 +290,7 @@
                 <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Child</th>
                 <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
                 <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Time</th>
-                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Payment ($30)</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Payment</th>
                 <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
@@ -296,6 +300,9 @@
                   <td class="py-3 px-4">
                     <p class="font-semibold text-gray-800 text-sm">{{ b.client.fullName }}</p>
                     <p class="text-xs text-gray-500">{{ b.client.email }}</p>
+                    @if (b.client.isApproved === false) {
+                      <p class="text-xs font-medium text-amber-700 mt-1">Account not approved yet — accept this client first, then approve the booking.</p>
+                    }
                   </td>
                   <td class="py-3 px-4">
                     <p class="text-sm font-medium text-gray-700">{{ b.swimmer.name }}</p>
@@ -311,7 +318,13 @@
                   </td>
                   <!-- Payment column -->
                   <td class="py-3 px-4">
-                    @if (getBookingPaymentState(b.id) === 'done') {
+                    @if (onlineCheckoutPending(b)) {
+                      <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
+                        title="Completes automatically when you approve the booking (after the account is approved).">
+                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Card on hold — ${{ (b.onlinePayment?.amount ?? b.sessionPrice ?? 30) | number:'1.2-2' }}
+                      </span>
+                    } @else if (getBookingPaymentState(b.id) === 'done') {
                       <span class="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         Paid
@@ -347,9 +360,10 @@
                     <div class="flex items-center gap-2">
                       <button
                         (click)="approveBooking(b.id)"
-                        [disabled]="isProcessingBooking(b.id)"
+                        [disabled]="isProcessingBooking(b.id) || b.client.isApproved === false"
                         class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
                         style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 2px 8px rgba(34,197,94,.3)"
+                        [attr.title]="b.client.isApproved === false ? 'Approve the client account first' : null"
                         aria-label="Approve booking"
                       >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,6 +382,107 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                         Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Contact form messages (Contact Us page) -->
+    <div class="premium-container mb-8">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            Contact messages
+            @if (contactFormMessages().length > 0) {
+              <span class="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-xs font-bold text-white"
+                style="background:#0284c7">{{ contactFormMessages().length }}</span>
+            }
+          </h2>
+          <p class="text-sm text-gray-500 mt-0.5">Messages sent from your website’s Contact page (stored as leads).</p>
+        </div>
+        @if (leads().length > 0) {
+          <button
+            type="button"
+            (click)="exportLeadsCsv()"
+            class="text-sm font-semibold px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+          >
+            Export all leads (CSV)
+          </button>
+        }
+      </div>
+
+      @if (contactFormMessages().length === 0) {
+        <p class="text-gray-500 text-sm py-6 text-center rounded-xl bg-sky-50/50 border border-sky-100">No contact messages yet.</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full" aria-label="Contact form messages">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Message</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Received</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of contactFormMessages(); track row.id) {
+                <tr class="border-b border-gray-100 hover:bg-sky-50/40 transition-colors">
+                  <td class="py-3 px-4 font-semibold text-gray-800">{{ row.name }}</td>
+                  <td class="py-3 px-4 text-sm">
+                    @if (row.email) {
+                      <a class="text-sky-700 underline hover:text-sky-900 break-all" [href]="'mailto:' + row.email">{{ row.email }}</a>
+                    } @else {
+                      <span class="text-gray-400">—</span>
+                    }
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-700 max-w-md">
+                    <span class="whitespace-pre-wrap break-words">{{ row.sourceAction || '—' }}</span>
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-500 whitespace-nowrap">{{ formatLeadDate(row.createdAt) }}</td>
+                  <td class="py-3 px-4">
+                    @if (row.isContacted) {
+                      <span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">Responded</span>
+                      @if (row.contactedAt) {
+                        <span class="block text-[11px] text-gray-400 mt-0.5">{{ formatLeadDate(row.contactedAt) }}</span>
+                      }
+                    } @else {
+                      <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">New</span>
+                    }
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        (click)="toggleLeadContacted(row.id, !row.isContacted)"
+                        [disabled]="updatingLeadId() === row.id"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-300 text-slate-800 hover:bg-slate-100 disabled:opacity-50"
+                      >
+                        @if (updatingLeadId() === row.id) {
+                          <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                        }
+                        {{ row.isContacted ? 'Mark new' : 'Mark responded' }}
+                      </button>
+                      <button
+                        type="button"
+                        (click)="deleteLead(row.id, 'contact')"
+                        [disabled]="deletingLeadId() === row.id"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
+                        style="background:linear-gradient(135deg,#dc2626,#b91c1c)"
+                        [attr.aria-label]="'Delete message from ' + row.name"
+                      >
+                        @if (deletingLeadId() === row.id) {
+                          <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                        } @else {
+                          Delete
+                        }
                       </button>
                     </div>
                   </td>
@@ -519,7 +634,7 @@
                           Create Account
                         </button>
                         <button
-                          (click)="deleteLead(lead.id)"
+                          (click)="deleteLead(lead.id, 'booking')"
                           [disabled]="deletingLeadId() === lead.id"
                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
                           style="background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 2px 8px rgba(220,38,38,.3)"

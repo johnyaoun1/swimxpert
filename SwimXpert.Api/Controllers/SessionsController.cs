@@ -240,29 +240,51 @@ public class SessionsController(
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetPendingBookings()
     {
-        var pending = await dbContext.Attendances
-            .Where(a => a.BookingStatus == "Pending" && a.Swimmer.ParentUser!.IsApproved)
+        var rows = await dbContext.Attendances
+            .Where(a => a.BookingStatus == "Pending")
             .Include(a => a.TrainingSession)
             .Include(a => a.Swimmer)
                 .ThenInclude(sw => sw.ParentUser)
-            .OrderBy(a => a.TrainingSession.StartTime)
-            .Select(a => new
+            .OrderBy(a => a.TrainingSession!.StartTime)
+            .ToListAsync();
+
+        var ids = rows.Select(a => a.Id).ToList();
+        var payByAtt = await dbContext.Payments
+            .AsNoTracking()
+            .Where(p => p.AttendanceId.HasValue && ids.Contains(p.AttendanceId.Value))
+            .GroupBy(p => p.AttendanceId!.Value)
+            .ToDictionaryAsync(g => g.Key, g => g.First());
+
+        var pending = rows.Select(a =>
+        {
+            payByAtt.TryGetValue(a.Id, out var op);
+            return new
             {
                 a.Id,
                 a.BookingStatus,
                 swimmer = new { a.Swimmer.Id, a.Swimmer.Name, a.Swimmer.Level },
-                client  = new { a.Swimmer.ParentUser!.Id, a.Swimmer.ParentUser.FullName, a.Swimmer.ParentUser.Email },
+                client = new
+                {
+                    a.Swimmer.ParentUser!.Id,
+                    a.Swimmer.ParentUser.FullName,
+                    a.Swimmer.ParentUser.Email,
+                    isApproved = a.Swimmer.ParentUser.IsApproved
+                },
                 session = new
                 {
-                    a.TrainingSession.Id,
+                    a.TrainingSession!.Id,
                     a.TrainingSession.Title,
                     startTime = a.TrainingSession.StartTime,
                     endTime   = a.TrainingSession.EndTime
                 },
+                sessionPrice = a.TrainingSession.Price,
                 a.SessionDate,
-                a.CreatedAt
-            })
-            .ToListAsync();
+                a.CreatedAt,
+                onlinePayment = op == null
+                    ? null
+                    : new { op.Status, op.Amount, op.Method }
+            };
+        }).ToList();
 
         return Ok(pending);
     }
@@ -274,8 +296,28 @@ public class SessionsController(
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ApproveBooking(int id)
     {
-        var attendance = await dbContext.Attendances.FindAsync(id);
-        if (attendance is null) return NotFound(new { message = "Booking not found." });
+        var attendance = await dbContext.Attendances
+            .Include(a => a.Swimmer).ThenInclude(s => s.ParentUser)
+            .Include(a => a.TrainingSession)
+            .FirstOrDefaultAsync(a => a.Id == id);
+        if (attendance is null)
+            return NotFound(new { message = "Booking not found." });
+
+        if (attendance.Swimmer.ParentUser is null || !attendance.Swimmer.ParentUser.IsApproved)
+            return BadRequest(new { message = "Approve the client account before confirming this booking." });
+
+        var heldPayments = await dbContext.Payments
+            .Where(p => p.AttendanceId == id && p.Status == "Pending")
+            .ToListAsync();
+        foreach (var p in heldPayments)
+        {
+            p.Status = "Completed";
+            p.PaymentDate = DateTime.UtcNow;
+        }
+
+        if (heldPayments.Count > 0 && attendance.TrainingSession is not null)
+            attendance.TrainingSession.IsPaid = true;
+
         attendance.BookingStatus = "Confirmed";
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("BookingApproved", "Attendance", id.ToString());
@@ -292,14 +334,22 @@ public class SessionsController(
         var attendance = await dbContext.Attendances
             .Include(a => a.TrainingSession)
             .FirstOrDefaultAsync(a => a.Id == id);
-        if (attendance is null) return NotFound(new { message = "Booking not found." });
+        if (attendance is null)
+            return NotFound(new { message = "Booking not found." });
+
+        var held = await dbContext.Payments
+            .Where(p => p.AttendanceId == id && p.Status == "Pending")
+            .ToListAsync();
+        foreach (var p in held)
+            p.Status = "Refunded";
 
         var session = attendance.TrainingSession;
         dbContext.Attendances.Remove(attendance);
-        if (session is not null) dbContext.TrainingSessions.Remove(session);
+        if (session is not null)
+            dbContext.TrainingSessions.Remove(session);
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("BookingRejected", "Attendance", id.ToString());
-        return Ok(new { message = "Booking rejected and removed." });
+        return Ok(new { message = "Booking rejected. Any pending online payment was marked as refunded." });
     }
 
     /// <summary>

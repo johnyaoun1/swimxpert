@@ -52,7 +52,13 @@ public class ApplicationDbContext : DbContext
             .HasOne(p => p.User)
             .WithMany(u => u.Payments)
             .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Payment>()
+            .HasOne(p => p.Attendance)
+            .WithMany()
+            .HasForeignKey(p => p.AttendanceId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<TrainingSession>()
             .Property(t => t.Price)

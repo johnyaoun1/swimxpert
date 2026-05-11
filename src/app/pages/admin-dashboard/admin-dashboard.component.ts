@@ -33,13 +33,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     id: number;
     bookingStatus: string;
     swimmer: { id: number; name: string; level?: number };
-    client: { id: number; fullName: string; email: string };
+    client: { id: number; fullName: string; email: string; isApproved?: boolean };
     session: { id: number; title: string; startTime: string; endTime: string };
     sessionDate: string;
+    sessionPrice?: number;
     createdAt: string;
+    onlinePayment?: { status: string; amount: number; method: string } | null;
   }>>([]);
   pendingBookingsLoading = signal(false);
   processingBookingId = signal<number | null>(null);
+  bookingActionError = signal<string>('');
 
   leads = signal<Array<{ id: number; name: string; email?: string | null; phone?: string | null; sourcePage?: string | null; sourceAction?: string | null; isContacted: boolean; contactedAt?: string | null; createdAt: string }>>([]);
 
@@ -47,6 +50,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   waitingList = computed(() =>
     this.leads().filter(l =>
       l.sourceAction?.startsWith('Booking Request') && !l.isContacted
+    )
+  );
+
+  /** Submissions from the Contact Us page (`sourcePage` = Contact). */
+  contactFormMessages = computed(() =>
+    this.leads().filter(
+      (l) => (l.sourcePage?.trim().toLowerCase() ?? '') === 'contact'
     )
   );
 
@@ -404,8 +414,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   deletingLeadId = signal<number | null>(null);
 
-  deleteLead(leadId: number): void {
-    if (!confirm('Delete this booking request?')) return;
+  deleteLead(leadId: number, kind: 'booking' | 'contact' = 'booking'): void {
+    const msg =
+      kind === 'contact'
+        ? 'Delete this contact message? This cannot be undone.'
+        : 'Delete this booking request? This cannot be undone.';
+    if (!confirm(msg)) return;
     this.deletingLeadId.set(leadId);
     this.apiService.deleteLead(leadId).subscribe({
       next: () => {
@@ -800,32 +814,46 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   approveBooking(id: number): void {
+    this.bookingActionError.set('');
     this.processingBookingId.set(id);
     this.apiService.approveBooking(id).subscribe({
       next: () => {
         this.pendingBookings.update(list => list.filter(b => b.id !== id));
         this.processingBookingId.set(null);
       },
-      error: () => this.processingBookingId.set(null)
+      error: (err: { error?: { message?: string } }) => {
+        this.processingBookingId.set(null);
+        this.bookingActionError.set(err?.error?.message || 'Could not approve booking.');
+      }
     });
   }
 
   rejectBooking(id: number): void {
+    this.bookingActionError.set('');
     this.processingBookingId.set(id);
     this.apiService.rejectBooking(id).subscribe({
       next: () => {
         this.pendingBookings.update(list => list.filter(b => b.id !== id));
         this.processingBookingId.set(null);
       },
-      error: () => this.processingBookingId.set(null)
+      error: (err: { error?: { message?: string } }) => {
+        this.processingBookingId.set(null);
+        this.bookingActionError.set(err?.error?.message || 'Could not reject booking.');
+      }
     });
+  }
+
+  onlineCheckoutPending(booking: { onlinePayment?: { status: string } | null }): boolean {
+    return booking.onlinePayment?.status === 'Pending';
   }
 
   getBookingPaymentState(id: number): 'idle' | 'recording' | 'done' {
     return this.bookingPaymentState()[id] ?? 'idle';
   }
 
-  recordBookingPayment(booking: { id: number; client: { id: number; fullName: string } }): void {
+  recordBookingPayment(booking: { id: number; client: { id: number; fullName: string }; onlinePayment?: { status: string } | null }): void {
+    if (booking.onlinePayment?.status === 'Pending')
+      return;
     const method = this.bookingPaymentMethod[booking.id] || 'Cash';
     this.bookingPaymentState.update(s => ({ ...s, [booking.id]: 'recording' }));
     this.revenueService.processPayment(30, method, String(booking.client.id)).subscribe({

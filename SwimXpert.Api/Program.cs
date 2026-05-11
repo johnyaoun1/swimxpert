@@ -281,6 +281,22 @@ using (var scope = app.Services.CreateScope())
         );
         """);
 
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" ADD COLUMN IF NOT EXISTS \"AttendanceId\" integer;");
+    await db.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS \"IX_Payments_AttendanceId\" ON \"Payments\" (\"AttendanceId\");");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" DROP CONSTRAINT IF EXISTS \"FK_Payments_Attendances_AttendanceId\";");
+    await db.Database.ExecuteSqlRawAsync(
+        """
+        ALTER TABLE "Payments" ADD CONSTRAINT "FK_Payments_Attendances_AttendanceId"
+        FOREIGN KEY ("AttendanceId") REFERENCES "Attendances" ("Id") ON DELETE SET NULL;
+        """);
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" DROP CONSTRAINT IF EXISTS \"FK_Payments_Users_UserId\";");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" ALTER COLUMN \"UserId\" DROP NOT NULL;");
+    await db.Database.ExecuteSqlRawAsync(
+        """
+        ALTER TABLE "Payments" ADD CONSTRAINT "FK_Payments_Users_UserId"
+        FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE SET NULL;
+        """);
+
     var adminEmail = Environment.GetEnvironmentVariable("INITIAL_ADMIN_EMAIL");
     var adminPassword = Environment.GetEnvironmentVariable("INITIAL_ADMIN_PASSWORD");
     if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword)

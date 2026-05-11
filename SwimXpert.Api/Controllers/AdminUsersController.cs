@@ -365,20 +365,50 @@ public class AdminUsersController(
 
     /// <summary>
     /// Hard-deletes a self-registered (unapproved) user — reject without creating an account.
+    /// Pending online session payments are marked refunded and pending slots removed.
     /// </summary>
     [HttpDelete("{id:int}/reject")]
     public async Task<IActionResult> RejectUser(int id)
     {
-        var user = await dbContext.Users.FindAsync(id);
+        var user = await dbContext.Users
+            .Include(u => u.Swimmers)
+            .ThenInclude(s => s.Attendances)
+            .ThenInclude(a => a.TrainingSession)
+            .FirstOrDefaultAsync(u => u.Id == id);
         if (user is null)
             return NotFound(new { message = "User not found." });
         if (user.IsApproved)
             return BadRequest(new { message = "Cannot reject an already-approved user." });
 
+        foreach (var swimmer in user.Swimmers)
+        {
+            foreach (var att in swimmer.Attendances.ToList())
+            {
+                if (att.BookingStatus != "Pending")
+                    continue;
+
+                var held = await dbContext.Payments
+                    .Where(p => p.AttendanceId == att.Id && p.Status == "Pending")
+                    .ToListAsync();
+                foreach (var p in held)
+                    p.Status = "Refunded";
+
+                dbContext.Attendances.Remove(att);
+                if (att.TrainingSession is not null)
+                    dbContext.TrainingSessions.Remove(att.TrainingSession);
+            }
+        }
+
+        var stray = await dbContext.Payments
+            .Where(p => p.UserId == id && p.Status == "Pending")
+            .ToListAsync();
+        foreach (var p in stray)
+            p.Status = "Refunded";
+
         dbContext.Users.Remove(user);
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("UserRejected", "User", id.ToString(), new { user.Email });
-        return Ok(new { message = "Account rejected and removed." });
+        return Ok(new { message = "Account rejected. Pending bookings were removed and online holds marked refunded." });
     }
 
     /// <summary>

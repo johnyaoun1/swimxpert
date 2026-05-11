@@ -259,6 +259,11 @@ $red:       #ef4444;
   margin: 0 auto 1.5rem;
   svg { width: 2rem; height: 2rem; color: $green; }
 }
+.co-receipt-check--pending {
+  background: rgba(245,158,11,.15);
+  border-color: rgba(245,158,11,.45);
+  svg { color: #f59e0b; }
+}
 .co-receipt-title {
   font-size: 1.75rem;
   font-weight: 800;
