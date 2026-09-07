@@ -838,33 +838,7 @@
                     <div class="sm:col-span-2">
                       <dt class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Password</dt>
                       <dd class="mt-0.5 text-slate-700 leading-snug space-y-2">
-                        <p class="text-sm">Login uses a BCrypt hash. For admin retrieval, the server stores an optional AES-GCM backup encrypted with <code class="text-xs bg-slate-200 px-1 rounded">ADMIN_PASSWORD_REVEAL_KEY</code>. Forgot-password resets clear that backup.</p>
-                        @if (revealedClientPasswordById()[client.id]) {
-                          <div class="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-                            <code class="flex-1 min-w-[12rem] font-mono text-sm font-bold text-slate-900 tracking-wide select-all break-all">{{ revealedClientPasswordById()[client.id] }}</code>
-                            <button type="button" (click)="copyToClipboardDash(revealedClientPasswordById()[client.id]!)" class="text-xs px-2 py-1 rounded bg-emerald-200 hover:bg-emerald-300 text-emerald-900 font-semibold shrink-0">Copy</button>
-                            <button type="button" (click)="hideRevealedClientPassword(client.id)" class="text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 font-semibold shrink-0">Hide</button>
-                          </div>
-                        }
-                        @if (clientRevealError()) {
-                          <p class="text-sm text-red-600">{{ clientRevealError() }}</p>
-                        }
-                        @if (clientRevealInfo()) {
-                          <p class="text-sm text-amber-800">{{ clientRevealInfo() }}</p>
-                        }
-                        <button
-                          type="button"
-                          (click)="revealClientLoginPassword(client)"
-                          [disabled]="clientRevealLoadingId() === client.id"
-                          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 disabled:opacity-60"
-                        >
-                          @if (clientRevealLoadingId() === client.id) {
-                            <span>Loading…</span>
-                          } @else {
-                            <span>Reveal stored password</span>
-                          }
-                        </button>
-                        <p class="text-xs text-slate-500">Use <strong>Edit account</strong> to set a new password; it appears once after save.</p>
+                        <p class="text-sm">Passwords are stored as irreversible BCrypt hashes only. Admins cannot retrieve an existing password — use <strong>Edit account</strong> to set a new one (shown once after save).</p>
                       </dd>
                     </div>
                   </dl>

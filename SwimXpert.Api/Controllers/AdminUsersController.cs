@@ -16,17 +16,8 @@ namespace SwimXpert.Api.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminUsersController(
     ApplicationDbContext dbContext,
-    IAuditLogService auditLog,
-    IAdminPasswordRevealVault passwordRevealVault) : ControllerBase
+    IAuditLogService auditLog) : ControllerBase
 {
-    private void StoreRevealCipher(User user, string plainPassword)
-    {
-        if (passwordRevealVault.TryEncrypt(plainPassword, out var enc))
-            user.AdminPasswordRevealCipher = enc;
-        else
-            user.AdminPasswordRevealCipher = null;
-    }
-
     /// <summary>
     /// Returns all users.
     /// </summary>
@@ -128,7 +119,6 @@ public class AdminUsersController(
             EmailVerified = true,
             CreatedAt = DateTime.UtcNow
         };
-        StoreRevealCipher(user, plainPassword);
 
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
@@ -193,7 +183,6 @@ public class AdminUsersController(
             EmailVerified = true,
             CreatedAt = DateTime.UtcNow
         };
-        StoreRevealCipher(user, plainPassword);
 
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
@@ -242,7 +231,6 @@ public class AdminUsersController(
         {
             var plain = request.NewPassword.Trim();
             user.Password = BCrypt.Net.BCrypt.HashPassword(plain);
-            StoreRevealCipher(user, plain);
         }
 
         await dbContext.SaveChangesAsync();
@@ -250,50 +238,6 @@ public class AdminUsersController(
             new { request.FullName, request.Email, hasPasswordChange = !string.IsNullOrWhiteSpace(request.NewPassword) });
 
         return Ok(new { message = "Profile updated." });
-    }
-
-    /// <summary>
-    /// Decrypts the admin-only AES-GCM backup of the user's login password. Requires ADMIN_PASSWORD_REVEAL_KEY on the server.
-    /// </summary>
-    [HttpPost("{id:int}/reveal-password")]
-    public async Task<IActionResult> RevealPassword(int id)
-    {
-        if (!passwordRevealVault.IsConfigured)
-        {
-            return Ok(new
-            {
-                vaultEnabled = false,
-                password = (string?)null,
-                message = "Reveal vault is off. Set ADMIN_PASSWORD_REVEAL_KEY (env) or AdminPasswordReveal:Key (appsettings / user secrets), restart the API, then rotate passwords so backups are stored. Example: dotnet user-secrets set \"AdminPasswordReveal:Key\" \"$(openssl rand -hex 32)\""
-            });
-        }
-
-        var user = await dbContext.Users.FindAsync(id);
-        if (user is null)
-            return NotFound(new { message = "User not found." });
-
-        if (string.IsNullOrEmpty(user.AdminPasswordRevealCipher))
-        {
-            return Ok(new
-            {
-                vaultEnabled = true,
-                password = (string?)null,
-                message = "No encrypted backup for this account — often because the client reset their password via email, or the vault key was enabled after this password was set. Use Edit account to set a new password."
-            });
-        }
-
-        if (!passwordRevealVault.TryDecrypt(user.AdminPasswordRevealCipher, out var plain))
-        {
-            return Ok(new
-            {
-                vaultEnabled = true,
-                password = (string?)null,
-                message = "Backup could not be decrypted — ADMIN_PASSWORD_REVEAL_KEY may have changed."
-            });
-        }
-
-        await auditLog.LogAsync("AdminPasswordRevealed", "User", id.ToString(), new { user.Email });
-        return Ok(new { vaultEnabled = true, password = plain });
     }
 
     private async Task<string> GenerateUniqueUsernameAsync(string fullName)
@@ -356,7 +300,6 @@ public class AdminUsersController(
             return BadRequest(new { message = "A password of at least 6 characters is required to accept this account." });
 
         user.Password   = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, 12);
-        StoreRevealCipher(user, request.NewPassword.Trim());
         user.IsApproved = true;
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("UserApproved", "User", id.ToString(), new { user.Email });

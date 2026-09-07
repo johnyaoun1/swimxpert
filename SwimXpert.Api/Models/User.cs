@@ -16,13 +16,6 @@ public class User
     [MaxLength(255)]
     public string Password { get; set; } = string.Empty;
 
-    /// <summary>
-    /// AES-GCM ciphertext (base64) of the current login password for admin reveal only.
-    /// Cleared when the user resets their password via email; updated when admin or registration sets a known plaintext password.
-    /// </summary>
-    [MaxLength(512)]
-    public string? AdminPasswordRevealCipher { get; set; }
-
     [Required]
     [MaxLength(255)]
     public string FullName { get; set; } = string.Empty;

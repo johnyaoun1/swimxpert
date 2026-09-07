@@ -114,12 +114,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   editClientSuccess     = signal(false);
   editClientSavedPw     = signal('');
 
-  /** AES vault reveal (server ADMIN_PASSWORD_REVEAL_KEY). */
-  revealedClientPasswordById = signal<Record<string, string>>({});
-  clientRevealLoadingId = signal<string | null>(null);
-  clientRevealError = signal<string | null>(null);
-  clientRevealInfo = signal<string | null>(null);
-
   // ── Add Child ────────────────────────────────────────────────
   showAddChildModal   = signal(false);
   addChildClientId    = signal<number | null>(null);
@@ -450,9 +444,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   selectClient(clientId: string | number): void {
     this.selectedClientId.set(clientId == null ? null : String(clientId));
-    this.clientRevealError.set(null);
-    this.clientRevealInfo.set(null);
-    this.clientRevealLoadingId.set(null);
   }
 
   isClientSelected(clientId: string | number): boolean {
@@ -1003,8 +994,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.showEditPw = false;
     this.editClientError.set('');
     this.editClientSuccess.set(false);
-    this.clientRevealError.set(null);
-    this.clientRevealInfo.set(null);
     this.showEditClientModal.set(true);
   }
 
@@ -1040,41 +1029,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.editClientError.set(err?.message || 'Failed to update profile.');
         this.editClientLoading.set(false);
       }
-    });
-  }
-
-  revealClientLoginPassword(client: User): void {
-    this.clientRevealError.set(null);
-    this.clientRevealInfo.set(null);
-    const idNum = Number(client.id);
-    if (!idNum) return;
-    this.clientRevealLoadingId.set(client.id);
-    this.apiService.revealClientLoginPassword(idNum).subscribe({
-      next: (res) => {
-        this.clientRevealLoadingId.set(null);
-        if (!res.vaultEnabled) {
-          this.clientRevealError.set(res.message || 'Password reveal vault is not configured on the server.');
-          return;
-        }
-        if (res.password) {
-          this.revealedClientPasswordById.update((m) => ({ ...m, [client.id]: res.password! }));
-          return;
-        }
-        this.clientRevealInfo.set(res.message || 'No encrypted backup for this account.');
-      },
-      error: (err: any) => {
-        this.clientRevealLoadingId.set(null);
-        const msg = err?.error?.message ?? err?.message ?? 'Could not reveal password.';
-        this.clientRevealError.set(typeof msg === 'string' ? msg : 'Could not reveal password.');
-      }
-    });
-  }
-
-  hideRevealedClientPassword(clientId: string): void {
-    this.revealedClientPasswordById.update((m) => {
-      const next = { ...m };
-      delete next[clientId];
-      return next;
     });
   }
 

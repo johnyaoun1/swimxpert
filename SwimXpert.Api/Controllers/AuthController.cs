@@ -17,7 +17,7 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService, IAdminPasswordRevealVault passwordRevealVault, IWebHostEnvironment env) : ControllerBase
+public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService, IWebHostEnvironment env) : ControllerBase
 {
     private const int BcryptWorkFactor = 12;
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
@@ -57,8 +57,6 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24),
             Phone = phone
         };
-        if (passwordRevealVault.TryEncrypt(request.Password!, out var enc))
-            user.AdminPasswordRevealCipher = enc;
 
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
@@ -313,7 +311,6 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         if (user is null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
             return BadRequest(new { message = "Invalid or expired reset token." });
         user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, BcryptWorkFactor);
-        user.AdminPasswordRevealCipher = null;
         user.PasswordResetTokenHash = null;
         user.PasswordResetTokenExpiry = null;
         var refreshTokens = await dbContext.RefreshTokens.Where(r => r.UserId == user.Id && r.RevokedAt == null).ToListAsync();

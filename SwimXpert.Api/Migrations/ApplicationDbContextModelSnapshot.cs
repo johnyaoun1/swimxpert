@@ -188,10 +188,6 @@ namespace SwimXpert.Api.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("AdminPasswordRevealCipher")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(50)
