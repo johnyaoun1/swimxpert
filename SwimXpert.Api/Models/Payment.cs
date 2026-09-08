@@ -10,7 +10,7 @@ public class Payment
     public int? UserId { get; set; }
     public User? User { get; set; }
 
-    /// <summary>Set for client checkout while the booking awaits admin confirmation.</summary>
+    /// <summary>Optional link to a booking (e.g. legacy online holds). Manual payments usually leave this null.</summary>
     public int? AttendanceId { get; set; }
     public Attendance? Attendance { get; set; }
 

@@ -136,8 +136,9 @@
                 @if (isLoggedIn()) {
                   <button
                     class="slot-btn slot-booking"
-                    (click)="goToCheckout(slot)"
-                    title="Book this slot — pay at checkout"
+                    (click)="bookSlot(slot)"
+                    [disabled]="bookingInProgress()"
+                    title="Request this slot — pay in person or by transfer; staff will record payment"
                   >
                     {{ slot.startLocal }}
                   </button>

@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { SessionService, AvailableSlot } from '../../services/session.service';
@@ -63,13 +63,13 @@ export class AvailableSessionsComponent implements OnInit {
   requestLoading  = signal(false);
   requestError    = signal('');
   requestSubmitted = signal(false);
+  bookingInProgress = signal(false);
 
   constructor(
     private sessionService: SessionService,
     private authService: AuthService,
     private apiService: ApiService,
     private http: HttpClient,
-    private router: Router,
     private route: ActivatedRoute
   ) {}
 
@@ -122,8 +122,8 @@ export class AvailableSessionsComponent implements OnInit {
     });
   }
 
-  // ── Logged-in client — checkout (session fee + pending confirmation) ──
-  goToCheckout(slot: AvailableSlot): void {
+  // ── Logged-in client — request slot (no online payment; staff records payment offline) ──
+  bookSlot(slot: AvailableSlot): void {
     if (this.swimmers().length === 0) {
       this.openAddSwimmerModal(slot);
       return;
@@ -133,15 +133,25 @@ export class AvailableSessionsComponent implements OnInit {
       this.showToast('Please select a swimmer first.', 'error');
       return;
     }
-    const swimmer = this.swimmers().find(s => s.id === String(swimmerId));
-    this.router.navigate(['/checkout'], {
-      queryParams: {
-        startUtc: slot.startUtc,
-        swimmerId,
-        date: slot.date,
-        startLocal: slot.startLocal,
-        endLocal: slot.endLocal,
-        swimmerName: swimmer?.name ?? ''
+    if (this.bookingInProgress()) return;
+
+    this.bookingInProgress.set(true);
+    this.sessionService.bookSlot(slot.startUtc, swimmerId).subscribe({
+      next: (res) => {
+        this.bookingInProgress.set(false);
+        this.showToast(
+          res?.message || 'Booking request submitted. Payment is recorded by staff after you pay in person or by transfer.',
+          'success'
+        );
+        // Refresh slots so the taken time disappears
+        this.sessionService.getAvailableSlots(14).subscribe({
+          next: (slots) => this.days.set(this.groupByDate(Array.isArray(slots) ? slots : [])),
+          error: () => { /* keep current list */ }
+        });
+      },
+      error: (err) => {
+        this.bookingInProgress.set(false);
+        this.showToast(err?.error?.message || err?.message || 'Could not book this slot. Try another time.', 'error');
       }
     });
   }
@@ -340,7 +350,7 @@ export class AvailableSessionsComponent implements OnInit {
         const slot = this.pendingSlot();
         if (slot) {
           this.pendingSlot.set(null);
-          this.goToCheckout(slot);
+          this.bookSlot(slot);
         }
       },
       error: (err: any) => {

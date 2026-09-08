@@ -203,168 +203,15 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
     }
 
     /// <summary>
-    /// Client checkout: reserves a slot, records a pending card payment until admin confirms the booking (and the client account is approved).
-    /// Admin checkout: same as before — immediate confirmation and completed payment.
+    /// Online card checkout is disabled for this deployment. Use POST /api/payments (manual record) instead.
     /// </summary>
     [HttpPost("checkout")]
     [Authorize]
-    public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request, CancellationToken cancellationToken)
+    public IActionResult CheckoutDisabled()
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-            return Unauthorized(new { message = "Invalid user context." });
-
-        if (request.Amount <= 0)
-            return BadRequest(new { message = "Amount must be greater than zero." });
-
-        if (string.IsNullOrWhiteSpace(request.CardLastFour) || request.CardLastFour.Length != 4)
-            return BadRequest(new { message = "Card last four digits are required." });
-
-        // ── Booking logic (mirrors /api/sessions/book-slot) ──────────────────
-        var beirutOffset = TimeSpan.FromHours(3);
-        var slotDuration = TimeSpan.FromMinutes(45);
-        var dayStart     = TimeSpan.FromHours(9);
-        var dayEnd       = TimeSpan.FromHours(20);
-
-        var startUtc = request.StartUtc.Kind == DateTimeKind.Utc
-            ? request.StartUtc
-            : DateTime.SpecifyKind(request.StartUtc, DateTimeKind.Utc);
-        var endUtc = startUtc + slotDuration;
-
-        if (startUtc <= DateTime.UtcNow)
-            return BadRequest(new { message = "This slot is in the past." });
-
-        var startBeirut = startUtc + beirutOffset;
-        var timeOfDay   = startBeirut.TimeOfDay;
-        if (timeOfDay < dayStart || timeOfDay + slotDuration > dayEnd)
-            return BadRequest(new { message = "Slot is outside working hours (9 AM–8 PM)." });
-
-        var swimmer = await dbContext.Swimmers.FindAsync(request.SwimmerId);
-        if (swimmer is null)
-            return NotFound(new { message = "Swimmer not found." });
-
-        var isAdmin = User.IsInRole("Admin");
-        if (!isAdmin && swimmer.ParentUserId != currentUserId)
-            return Forbid();
-
-        var overlaps = await dbContext.TrainingSessions.AnyAsync(
-            s => s.StartTime < endUtc && s.EndTime > startUtc, cancellationToken);
-        if (overlaps)
-            return Conflict(new { message = "This slot was just taken. Please choose another time." });
-
-        var receiptId = "RCT-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
-
-        if (isAdmin)
+        return StatusCode(410, new
         {
-            var session = new TrainingSession
-            {
-                Title     = $"{swimmer.Name} Session",
-                StartTime = startUtc,
-                EndTime   = endUtc,
-                Capacity  = 1,
-                Status    = "Scheduled",
-                Price     = request.Amount,
-                IsPaid    = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            dbContext.TrainingSessions.Add(session);
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            var attendance = new Attendance
-            {
-                SwimmerId         = request.SwimmerId,
-                TrainingSessionId = session.Id,
-                SessionDate       = startUtc.Date,
-                IsPresent         = false,
-                BookingStatus     = "Confirmed",
-                CreatedAt         = DateTime.UtcNow
-            };
-            dbContext.Attendances.Add(attendance);
-
-            var payment = new Payment
-            {
-                UserId      = currentUserId,
-                Amount      = request.Amount,
-                Method      = $"Card ****{request.CardLastFour}",
-                Status      = "Completed",
-                PaymentDate = DateTime.UtcNow,
-                Reference   = receiptId
-            };
-            dbContext.Payments.Add(payment);
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            return Ok(new
-            {
-                success          = true,
-                paymentStatus    = "Completed",
-                receiptId,
-                sessionId        = session.Id,
-                registrationId   = attendance.Id,
-                date             = startBeirut.ToString("yyyy-MM-dd"),
-                startLocal       = startBeirut.ToString("HH:mm"),
-                endLocal         = (startBeirut + slotDuration).ToString("HH:mm"),
-                amount           = request.Amount,
-                cardLastFour     = request.CardLastFour,
-                cardHolder       = request.CardHolder,
-                swimmerName      = swimmer.Name
-            });
-        }
-
-        // ── Client: hold payment until admin approves account + booking ───────
-        var sessionPending = new TrainingSession
-        {
-            Title     = $"{swimmer.Name} Session",
-            StartTime = startUtc,
-            EndTime   = endUtc,
-            Capacity  = 1,
-            Status    = "Scheduled",
-            Price     = request.Amount,
-            IsPaid    = false,
-            CreatedAt = DateTime.UtcNow
-        };
-        dbContext.TrainingSessions.Add(sessionPending);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        var attendancePending = new Attendance
-        {
-            SwimmerId         = request.SwimmerId,
-            TrainingSessionId = sessionPending.Id,
-            SessionDate       = startUtc.Date,
-            IsPresent         = false,
-            BookingStatus     = "Pending",
-            CreatedAt         = DateTime.UtcNow
-        };
-        dbContext.Attendances.Add(attendancePending);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        var paymentPending = new Payment
-        {
-            UserId        = currentUserId,
-            AttendanceId  = attendancePending.Id,
-            Amount        = request.Amount,
-            Method        = $"Card ****{request.CardLastFour}",
-            Status        = "Pending",
-            PaymentDate   = DateTime.UtcNow,
-            Reference     = receiptId
-        };
-        dbContext.Payments.Add(paymentPending);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Ok(new
-        {
-            success           = true,
-            paymentStatus     = "Pending",
-            receiptId,
-            sessionId         = sessionPending.Id,
-            registrationId    = attendancePending.Id,
-            date              = startBeirut.ToString("yyyy-MM-dd"),
-            startLocal        = startBeirut.ToString("HH:mm"),
-            endLocal          = (startBeirut + slotDuration).ToString("HH:mm"),
-            amount            = request.Amount,
-            cardLastFour      = request.CardLastFour,
-            cardHolder        = request.CardHolder,
-            swimmerName       = swimmer.Name,
-            message           = "Payment is on hold until an admin approves your account (if new) and confirms this booking. If the booking is declined, the hold is released (refunded in your payment system when you use a live processor)."
+            message = "Online checkout is not available. Payments are recorded manually by staff after cash, transfer, or in-person card payment."
         });
     }
 
@@ -378,15 +225,6 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
             DateTimeKind.Local => dt.ToUniversalTime(),
             _ => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
         };
-}
-
-public class CheckoutRequest
-{
-    public DateTime StartUtc   { get; set; }
-    public int      SwimmerId  { get; set; }
-    public decimal  Amount     { get; set; }
-    public string   CardHolder { get; set; } = string.Empty;
-    public string   CardLastFour { get; set; } = string.Empty;
 }
 
 public class CreatePaymentRequest

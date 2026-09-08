@@ -67,7 +67,7 @@ export const routes: Routes = [
   // Sessions — Admin only (contains client names & registration data)
   { path: 'sessions', loadComponent: () => import('./pages/sessions-list/sessions-list.component').then((m) => m.SessionsListComponent), title: 'Sessions - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
   { path: 'sessions/available', loadComponent: () => import('./pages/available-sessions/available-sessions.component').then((m) => m.AvailableSessionsComponent), title: 'Book a Session - SwimXpert', canActivate: [blockCoachGuard] },
-  { path: 'checkout', loadComponent: () => import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent), title: 'Checkout - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
+  { path: 'checkout', redirectTo: 'sessions/available', pathMatch: 'full' },
   { path: 'chat', loadComponent: () => import('./pages/chat/chat.component').then((m) => m.ChatComponent), title: 'AI Assistant - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
   { path: 'sessions/create', loadComponent: () => import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent), title: 'Create Session - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
   { path: 'sessions/edit/:id', loadComponent: () => import('./pages/session-form/session-form.component').then((m) => m.SessionFormComponent), title: 'Edit Session - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
