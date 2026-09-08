@@ -42,7 +42,14 @@ export class RevenueService {
     });
   }
 
-  processPayment(amount: number, method: string, userId?: string, paymentDate?: string, reference?: string): Observable<any> {
+  processPayment(
+    amount: number,
+    method: string,
+    userId?: string,
+    paymentDate?: string,
+    reference?: string,
+    trainingSessionId?: number
+  ): Observable<any> {
     const currentUser = this.authService.getCurrentUser();
     const resolvedUserId = userId || currentUser?.id;
     if (!resolvedUserId) {
@@ -54,14 +61,18 @@ export class RevenueService {
         ? new Date(`${paymentDate}T00:00:00Z`).toISOString()
         : null;
 
-    return this.http.post(this.paymentsApi, {
+    const body: Record<string, unknown> = {
       userId: Number(resolvedUserId),
       amount,
       method,
-      status: 'Completed',
       paymentDate: normalizedPaymentDate,
       reference: reference || null
-    });
+    };
+    if (trainingSessionId != null && Number.isFinite(trainingSessionId)) {
+      body['trainingSessionId'] = trainingSessionId;
+    }
+
+    return this.http.post(this.paymentsApi, body);
   }
 
   getMyPayments(userId?: string): Observable<any[]> {

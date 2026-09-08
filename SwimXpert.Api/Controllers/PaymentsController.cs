@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,25 +15,54 @@ namespace SwimXpert.Api.Controllers;
 [Route("api/payments")]
 public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
 {
+    private static readonly HashSet<string> AllowedMethods = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Cash", "Card", "Transfer", "Bank Transfer", "WhatsApp", "Other"
+    };
+
     /// <summary>
-    /// Processes a payment record.
+    /// Staff-only: records a completed offline payment (cash / transfer / in-person card).
+    /// Parents cannot create payment records.
     /// </summary>
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "Admin,Coach")]
     public async Task<IActionResult> ProcessPayment([FromBody] CreatePaymentRequest request)
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdClaim, out var currentUserId))
-            return Unauthorized(new { message = "Invalid user context." });
+        if (request is null)
+            return BadRequest(new { message = "Request body is required." });
 
-        var isAdmin = User.IsInRole("Admin");
-        if (!isAdmin && request.UserId != currentUserId)
-            return Forbid();
+        if (request.UserId <= 0)
+            return BadRequest(new { message = "A valid client userId is required." });
+
+        if (request.Amount < 0.01m || request.Amount > 1_000_000m)
+            return BadRequest(new { message = "Amount must be between 0.01 and 1,000,000." });
+
+        var method = string.IsNullOrWhiteSpace(request.Method) ? "Cash" : request.Method.Trim();
+        if (method.Length > 30)
+            method = method[..30];
+        if (!AllowedMethods.Contains(method))
+            return BadRequest(new { message = $"Method must be one of: {string.Join(", ", AllowedMethods.OrderBy(m => m))}." });
 
         var userExists = await dbContext.Users.AnyAsync(u => u.Id == request.UserId);
         if (!userExists)
-        {
             return NotFound(new { message = "User not found." });
+
+        // If tied to a session, amount must match the session fee when a fee is set.
+        if (request.TrainingSessionId is int sessionId)
+        {
+            var session = await dbContext.TrainingSessions.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+            if (session is null)
+                return NotFound(new { message = "Training session not found." });
+
+            if (session.Price > 0 && request.Amount != session.Price)
+            {
+                return BadRequest(new
+                {
+                    message = $"Amount must match the session price ({session.Price:0.00}).",
+                    sessionPrice = session.Price
+                });
+            }
         }
 
         DateTime paymentDateUtc;
@@ -53,20 +83,34 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
             paymentDateUtc = DateTime.SpecifyKind(request.PaymentDate.Value, DateTimeKind.Utc);
         }
 
+        // Status is never taken from the client. Staff recording always creates a Completed ledger row.
+        var reference = string.IsNullOrWhiteSpace(request.Reference) ? null : request.Reference.Trim();
+        if (reference is { Length: > 100 })
+            reference = reference[..100];
+
         var payment = new Payment
         {
             UserId = request.UserId,
             Amount = request.Amount,
-            Method = request.Method,
-            Status = string.IsNullOrWhiteSpace(request.Status) ? "Completed" : request.Status,
+            Method = method,
+            Status = "Completed",
             PaymentDate = paymentDateUtc,
-            Reference = request.Reference
+            Reference = reference
         };
 
         dbContext.Payments.Add(payment);
         await dbContext.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetByUser), new { userId = request.UserId }, payment);
+        return CreatedAtAction(nameof(GetByUser), new { userId = request.UserId }, new
+        {
+            payment.Id,
+            payment.UserId,
+            payment.Amount,
+            payment.Method,
+            payment.Status,
+            payment.PaymentDate,
+            payment.Reference
+        });
     }
 
     /// <summary>
@@ -80,13 +124,24 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
         if (!int.TryParse(userIdClaim, out var currentUserId))
             return Unauthorized(new { message = "Invalid user context." });
 
-        var isAdmin = User.IsInRole("Admin");
-        if (!isAdmin && userId != currentUserId)
+        var isStaff = User.IsInRole("Admin") || User.IsInRole("Coach");
+        if (!isStaff && userId != currentUserId)
             return Forbid();
 
         var payments = await dbContext.Payments
+            .AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.PaymentDate)
+            .Select(p => new
+            {
+                p.Id,
+                p.UserId,
+                p.Amount,
+                p.Method,
+                p.Status,
+                p.PaymentDate,
+                p.Reference
+            })
             .ToListAsync();
 
         return Ok(payments);
@@ -227,12 +282,28 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
         };
 }
 
+/// <summary>
+/// Staff manual payment recording. Status is never accepted from the client.
+/// </summary>
 public class CreatePaymentRequest
 {
+    [Required]
     public int UserId { get; set; }
+
+    [Range(typeof(decimal), "0.01", "1000000")]
     public decimal Amount { get; set; }
+
+    [MaxLength(30)]
     public string Method { get; set; } = "Cash";
-    public string Status { get; set; } = "Completed";
+
+    /// <summary>Ignored. Server always records Status = Completed for staff entries.</summary>
+    public string? Status { get; set; }
+
     public DateTime? PaymentDate { get; set; }
+
+    [MaxLength(100)]
     public string? Reference { get; set; }
+
+    /// <summary>Optional. When set and the session has Price &gt; 0, Amount must equal that price.</summary>
+    public int? TrainingSessionId { get; set; }
 }

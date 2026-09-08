@@ -316,9 +316,17 @@ export class AdminScheduleComponent implements OnInit {
     }
     const opt = this.selectedSession();
     const reference = opt ? `Session ${opt.date ?? ''} ${opt.time ?? ''}`.trim() : undefined;
+    const sessionId = opt?.id ? Number(opt.id) : undefined;
     this.recordingPayment.set(true);
     this.paymentError.set('');
-    this.revenueService.processPayment(payAmount, payMethod, clientId, undefined, reference).subscribe({
+    this.revenueService.processPayment(
+      payAmount,
+      payMethod,
+      clientId,
+      undefined,
+      reference,
+      Number.isFinite(sessionId) ? sessionId : undefined
+    ).subscribe({
       next: () => {
         this.recordingPayment.set(false);
         this.paymentRecorded.set(true);
