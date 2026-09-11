@@ -68,7 +68,7 @@ export class SessionsListComponent implements OnInit, OnDestroy {
 
   loadSessions(): void {
     this.loading = true;
-    this.sessionService.getSessions().subscribe({
+    this.sessionService.getSessionsForStaffDashboard().subscribe({
       next: (sessions) => {
         this.sessions = sessions;
         this.applyFilters();

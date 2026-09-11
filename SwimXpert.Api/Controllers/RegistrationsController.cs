@@ -108,12 +108,12 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         if (!int.TryParse(userIdClaim, out var currentUserId))
             return Unauthorized(new { message = "Invalid user context." });
 
-        var isAdmin = User.IsInRole("Admin");
+        var isStaff = User.IsInRole("Admin") || User.IsInRole("Coach");
 
         IQueryable<Attendance> query = dbContext.Attendances
             .Where(a => a.TrainingSessionId == sessionId);
 
-        if (!isAdmin)
+        if (!isStaff)
             query = query.Where(a => a.Swimmer.ParentUserId == currentUserId);
 
         var attendees = await query

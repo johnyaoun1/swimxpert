@@ -88,25 +88,57 @@ export class SessionService {
   sessions = signal<Session[]>([]);
 
   constructor(private http: HttpClient) {
-    // Only Coach/Admin can fetch full sessions; silently skip for clients.
-    this.getSessions().pipe(catchError(() => EMPTY)).subscribe();
+    // Prefetch for staff UIs; Parents get a filtered upcoming window if they hit this.
+    this.getSessionsForStaffDashboard().pipe(catchError(() => EMPTY)).subscribe();
   }
 
-  getSessions(filters?: { status?: string; from?: string; to?: string }): Observable<Session[]> {
+  /** Wide window for staff dashboards (API defaults to upcoming-only when from/to omitted). */
+  private staffListRange(): { from: string; to: string; pageSize: number } {
+    const from = new Date();
+    from.setUTCFullYear(from.getUTCFullYear() - 1);
+    const to = new Date();
+    to.setUTCFullYear(to.getUTCFullYear() + 1);
+    return { from: from.toISOString(), to: to.toISOString(), pageSize: 100 };
+  }
+
+  getSessions(filters?: { status?: string; from?: string; to?: string; page?: number; pageSize?: number }): Observable<Session[]> {
     let params = new HttpParams();
     if (filters?.status) params = params.set('status', this.toApiStatus(filters.status));
     if (filters?.from) params = params.set('from', filters.from);
     if (filters?.to) params = params.set('to', filters.to);
+    if (filters?.page) params = params.set('page', String(filters.page));
+    if (filters?.pageSize) params = params.set('pageSize', String(filters.pageSize));
 
-    return this.http.get<ApiSession[]>(this.apiUrl, { params }).pipe(
-      map((sessions) => sessions.map((s) => this.fromApiSession(s))),
+    return this.http.get<ApiSession[] | { items?: ApiSession[] }>(this.apiUrl, { params }).pipe(
+      map((res) => {
+        const list = Array.isArray(res) ? res : (res?.items ?? []);
+        return list.map((s) => this.fromApiSession(s));
+      }),
       tap((sessions) => this.sessions.set(sessions))
     );
   }
 
-  getUpcomingSessions(): Observable<Session[]> {
-    return this.http.get<ApiSession[]>(`${this.apiUrl}/upcoming`).pipe(
-      map((sessions) => sessions.map((s) => this.fromApiSession(s))),
+  /** Staff convenience: last year → next year, paginated (page size 100). */
+  getSessionsForStaffDashboard(status?: string): Observable<Session[]> {
+    const range = this.staffListRange();
+    return this.getSessions({
+      status,
+      from: range.from,
+      to: range.to,
+      page: 1,
+      pageSize: range.pageSize
+    });
+  }
+
+  getUpcomingSessions(page = 1, pageSize = 50): Observable<Session[]> {
+    const params = new HttpParams()
+      .set('page', String(page))
+      .set('pageSize', String(pageSize));
+    return this.http.get<ApiSession[] | { items?: ApiSession[] }>(`${this.apiUrl}/upcoming`, { params }).pipe(
+      map((res) => {
+        const list = Array.isArray(res) ? res : (res?.items ?? []);
+        return list.map((s) => this.fromApiSession(s));
+      }),
       tap((sessions) => this.sessions.set(sessions))
     );
   }

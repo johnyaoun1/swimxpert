@@ -270,6 +270,8 @@ using (var scope = app.Services.CreateScope())
     await db.Database.ExecuteSqlRawAsync(
         """CREATE INDEX IF NOT EXISTS "IX_TrainingSessions_RecurrenceSeriesId" ON "TrainingSessions" ("RecurrenceSeriesId");""");
     await db.Database.ExecuteSqlRawAsync(
+        """CREATE INDEX IF NOT EXISTS "IX_TrainingSessions_StartTime" ON "TrainingSessions" ("StartTime");""");
+    await db.Database.ExecuteSqlRawAsync(
         """CREATE UNIQUE INDEX IF NOT EXISTS "IX_TrainingSessions_GoogleEventId_unique" ON "TrainingSessions" ("GoogleEventId") WHERE "GoogleEventId" IS NOT NULL;""");
     await db.Database.ExecuteSqlRawAsync(
         """
