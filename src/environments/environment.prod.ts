@@ -1,5 +1,6 @@
-// Replace with your production API URL, e.g. 'https://your-api.railway.app/api'
-// Use '/api' only if frontend and API are served from same origin (reverse proxy)
+// Production: keep '/api' for same-origin reverse proxy (see DEPLOYMENT.md).
+// Do not point this at a different subdomain unless you also switch cookies to
+// SameSite=None, widen CORS, and update CSP connect-src.
 export const environment = {
   production: true,
   apiUrl: '/api',

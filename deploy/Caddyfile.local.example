@@ -1,0 +1,15 @@
+# Local same-origin proxy for cookie testing.
+# Terminal 1: cd SwimXpert.Api && dotnet run   (http://localhost:5002)
+# Terminal 2: npm start                         (http://localhost:4200)
+# Terminal 3: caddy run --config deploy/Caddyfile.local.example
+# Then open http://localhost:8080  (NOT :4200)
+
+:8080 {
+	handle /api/* {
+		reverse_proxy localhost:5002
+	}
+
+	handle {
+		reverse_proxy localhost:4200
+	}
+}

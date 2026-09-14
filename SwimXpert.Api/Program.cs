@@ -8,6 +8,8 @@ using SwimXpert.Api.Options;
 using SwimXpert.Api.Services;
 using System.Text;
 
+using Microsoft.AspNetCore.HttpOverrides;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Google OAuth: do not commit real ClientId/ClientSecret. Use user secrets (dev) or env vars, e.g.:
@@ -27,6 +29,15 @@ if (!string.IsNullOrEmpty(gCalendarId))
 var allowedHostsEnv = Environment.GetEnvironmentVariable("ALLOWED_HOSTS");
 if (!string.IsNullOrWhiteSpace(allowedHostsEnv))
     builder.Configuration["AllowedHosts"] = allowedHostsEnv;
+
+// Railway / reverse proxies terminate TLS and forward X-Forwarded-*.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    // Railway's proxy IPs are dynamic — clear known networks/proxies so headers are accepted.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
@@ -62,6 +73,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Same-origin reverse proxy (recommended): browser calls https://yourdomain.com/api → no CORS preflight needed.
+// Still set CORS_ALLOWED_ORIGINS to the public site origin(s) so direct API hits and local Angular (localhost:4200) work.
+// Never use AllowAnyOrigin() with AllowCredentials().
 var allowedOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS")
     ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     ?? builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -144,6 +158,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+
+// Must run first so Request.Scheme/Host reflect the public HTTPS hostname behind Railway/nginx.
+app.UseForwardedHeaders();
 
 app.UseMiddleware<SwimXpert.Api.Middleware.GlobalExceptionMiddleware>();
 app.UseMiddleware<SwimXpert.Api.Middleware.SecurityHeadersMiddleware>();

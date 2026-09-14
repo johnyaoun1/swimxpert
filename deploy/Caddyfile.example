@@ -1,0 +1,21 @@
+# Production-shaped Caddy on Railway Web (or any host): static + /api proxy.
+# Set {$API_UPSTREAM} e.g. http://api.railway.internal:8080
+
+{$SITE_ADDRESS: :80} {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up Host {host}
+			header_up X-Forwarded-Host {host}
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	handle {
+		root * {$SITE_ROOT:/srv}
+		try_files {path} /index.html
+		file_server
+	}
+}

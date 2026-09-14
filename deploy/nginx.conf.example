@@ -1,0 +1,32 @@
+# Example nginx for Railway "Web" service — same-origin reverse proxy.
+# Custom domain points HERE. /api is forwarded to the private API service.
+#
+# Replace api.railway.internal:8080 with your Railway private URL + ASP.NET listen port.
+# Angular build output: adjust root to match `ng build` (often /usr/share/nginx/html).
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # API — preserve Host / proto so cookies & redirects see the public site
+    location /api/ {
+        proxy_pass http://api.railway.internal:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Connection "";
+        proxy_pass_request_headers on;
+        # Large uploads (profile pictures)
+        client_max_body_size 6m;
+    }
+
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

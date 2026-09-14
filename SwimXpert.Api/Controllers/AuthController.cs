@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OtpNet;
+using SwimXpert.Api;
 using SwimXpert.Api.Data;
 using SwimXpert.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -374,41 +375,27 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
 
     private void SetAccessTokenCookie(string token)
     {
-        var isDev = HttpContext.Request.Host.Host == "localhost" || HttpContext.Request.Host.Host == "127.0.0.1";
-        Response.Cookies.Append("access_token", token, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = !isDev,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(
-                configuration.GetValue<int>("Jwt:ExpiryInMinutes", 60)),
-            Path = "/"
-        });
+        var expires = DateTimeOffset.UtcNow.AddMinutes(
+            configuration.GetValue<int>("Jwt:ExpiryInMinutes", 60));
+        Response.Cookies.Append("access_token", token, AuthCookieSettings.Create(Request, expires));
     }
 
     private void SetRefreshTokenCookie(string rawToken)
     {
-        var isDev = HttpContext.Request.Host.Host == "localhost" || HttpContext.Request.Host.Host == "127.0.0.1";
-        Response.Cookies.Append("refresh_token", rawToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = !isDev,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddDays(7),
-            Path = "/"
-        });
+        Response.Cookies.Append(
+            "refresh_token",
+            rawToken,
+            AuthCookieSettings.Create(Request, DateTimeOffset.UtcNow.AddDays(7)));
     }
 
     private void ClearAccessTokenCookie()
     {
-        var isDev = HttpContext.Request.Host.Host == "localhost" || HttpContext.Request.Host.Host == "127.0.0.1";
-        Response.Cookies.Delete("access_token", new CookieOptions { HttpOnly = true, Secure = !isDev, SameSite = SameSiteMode.Strict, Path = "/" });
+        Response.Cookies.Delete("access_token", AuthCookieSettings.CreateDeletion(Request));
     }
 
     private void ClearRefreshTokenCookie()
     {
-        var isDev = HttpContext.Request.Host.Host == "localhost" || HttpContext.Request.Host.Host == "127.0.0.1";
-        Response.Cookies.Delete("refresh_token", new CookieOptions { HttpOnly = true, Secure = !isDev, SameSite = SameSiteMode.Strict, Path = "/" });
+        Response.Cookies.Delete("refresh_token", AuthCookieSettings.CreateDeletion(Request));
     }
 
     private static (bool valid, string? message) ValidateRegisterRequest(RegisterRequest request)
