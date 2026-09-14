@@ -100,14 +100,14 @@ Cross-origin fallback (not recommended): set `AUTH_COOKIE_SAMESITE=None`, `apiUr
 
 ## Local test of same-origin cookies (before deploy)
 
-Dev today (`localhost:4200` → `localhost:5002`) already sends Strict cookies because Chromium treats different localhost ports as **same-site**. That does **not** prove production subdomain behavior.
+Dev uses `apiUrl: '/api'` with `proxy.conf.json` (`ng serve` proxies `/api` → `:5002`). Day-to-day on `:4200` is fine; that still is **not** a full production cookie/proxy rehearsal.
 
 To mimic production same-origin proxy locally:
 
 ### Option A — Caddy (recommended)
 
 1. Install Caddy.
-2. From repo root, with API on `:5002` and `ng serve` on `:4200`:
+2. From repo root, with API on `:5002` and `ng serve` on `:4200` (restart `ng serve` after proxy changes):
 
 ```bash
 caddy run --config deploy/Caddyfile.local.example

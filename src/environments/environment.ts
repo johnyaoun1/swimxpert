@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5002/api',
+  /** Relative path — ng serve proxies /api → localhost:5002 (see proxy.conf.json). */
+  apiUrl: '/api',
   /**
    * Contact page: embed URL only (the `src="..."` from Google’s iframe), or '' to hide.
    *
