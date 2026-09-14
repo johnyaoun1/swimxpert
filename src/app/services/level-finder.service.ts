@@ -3,30 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export interface LevelFinderAnswers {
-  age: number;
-  q1: boolean | null;
-  q2: boolean | null;
-  q3: boolean | null;
-  q4: boolean | null;
-  q5: boolean | null;
-  q6: boolean | null;
-  q7: boolean | null;
-  q8: boolean | null;
-  q9: boolean | null;
-  q10: boolean | null;
-  q11: boolean | null;
-  q12: boolean | null;
-  q13: boolean | null;
-}
-
-export interface AiLevelRequest {
+export interface LevelFinderRequest {
   age: number;
   answers: { question: string; answer: string }[];
 }
 
-export interface AiLevelResult {
-  level: 'Beginner' | 'Intermediate' | 'Advanced' | 'Elite';
+/** Rules-based placement result from POST /api/level-finder/analyze */
+export interface LevelFinderResult {
+  level: string;
+  levelNumber: number;
+  title?: string;
   explanation: string;
   recommendations: string[];
 }
@@ -38,19 +24,23 @@ export class LevelFinderService {
   private http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/level-finder`;
 
-  analyzeLevel(request: AiLevelRequest): Observable<AiLevelResult> {
-    return this.http.post<AiLevelResult>(`${this.apiUrl}/analyze`, request);
+  analyzeLevel(request: LevelFinderRequest): Observable<LevelFinderResult> {
+    return this.http.post<LevelFinderResult>(`${this.apiUrl}/analyze`, request);
   }
 
-  /** Maps AI level name to a 1-6 number for the star/badge display. */
-  levelNameToNumber(level: string): number {
-    const map: { [k: string]: number } = {
+  /** Prefer API levelNumber; fall back to short band names for older cached results. */
+  toLevelNumber(result: LevelFinderResult): number {
+    if (result.levelNumber >= 1 && result.levelNumber <= 6)
+      return result.levelNumber;
+    const map: Record<string, number> = {
+      Early: 1,
       Beginner: 2,
+      'Beginner-Intermediate': 3,
       Intermediate: 4,
       Advanced: 5,
-      Elite: 6,
+      Elite: 6
     };
-    return map[level] ?? 3;
+    return map[result.level] ?? 1;
   }
 
   getLevelDescription(level: number): string {

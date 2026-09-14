@@ -10,11 +10,9 @@ public class RateLimitMiddleware
     private readonly RequestDelegate _next;
     private static readonly ConcurrentDictionary<string, WindowCount> AuthAttempts = new();
     private static readonly ConcurrentDictionary<string, WindowCount> LeadAttempts = new();
-    private static readonly ConcurrentDictionary<string, WindowCount> ChatAttempts = new();
     private static readonly ConcurrentDictionary<string, WindowCount> PasswordAttempts = new();
     private const int AuthPermitLimit = 10;
     private const int LeadPermitLimit = 20;
-    private const int ChatPermitLimit = 20;
     private const int PasswordPermitLimit = 5;
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
@@ -40,16 +38,6 @@ public class RateLimitMiddleware
         else if (path.StartsWith("/api/leads/capture", StringComparison.OrdinalIgnoreCase) && method == "POST")
         {
             if (!TryConsume(LeadAttempts, ip, LeadPermitLimit))
-            {
-                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("""{"message":"Too many requests. Please try again later."}""");
-                return;
-            }
-        }
-        else if (path.Equals("/api/chat", StringComparison.OrdinalIgnoreCase) && method == "POST")
-        {
-            if (!TryConsume(ChatAttempts, ip, ChatPermitLimit))
             {
                 context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                 context.Response.ContentType = "application/json";

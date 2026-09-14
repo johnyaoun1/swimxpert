@@ -43,7 +43,7 @@ Cookies are set for `swimxpert.com` and sent on same-origin `/api` requests. `Sa
     - `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET` / `GOOGLE_CALENDAR_CALENDAR_ID`
     - `GoogleCalendar__PublicApiBaseUrl` = `https://swimxpert.com` (public URL that receives `/api/google-oauth/callback`)
     - `GoogleCalendar__FrontendRedirectBaseUrl` = `https://swimxpert.com`
-  - Optional: `CLOUDINARY_*`, `SMTP_*`, `GEMINI_API_KEY`, `INITIAL_ADMIN_*`
+  - Optional: `CLOUDINARY_*`, `SMTP_*`, `INITIAL_ADMIN_*`
 
 - [ ] **Private networking** – Web service reaches API via Railway private DNS (e.g. `http://api.railway.internal:8080`), not the public `*.railway.app` URL, so only the site origin is public.
 

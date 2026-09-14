@@ -126,8 +126,8 @@
             type="submit"
             [disabled]="levelFinderForm.invalid"
             class="lf-btn-submit"
-            aria-label="Analyze my swimming level with AI">
-            <span>Analyze with AI</span>
+            aria-label="Find my swimming level">
+            <span>Find my level</span>
             <svg class="lf-arrow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fill-rule="evenodd"
                     d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
@@ -137,12 +137,12 @@
         </div>
 
         <!-- ERROR -->
-        @if (aiError()) {
+        @if (errorMessage()) {
           <div class="lf-ai-error" role="alert">
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
             </svg>
-            {{ aiError() }}
+            {{ errorMessage() }}
           </div>
         }
 
@@ -163,18 +163,18 @@
             </svg>
           </div>
         </div>
-        <h2 class="lf-loading-title">Analyzing your answers…</h2>
-        <p class="lf-loading-sub">Gemini AI is reviewing your child's swimming profile</p>
+        <h2 class="lf-loading-title">Checking your answers…</h2>
+        <p class="lf-loading-sub">Matching skills to SwimXpert lesson levels</p>
         <div class="lf-loading-dots" aria-hidden="true">
           <span></span><span></span><span></span>
         </div>
       </div>
     }
 
-    @if (showResult() && aiResult()) {
+    @if (showResult() && result()) {
 
-      <!-- ─── AI RESULT ─── -->
-      <section aria-label="Your AI-powered swimming level assessment">
+      <!-- ─── RESULT ─── -->
+      <section aria-label="Your swimming level assessment">
       <div class="lf-card lf-result-card">
 
         <!-- Sparkles -->
@@ -186,23 +186,9 @@
           <span class="lf-sp lf-sp-5">✦</span>
         </div>
 
-        <!-- Gemini badge -->
-        <div class="lf-gemini-badge" aria-label="Powered by Gemini AI">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z" fill="url(#gem-grad)" stroke="none"/>
-            <defs>
-              <linearGradient id="gem-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#8b5cf6"/>
-                <stop offset="100%" stop-color="#06b6d4"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          Powered by Gemini AI
-        </div>
-
-        <!-- AI Level name — prominent -->
-        <div class="lf-ai-level-name" [attr.data-level]="aiResult()!.level">
-          {{ aiResult()!.level }}
+        <!-- Level band — prominent -->
+        <div class="lf-ai-level-name" [attr.data-level]="result()!.level">
+          {{ result()!.level }}
         </div>
 
         <!-- Level number badge -->
@@ -214,7 +200,7 @@
         @if (levelInfo()) {
           <h2 class="lf-result-name">{{ levelInfo()!.title }}</h2>
         } @else {
-          <h2 class="lf-result-name">Level {{ determinedLevel() }}</h2>
+          <h2 class="lf-result-name">{{ result()!.title || ('Level ' + determinedLevel()) }}</h2>
         }
 
         <!-- Stars -->
@@ -226,19 +212,19 @@
           <span class="lf-star" [class.lf-star-on]="5 <= determinedLevel()" aria-hidden="true">★</span>
         </div>
 
-        <!-- AI Explanation -->
+        <!-- Explanation -->
         <div class="lf-result-block lf-ai-explanation-block">
           <h3 class="lf-block-label">
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            AI Assessment
+            Assessment
           </h3>
-          <p class="lf-block-text">{{ aiResult()!.explanation }}</p>
+          <p class="lf-block-text">{{ result()!.explanation }}</p>
         </div>
 
-        <!-- AI Recommendations -->
-        @if (aiResult()!.recommendations.length > 0) {
+        <!-- Recommendations -->
+        @if (result()!.recommendations.length > 0) {
           <div class="lf-result-block lf-ai-recs-block">
             <h3 class="lf-block-label">
               <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -247,7 +233,7 @@
               Training Recommendations
             </h3>
             <ul class="lf-ai-recs-list" aria-label="Training recommendations">
-              @for (rec of aiResult()!.recommendations; track $index) {
+              @for (rec of result()!.recommendations; track $index) {
                 <li class="lf-ai-rec-item">
                   <span class="lf-rec-bullet" aria-hidden="true">→</span>
                   {{ rec }}

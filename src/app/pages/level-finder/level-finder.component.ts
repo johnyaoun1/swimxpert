@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
-import { LevelFinderService, LevelFinderAnswers, AiLevelResult } from '../../services/level-finder.service';
+import { LevelFinderService, LevelFinderResult } from '../../services/level-finder.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -22,10 +22,10 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
   levelFinderForm: FormGroup;
   showResult  = signal(false);
   loading     = signal(false);
-  aiError     = signal('');
+  errorMessage = signal('');
   determinedLevel = signal<number>(1);
   levelInfo   = signal<any>(null);
-  aiResult    = signal<AiLevelResult | null>(null);
+  result      = signal<LevelFinderResult | null>(null);
 
   questions = [
     { id: 1,  key: 'q1',  text: 'Can your child float independently on their back?' },
@@ -66,15 +66,12 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
       content: 'Not sure which swimming class is right for you? Take our quick level assessment and find the perfect SwimXpert program in Lebanon.'
     });
 
-    // Subscribe to queryParams so restore works even when the component is reused
     this.querySub = this.route.queryParams.subscribe(params => {
       if (params['restore'] === '1') {
         this.tryRestoreResult();
       }
     });
 
-    // Also try to restore immediately if the user is already logged in and there's a pending result
-    // (handles the case where the user logs in via another tab or returns directly)
     if (this.authService.isAuthenticatedSync() && !this.showResult()) {
       this.tryRestoreResult();
     }
@@ -88,10 +85,11 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
     try {
       const raw = localStorage.getItem(LF_RESULT_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as AiLevelResult & { determinedLevel: number };
-        this.aiResult.set(saved);
-        this.determinedLevel.set(saved.determinedLevel ?? 1);
-        this.levelInfo.set(this.swimLevelsService.getLevel(saved.determinedLevel ?? 1));
+        const saved = JSON.parse(raw) as LevelFinderResult & { determinedLevel: number };
+        const num = saved.determinedLevel ?? this.levelFinderService.toLevelNumber(saved);
+        this.result.set(saved);
+        this.determinedLevel.set(num);
+        this.levelInfo.set(this.swimLevelsService.getLevel(num));
         this.showResult.set(true);
         localStorage.removeItem(LF_RESULT_KEY);
       }
@@ -113,24 +111,23 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
     }));
 
     this.loading.set(true);
-    this.aiError.set('');
+    this.errorMessage.set('');
 
     this.levelFinderService.analyzeLevel({ age: formValue.age, answers }).subscribe({
-      next: (result) => {
-        const num = this.levelFinderService.levelNameToNumber(result.level);
-        this.aiResult.set(result);
+      next: (res) => {
+        const num = this.levelFinderService.toLevelNumber(res);
+        this.result.set(res);
         this.determinedLevel.set(num);
         this.levelInfo.set(this.swimLevelsService.getLevel(num));
         this.loading.set(false);
         this.showResult.set(true);
 
-        // If guest, persist result so it survives a login/signup redirect
         if (!this.authService.isAuthenticatedSync()) {
-          localStorage.setItem(LF_RESULT_KEY, JSON.stringify({ ...result, determinedLevel: num }));
+          localStorage.setItem(LF_RESULT_KEY, JSON.stringify({ ...res, determinedLevel: num }));
         }
       },
       error: (err) => {
-        this.aiError.set(err?.error?.message || err?.message || 'AI assessment failed. Please try again.');
+        this.errorMessage.set(err?.error?.message || err?.message || 'Assessment failed. Please try again.');
         this.loading.set(false);
       }
     });
@@ -146,8 +143,8 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
     this.levelFinderForm.reset();
     this.showResult.set(false);
     this.loading.set(false);
-    this.aiError.set('');
-    this.aiResult.set(null);
+    this.errorMessage.set('');
+    this.result.set(null);
     this.determinedLevel.set(1);
     this.levelInfo.set(null);
   }
