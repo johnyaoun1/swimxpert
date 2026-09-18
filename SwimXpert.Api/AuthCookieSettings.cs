@@ -20,7 +20,9 @@ public static class AuthCookieSettings
             Secure = secure,
             SameSite = sameSite,
             Path = "/",
-            // Host-only cookie (no Domain) — correct for same-origin proxy on the public hostname.
+            // Host-only cookie by default (correct for same-origin proxy).
+            // Set AUTH_COOKIE_DOMAIN when frontend and API are on different subdomains.
+            Domain = ResolveDomain(),
         };
 
         if (expires.HasValue)
@@ -60,5 +62,11 @@ public static class AuthCookieSettings
         var host = request.Host.Host;
         var isLocal = host is "localhost" or "127.0.0.1" or "::1";
         return !isLocal;
+    }
+
+    private static string? ResolveDomain()
+    {
+        var domain = Environment.GetEnvironmentVariable("AUTH_COOKIE_DOMAIN");
+        return string.IsNullOrWhiteSpace(domain) ? null : domain;
     }
 }
