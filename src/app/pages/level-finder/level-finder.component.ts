@@ -2,11 +2,11 @@ import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Title, Meta } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { LevelFinderService, LevelFinderResult } from '../../services/level-finder.service';
 import { SwimLevelsService } from '../../services/swim-levels.service';
 import { AuthService } from '../../services/auth.service';
+import { SeoService } from '../../services/seo.service';
 
 const LF_RESULT_KEY = 'lf_pending_result';
 
@@ -49,8 +49,7 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
     private swimLevelsService: SwimLevelsService,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private title: Title,
-    private meta: Meta
+    private seo: SeoService
   ) {
     const formControls: any = {
       age: [null, [Validators.required, Validators.min(3), Validators.max(18)]]
@@ -60,10 +59,11 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.title.setTitle('Find Your Swimming Level | SwimXpert Lebanon');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'Not sure which swimming class is right for you? Take our quick level assessment and find the perfect SwimXpert program in Lebanon.'
+    this.seo.updatePage({
+      title: 'Find Your Swimming Level | SwimXpert Lebanon',
+      description:
+        'Not sure which swimming class is right for you? Take our quick level assessment and find the perfect SwimXpert program in Lebanon.',
+      path: '/level-finder'
     });
 
     this.querySub = this.route.queryParams.subscribe(params => {

@@ -51,6 +51,7 @@ export const routes: Routes = [
   { path: 'swim-lessons', loadComponent: () => import('./pages/swim-lessons/swim-lessons.component').then((m) => m.SwimLessonsComponent), title: 'Swim Lessons - SwimXpert' },
   { path: 'level-finder', loadComponent: () => import('./pages/level-finder/level-finder.component').then((m) => m.LevelFinderComponent), title: 'Level Finder - SwimXpert' },
   { path: 'contact', loadComponent: () => import('./pages/contact/contact.component').then((m) => m.ContactComponent), title: 'Contact Us - SwimXpert' },
+  { path: 'faq', loadComponent: () => import('./pages/faq/faq.component').then((m) => m.FaqComponent), title: 'FAQ - SwimXpert' },
   { path: 'gallery', loadComponent: () => import('./pages/gallery/gallery.component').then((m) => m.GalleryComponent), title: 'Gallery - SwimXpert' },
   { path: 'certificates', loadComponent: () => import('./pages/certificates/certificates.component').then((m) => m.CertificatesComponent), title: 'Certificates - SwimXpert' },
   { path: 'quizzes', loadComponent: () => import('./pages/quizzes/quizzes.component').then((m) => m.QuizzesComponent), title: 'Swimming Quiz - SwimXpert', canActivate: [approvedClientGuard] },

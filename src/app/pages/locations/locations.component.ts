@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Title, Meta } from '@angular/platform-browser';
+import { SeoService } from '../../services/seo.service';
 
 interface Location {
   id: number;
@@ -50,13 +50,14 @@ export class LocationsComponent implements OnInit {
     }
   ];
 
-  constructor(private title: Title, private meta: Meta) {}
+  constructor(private seo: SeoService) {}
 
   ngOnInit(): void {
-    this.title.setTitle('SwimXpert Pool Locations | Lebanon');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'Find SwimXpert swimming lesson locations across Lebanon. Professional pools equipped for all age groups and skill levels.'
+    this.seo.updatePage({
+      title: 'SwimXpert Pool Locations | Lebanon',
+      description:
+        'Find SwimXpert swimming lesson locations across Lebanon. Professional pools equipped for all age groups and skill levels.',
+      path: '/locations'
     });
   }
 }

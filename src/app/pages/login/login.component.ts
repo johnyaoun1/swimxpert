@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { Title, Meta } from '@angular/platform-browser';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-login',
@@ -30,8 +30,8 @@ export class LoginComponent implements OnInit {
     private apiService: ApiService,
     private router: Router,
     private route: ActivatedRoute,
-    private title: Title,
-    private meta: Meta
+    private seo: SeoService,
+    @Inject(PLATFORM_ID) private platformId: object
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -45,16 +45,19 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title.setTitle('Login | SwimXpert Member Portal');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'Sign in to your SwimXpert account to manage sessions, track progress, and view payments.'
+    this.seo.updatePage({
+      title: 'Login | SwimXpert Member Portal',
+      description:
+        'Sign in to your SwimXpert account to manage sessions, track progress, and view payments.',
+      path: '/login'
     });
 
     // Store the returnUrl in sessionStorage so signup can access it too
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
-      sessionStorage.setItem('auth_return_url', returnUrl);
+    if (isPlatformBrowser(this.platformId)) {
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
+        sessionStorage.setItem('auth_return_url', returnUrl);
+      }
     }
   }
 

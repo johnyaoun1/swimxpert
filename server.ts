@@ -2,10 +2,70 @@ import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr';
-import * as express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import * as http from 'node:http';
+import * as https from 'node:https';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import bootstrap from './src/main.server';
+
+/**
+ * Same-origin /api reverse proxy → ASP.NET (Railway private network).
+ * Set API_UPSTREAM e.g. http://api.railway.internal:8080
+ */
+function attachApiProxy(server: express.Express): void {
+  const raw = process.env['API_UPSTREAM']?.trim();
+  if (!raw) {
+    console.warn('[ssr] API_UPSTREAM is not set — /api will not be proxied (SSR-only mode).');
+    return;
+  }
+
+  let target: URL;
+  try {
+    target = new URL(raw);
+  } catch {
+    throw new Error(`API_UPSTREAM is not a valid URL: ${raw}`);
+  }
+
+  const transport = target.protocol === 'https:' ? https : http;
+  const port = target.port
+    ? Number(target.port)
+    : target.protocol === 'https:'
+      ? 443
+      : 80;
+
+  server.use('/api', (req: Request, res: Response) => {
+    // originalUrl keeps the /api prefix that ASP.NET controllers expect.
+    const headers: http.OutgoingHttpHeaders = { ...req.headers, host: target.host };
+    delete headers['connection'];
+
+    const proxyReq = transport.request(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname,
+        port,
+        path: req.originalUrl,
+        method: req.method,
+        headers,
+      },
+      (proxyRes) => {
+        res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
+        proxyRes.pipe(res);
+      }
+    );
+
+    proxyReq.on('error', (err) => {
+      console.error('[ssr] API proxy error:', err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ message: 'Cannot reach API upstream.' });
+      }
+    });
+
+    req.pipe(proxyReq);
+  });
+
+  console.log(`[ssr] Proxying /api → ${target.origin}`);
+}
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -20,15 +80,16 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', distFolder);
 
-  // Example Express Rest API endpoints
-  // server.get('/api/**', (req, res) => { });
+  // Must run before static + SSR catch-alls so /api never hits Angular.
+  attachApiProxy(server);
+
   // Serve static files from /browser
   server.get('*.*', express.static(distFolder, {
     maxAge: '1y'
   }));
 
   // All regular routes use the Angular engine
-  server.get('*', (req, res, next) => {
+  server.get('*', (req: Request, res: Response, next: NextFunction) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
 
     commonEngine

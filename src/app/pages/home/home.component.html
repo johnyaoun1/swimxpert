@@ -1,13 +1,28 @@
-<header class="hero-gradient text-white relative overflow-hidden min-h-[min(70vh,36rem)] md:min-h-[min(78vh,40rem)]" aria-label="Hero" style="background-image:linear-gradient(rgba(6,14,36,0.62),rgba(13,27,62,0.72)),url('/assets/swimmer-butterfly.png');background-size:cover,cover;background-position:center,38% 45%;background-repeat:no-repeat,no-repeat;">
+<header class="hero-gradient text-white relative overflow-hidden min-h-[min(70vh,36rem)] md:min-h-[min(78vh,40rem)]" aria-label="Hero">
+  <!-- Above-the-fold LCP image: eager (not lazy) -->
+  <img
+    src="/assets/swimmer-butterfly.png"
+    alt=""
+    class="hero-lcp-img absolute inset-0 w-full h-full object-cover pointer-events-none"
+    style="object-position: 38% 45%;"
+    width="1600"
+    height="1000"
+    loading="eager"
+    fetchpriority="high"
+    decoding="async"
+    aria-hidden="true"
+  />
+  <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(rgba(6,14,36,0.62),rgba(13,27,62,0.72));" aria-hidden="true"></div>
+
   <!-- Animated background elements -->
-  <div class="absolute inset-0 overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
     <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-300 opacity-5 rounded-full blur-3xl animate-pulse-slow"></div>
   </div>
   
   <!-- Floating water waves -->
-  <div class="absolute bottom-0 left-0 right-0 h-32 overflow-hidden">
+  <div class="absolute bottom-0 left-0 right-0 h-32 overflow-hidden pointer-events-none" aria-hidden="true">
     <svg class="absolute bottom-0 w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
       <path d="M0,60 C300,100 600,20 900,60 C1050,80 1150,40 1200,60 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.1)" class="animate-wave"></path>
       <path d="M0,80 C300,120 600,40 900,80 C1050,100 1150,60 1200,80 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.05)" class="animate-wave" style="animation-delay: 1s;"></path>
@@ -21,6 +36,10 @@
           src="assets/logo.png"
           alt="SwimXpert logo - Professional swimming lessons in Lebanon"
           class="h-28 w-28 md:h-36 md:w-36 object-cover rounded-full ring-4 ring-white/40 drop-shadow-2xl"
+          width="144"
+          height="144"
+          loading="lazy"
+          decoding="async"
         />
       </div>
       <h1 class="text-5xl md:text-7xl font-extrabold mb-6 animate-slide-down">
@@ -126,8 +145,20 @@
   </div>
 </section>
 
-<section class="section-padding relative overflow-hidden min-h-[280px] md:min-h-[340px]" style="background-image:linear-gradient(rgba(6,14,36,0.72),rgba(13,27,62,0.80)),url('/assets/swimmer-dark.png');background-size:cover,cover;background-position:center,50% 38%;background-repeat:no-repeat,no-repeat;" aria-label="Join SwimXpert">
-  <div class="absolute inset-0">
+<section class="section-padding relative overflow-hidden min-h-[280px] md:min-h-[340px]" aria-label="Join SwimXpert">
+  <img
+    src="/assets/swimmer-dark.png"
+    alt=""
+    class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+    style="object-position: 50% 38%;"
+    width="1600"
+    height="900"
+    loading="lazy"
+    decoding="async"
+    aria-hidden="true"
+  />
+  <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(rgba(6,14,36,0.72),rgba(13,27,62,0.80));" aria-hidden="true"></div>
+  <div class="absolute inset-0" aria-hidden="true">
     <div class="absolute top-10 right-10 w-64 h-64 rounded-full blur-3xl floating-element" style="background:rgba(29,155,240,0.1);"></div>
     <div class="absolute bottom-10 left-10 w-80 h-80 rounded-full blur-3xl floating-element-delayed" style="background:rgba(0,196,255,0.08);"></div>
   </div>

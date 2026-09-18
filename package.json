@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
+    "dev": "ng serve",
+    "start": "node dist/swimxpert/server/main.js",
+    "build": "ng run swimxpert:prerender",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "dev:ssr": "ng run swimxpert:serve-ssr",
     "serve:ssr": "node dist/swimxpert/server/main.js",
-    "build:ssr": "ng build && ng run swimxpert:server",
+    "build:ssr": "ng run swimxpert:prerender",
     "prerender": "ng run swimxpert:prerender"
   },
   "private": true,

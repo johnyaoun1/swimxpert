@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
@@ -70,10 +71,14 @@ export class AuthService {
 
   constructor(
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    @Inject(PLATFORM_ID) private platformId: object
   ) {
-    this.loadUserFromStorage();
-    this.fetchMe().subscribe();
+    // Avoid localStorage / auth HTTP during SSR/prerender (Node has no browser APIs).
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadUserFromStorage();
+      this.fetchMe().subscribe();
+    }
   }
 
   login(identifier: string, password: string): Observable<AuthApiResponse> {
@@ -190,6 +195,7 @@ export class AuthService {
   }
 
   private loadUserFromStorage(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     const userStr = localStorage.getItem(this.USER_KEY);
     if (userStr) {
       try {
@@ -207,6 +213,7 @@ export class AuthService {
   getCurrentUser(): User | null {
     const current = this.currentUser();
     if (current) return current;
+    if (!isPlatformBrowser(this.platformId)) return null;
 
     const raw = localStorage.getItem(this.USER_KEY);
     if (!raw) return null;
@@ -367,7 +374,9 @@ export class AuthService {
   }
 
   private clearAuthState(redirectToLogin: boolean): void {
-    localStorage.removeItem(this.USER_KEY);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.USER_KEY);
+    }
     this.currentUser.set(null);
     if (redirectToLogin) {
       this.router.navigate(['/login']);

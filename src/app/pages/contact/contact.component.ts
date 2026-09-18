@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Title, Meta } from '@angular/platform-browser';
 import { ContactService } from '../../services/contact.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-contact',
@@ -20,8 +20,7 @@ export class ContactComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private contactService: ContactService,
-    private title: Title,
-    private meta: Meta
+    private seo: SeoService
   ) {
     this.contactForm = this.fb.group({
       name: ['', Validators.required],
@@ -31,10 +30,11 @@ export class ContactComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title.setTitle('Contact SwimXpert | Swimming Lessons Lebanon');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'Get in touch with SwimXpert for swimming lessons in Lebanon. Book a trial session or ask about our programs for children and adults.'
+    this.seo.updatePage({
+      title: 'Contact SwimXpert | Swimming Lessons Lebanon',
+      description:
+        'Get in touch with SwimXpert for swimming lessons in Lebanon. Book a trial session or ask about our programs for children and adults.',
+      path: '/contact'
     });
   }
 

@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { Title, Meta } from '@angular/platform-browser';
 import { AuthService } from '../../services/auth.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-signup',
@@ -22,8 +22,8 @@ export class SignupComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private title: Title,
-    private meta: Meta
+    private seo: SeoService,
+    @Inject(PLATFORM_ID) private platformId: object
   ) {
     this.signupForm = this.fb.group({
       name: ['', Validators.required],
@@ -35,15 +35,17 @@ export class SignupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title.setTitle('Join SwimXpert | Start Swimming Lessons');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'Create your SwimXpert account and start your swimming journey.'
+    this.seo.updatePage({
+      title: 'Join SwimXpert | Start Swimming Lessons',
+      description: 'Create your SwimXpert account and start your swimming journey.',
+      path: '/signup'
     });
 
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
-      sessionStorage.setItem('auth_return_url', returnUrl);
+    if (isPlatformBrowser(this.platformId)) {
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      if (returnUrl && returnUrl !== '/dashboard' && returnUrl !== '/login') {
+        sessionStorage.setItem('auth_return_url', returnUrl);
+      }
     }
   }
 

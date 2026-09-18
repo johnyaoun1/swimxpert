@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Title, Meta } from '@angular/platform-browser';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-home',
@@ -11,13 +11,16 @@ import { Title, Meta } from '@angular/platform-browser';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  constructor(private title: Title, private meta: Meta) {}
+  constructor(private seo: SeoService) {}
 
   ngOnInit(): void {
-    this.title.setTitle('SwimXpert | Swimming Lessons & Coaching in Lebanon');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'SwimXpert provides professional swimming lessons for children and adults across Lebanon. Expert coaches, beginner to advanced programs, and private sessions available.'
+    this.seo.updatePage({
+      title: 'SwimXpert | Swimming Lessons & Coaching in Lebanon',
+      description:
+        'SwimXpert provides professional swimming lessons for children and adults across Lebanon. Expert coaches, beginner to advanced programs, and private sessions available.',
+      path: '/',
+      keywords:
+        'swimming lessons lebanon, swimming classes beirut, kids swimming lessons, private swimming coach lebanon'
     });
   }
 }

@@ -1,0 +1,41 @@
+// Shared shell for login & signup.
+// Replace `src/assets/auth/login-signup-bg.png` with your photo (same path/name),
+// URL is relative to this file: `src/app/styles/` → `src/assets/auth/`.
+// or change $auth-bg-image to another filename under `src/assets/`.
+
+$auth-bg-image: url('../../assets/auth/login-signup-bg.png');
+
+.auth-page {
+  position: relative;
+  isolation: isolate;
+}
+
+.auth-page__bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: #0a0f1e;
+  background-image: $auth-bg-image;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.auth-page__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    160deg,
+    rgba(10, 15, 30, 0.45) 0%,
+    rgba(10, 15, 30, 0.72) 40%,
+    rgba(10, 15, 30, 0.88) 100%
+  );
+}
+
+.auth-page__inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}

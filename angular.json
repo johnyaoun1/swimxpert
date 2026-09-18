@@ -95,11 +95,20 @@
           "options": {
             "outputPath": "dist/swimxpert/server",
             "main": "server.ts",
-            "tsConfig": "tsconfig.server.json"
+            "tsConfig": "tsconfig.server.json",
+            "externalDependencies": [
+              "express"
+            ]
           },
           "configurations": {
             "production": {
-              "outputHashing": "media"
+              "outputHashing": "media",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "buildOptimizer": false,
@@ -128,6 +137,7 @@
         "prerender": {
           "builder": "@angular-devkit/build-angular:prerender",
           "options": {
+            "discoverRoutes": false,
             "routes": [
               "/",
               "/about",
@@ -135,6 +145,7 @@
               "/level-finder",
               "/locations",
               "/contact",
+              "/faq",
               "/login",
               "/signup"
             ]

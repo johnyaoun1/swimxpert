@@ -1,0 +1,31 @@
+<header class="hero-gradient text-white relative overflow-hidden" aria-label="FAQ hero">
+  <div class="container mx-auto px-4 py-20 md:py-24 relative z-10">
+    <div class="max-w-3xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-extrabold mb-4 animate-slide-down">Frequently Asked Questions</h1>
+      <p class="text-lg md:text-xl text-blue-100 leading-relaxed">
+        Straight answers about SwimXpert swimming lessons in Lebanon — pricing, ages, locations, and booking.
+      </p>
+    </div>
+  </div>
+</header>
+
+<main id="main-content" class="section-padding" style="background:#0a0f1e;">
+  <div class="container mx-auto max-w-3xl">
+    <div class="space-y-10">
+      @for (item of faqs; track item.question) {
+        <article class="faq-item premium-container">
+          <h2 class="text-xl md:text-2xl font-bold text-white mb-3">{{ item.question }}</h2>
+          <p class="text-lg text-slate-200 leading-relaxed mb-2">{{ item.answerLead }}</p>
+          @if (item.answerDetail) {
+            <p class="leading-relaxed" style="color:#94a3b8;">{{ item.answerDetail }}</p>
+          }
+        </article>
+      }
+    </div>
+
+    <div class="mt-14 text-center">
+      <p class="mb-4" style="color:#94a3b8;">Still have a question?</p>
+      <a routerLink="/contact" class="btn-primary inline-block">Contact SwimXpert</a>
+    </div>
+  </div>
+</main>

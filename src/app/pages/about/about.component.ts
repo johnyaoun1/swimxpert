@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Title, Meta } from '@angular/platform-browser';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-about',
@@ -10,13 +10,14 @@ import { Title, Meta } from '@angular/platform-browser';
   styleUrls: ['./about.component.scss']
 })
 export class AboutComponent implements OnInit {
-  constructor(private title: Title, private meta: Meta) {}
+  constructor(private seo: SeoService) {}
 
   ngOnInit(): void {
-    this.title.setTitle('About SwimXpert | Professional Swimming Coaches Lebanon');
-    this.meta.updateTag({
-      name: 'description',
-      content: "Learn about SwimXpert's mission to bring professional swimming coaching to Lebanon. Meet our certified instructors and discover our training philosophy."
+    this.seo.updatePage({
+      title: 'About SwimXpert | Professional Swimming Coaches Lebanon',
+      description:
+        "SwimXpert coaches hold ASCA Levels 1–3, SAS swimming diploma, and Ministry of Tourism lifeguard certification. Private lessons from 2.5 years, semi-private groups, aqua therapy, and aqua gym in Lebanon.",
+      path: '/about'
     });
   }
 }

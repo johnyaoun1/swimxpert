@@ -1,0 +1,13 @@
+.faq-item {
+  padding: 1.5rem 1.75rem;
+}
+
+@media (max-width: 639px) {
+  .faq-item {
+    padding: 1.25rem 1rem;
+  }
+
+  .hero-gradient h1 {
+    font-size: 1.875rem;
+  }
+}
