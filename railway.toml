@@ -1,0 +1,9 @@
+# Railway — API service (frontend is on Cloudflare; not deployed here)
+# Root Directory: repo root (Dockerfile COPY paths expect monorepo root)
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "SwimXpert.Api/Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"

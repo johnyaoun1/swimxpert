@@ -1,0 +1,10 @@
+# Railway — API service
+# Root Directory: / (repo root) OR set Dockerfile path to SwimXpert.Api/Dockerfile
+# Prefer: Settings → Root Directory = repo root, Dockerfile path = SwimXpert.Api/Dockerfile
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "SwimXpert.Api/Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"

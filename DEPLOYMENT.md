@@ -1,24 +1,24 @@
 # SwimXpert Production Deployment Guide
 
-## Recommended topology: same-origin reverse proxy
+## Topology (current): Cloudflare frontend + Railway API/Postgres
 
-This codebase is built for **one public origin** (e.g. `https://swimxpert.com`):
-
-| Signal | Current setting |
-|--------|-----------------|
-| `environment.prod.ts` | `apiUrl: '/api'` |
-| Auth cookies | `SameSite=Strict`, `Secure` in prod, `HttpOnly`, `Path=/` |
-| CSP (`SecurityHeadersMiddleware`) | `connect-src 'self'` — blocks a separate API host unless you change CSP |
-| Angular | `withCredentials: true` on all API calls |
-
-**Do not** put the SPA on `app.swimxpert.com` and the API on `api.swimxpert.com` unless you also switch cookies to `SameSite=None; Secure`, widen CORS, change `apiUrl` to the absolute API URL, and update CSP `connect-src`. That is higher risk for this project.
+Frontend and API are **different subdomains** of `swimxpert.com` (same *site*, different *origins*):
 
 ```
-Browser  →  https://swimxpert.com/          →  static Angular (Web / nginx)
-         →  https://swimxpert.com/api/*     →  proxied to ASP.NET (private)
+Browser  →  https://app.swimxpert.com/     →  Cloudflare (Angular SSR / Pages)
+         →  https://api.swimxpert.com/api  →  Railway service "api" → Postgres
 ```
 
-Cookies are set for `swimxpert.com` and sent on same-origin `/api` requests. `SameSite=Strict` stays valid.
+| Piece | Setting |
+|--------|---------|
+| `environment.prod.ts` | Absolute `apiUrl` → Railway API (`…/api`) |
+| Auth cookies | `HttpOnly`, `Secure`, `SameSite=Strict`, `Domain=.swimxpert.com` (`AUTH_COOKIE_DOMAIN`) |
+| CORS | `CORS_ALLOWED_ORIGINS` = exact FE origins + `AllowCredentials()` (never `*`) |
+| Angular | `withCredentials: true` on API calls |
+
+**Important:** Browsers only accept `Domain=.swimxpert.com` cookies when the API response host is under `swimxpert.com` (e.g. `api.swimxpert.com`). Cookies set from `*.up.railway.app` with that Domain are rejected.
+
+Interim Railway public URL (until DNS): `https://api-production-3b21e.up.railway.app`
 
 ---
 
@@ -26,145 +26,43 @@ Cookies are set for `swimxpert.com` and sent on same-origin `/api` requests. `Sa
 
 ### Backend (SwimXpert.Api) — Railway service `api`
 
-- [ ] **Environment variables**:
-  - `DATABASE_URL` – Postgres connection string (`SSL Mode=Require` if needed)
-  - `JWT_KEY` – Strong secret (32+ chars), e.g. `openssl rand -base64 32`
-  - `JWT_ISSUER` – e.g. `SwimXpert.Api`
-  - `JWT_AUDIENCE` – e.g. `SwimXpert.Client`
-  - `ASPNETCORE_ENVIRONMENT` – `Production`
-  - `ASPNETCORE_URLS` – `http://0.0.0.0:$PORT` (Railway sets `PORT`)
-  - `CORS_ALLOWED_ORIGINS` – Public site origin(s), no trailing slash  
-    e.g. `https://swimxpert.com,https://www.swimxpert.com`
-  - `ALLOWED_HOSTS` – e.g. `swimxpert.com,www.swimxpert.com` (and Railway hostname if you hit the API URL directly)
-  - `FRONTEND_URL` – e.g. `https://swimxpert.com` (email verify / reset links)
-  - `AUTH_COOKIE_SAMESITE` – `Strict` (default; omit unless you know you need otherwise)
-  - `AUTH_COOKIE_SECURE` – omit (defaults to secure off-localhost). Do not set `false` in production.
-  - Google Calendar (if used):
-    - `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET` / `GOOGLE_CALENDAR_CALENDAR_ID`
-    - `GoogleCalendar__PublicApiBaseUrl` = `https://swimxpert.com` (public URL that receives `/api/google-oauth/callback`)
-    - `GoogleCalendar__FrontendRedirectBaseUrl` = `https://swimxpert.com`
+- [x] Hobby plan / billing active
+- [x] Postgres plugin running
+- [x] API deployed (`SwimXpert.Api/Dockerfile` via `RAILWAY_DOCKERFILE_PATH`)
+- [x] Public domain generated
+- [ ] Custom domain `api.swimxpert.com` DNS (Cloudflare → Railway)
+- [x] Env (see also `deploy/railway.env.example`):
+  - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+  - `JWT_KEY` (unique, not the well-known DevKey)
+  - `AUTH_COOKIE_DOMAIN=.swimxpert.com`
+  - `AUTH_COOKIE_SECURE=true`
+  - `CORS_ALLOWED_ORIGINS=http://localhost:4200,https://app.swimxpert.com,https://swimxpert.com,https://www.swimxpert.com`
+  - `FRONTEND_URL=https://app.swimxpert.com`
+  - `ALLOWED_HOSTS=*` (tighten after custom domain is live)
   - Optional: `CLOUDINARY_*`, `SMTP_*`, `INITIAL_ADMIN_*`
 
-- [ ] **Private networking** – Web service reaches API via Railway private DNS (e.g. `http://api.railway.internal:8080`), not the public `*.railway.app` URL, so only the site origin is public.
+### Frontend — Cloudflare
 
-- [ ] **Secrets** – Never commit `JWT_KEY` or DB passwords.
-
-### Frontend — keep `apiUrl: '/api'`
-
-`src/environments/environment.prod.ts` should stay:
-
-```ts
-apiUrl: '/api',
-```
-
-Build: `npm ci && npm run build` → `dist/swimxpert/browser` (or `dist/swimxpert` depending on Angular version output).
-
-### Railway setup (two services + proxy)
-
-1. **API service** (`api`)
-   - Root / watch path: `SwimXpert.Api`
-   - Build: `dotnet publish -c Release -o ./publish`
-   - Start: `cd publish && dotnet SwimXpert.Api.dll`
-   - Env vars from the checklist above
-   - Custom domain: **optional** (prefer private-only + proxy)
-
-2. **Web service** (`web`)
-   - Serves static Angular + **reverse-proxies** `/api` → private API
-   - Custom domain: `swimxpert.com` (and `www` if needed)
-   - Example nginx config: [`deploy/nginx.conf.example`](deploy/nginx.conf.example)
-   - Example Caddy: [`deploy/Caddyfile.example`](deploy/Caddyfile.example)
-
-3. Attach the custom domain only to **Web**. TLS terminates at Railway/edge; proxy to API over HTTP on the private network is fine.
-
-### Supabase (PostgreSQL)
-
-1. Create project and copy connection string (pooling port 6543 if available).
-2. Set `DATABASE_URL` on the API service.
+- [ ] Cloudflare Pages/Workers project created
+- [x] `environment.prod.ts` points at live API URL (update again when `api.swimxpert.com` is live)
+- [ ] DNS: `app.swimxpert.com` (and optionally apex) → Cloudflare
+- [ ] Deploy production build (`npm run build`)
 
 ---
 
-## Cookie / CORS summary (same-origin)
+## Cookie / CORS summary (split subdomains)
 
 | Setting | Value |
 |---------|--------|
-| `SameSite` | `Strict` |
-| `Secure` | `true` in production |
+| `SameSite` | `Strict` (same-site across `*.swimxpert.com`) |
+| `Secure` | `true` |
 | `HttpOnly` | `true` |
 | `Path` | `/` |
-| `Domain` | unset (host-only on `swimxpert.com`) |
-| CORS | `CORS_ALLOWED_ORIGINS` = public frontend origin(s) + `AllowCredentials()` |
-
-Cross-origin fallback (not recommended): set `AUTH_COOKIE_SAMESITE=None`, `apiUrl` to `https://api…/api`, expand CSP `connect-src`, and list the SPA origin in `CORS_ALLOWED_ORIGINS`.
+| `Domain` | `.swimxpert.com` |
+| CORS | Explicit origins + `AllowCredentials()` |
 
 ---
 
-## Local test of same-origin cookies (before deploy)
+## Local same-origin proxy (optional / legacy)
 
-Dev uses `apiUrl: '/api'` with `proxy.conf.json` (`ng serve` proxies `/api` → `:5002`). Day-to-day on `:4200` is fine; that still is **not** a full production cookie/proxy rehearsal.
-
-To mimic production same-origin proxy locally:
-
-### Option A — Caddy (recommended)
-
-1. Install Caddy.
-2. From repo root, with API on `:5002` and `ng serve` on `:4200` (restart `ng serve` after proxy changes):
-
-```bash
-caddy run --config deploy/Caddyfile.local.example
-```
-
-3. Open **http://localhost:8080** (not :4200).
-4. Log in → DevTools → Application → Cookies for `localhost`:
-   - `access_token` / `refresh_token`: HttpOnly, SameSite=Strict, Path=/
-5. Network: `POST /api/auth/login` and later `GET /api/auth/me` should show cookies on the request (same host `:8080`).
-
-### Option B — curl cookie jar
-
-```bash
-# Hit API as if behind the public host (after login flow)
-curl -c /tmp/sx.jar -b /tmp/sx.jar -X POST http://localhost:5002/api/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"identifier":"you@example.com","password":"yourpassword"}' -v
-# Check Set-Cookie: SameSite=Strict; Path=/; HttpOnly
-curl -b /tmp/sx.jar http://localhost:5002/api/auth/me -v
-```
-
----
-
-## Smoke Tests (Post-Deploy)
-
-### Public
-
-1. **Home** – Load `/` → no errors.
-2. **Contact form** – Submit → success; lead in admin.
-3. **Lead capture modal** – Submit → lead in admin.
-
-### Auth (cookie-focused)
-
-4. **Register / Login** on `https://yourdomain.com` (proxied origin).
-5. DevTools → Cookies: `access_token` / `refresh_token` on **your domain**, SameSite=Strict, Secure, HttpOnly.
-6. Refresh the page → still logged in (`GET /api/auth/me` 200 with cookies).
-7. **Logout** → cookies cleared; `/api/auth/me` 401.
-
-### Parent / Admin
-
-8. Add/edit child, admin overview, leads, users as usual.
-
-### API Health
-
-9. Prefer `https://yourdomain.com/api/health` (through the proxy). Direct Railway API URL is optional.
-
----
-
-## Security Summary
-
-- JWT in HttpOnly cookies (not localStorage).
-- Refresh rotation via `POST /api/auth/refresh`.
-- CORS + credentials only for listed origins.
-- HTTPS / HSTS in production; forwarded headers honor Railway’s `X-Forwarded-Proto`.
-
----
-
-## Known Limitations
-
-- **File uploads** – Local `wwwroot/uploads` is ephemeral on Railway; use Cloudinary (`CLOUDINARY_*`) in production.
+Dev still uses `apiUrl: '/api'` + `proxy.conf.json` → `:5002`. See `deploy/Caddyfile.local.example` for a local reverse-proxy rehearsal. Production no longer relies on Express `/api` proxy on Railway.

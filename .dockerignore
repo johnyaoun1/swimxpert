@@ -1,0 +1,33 @@
+# Keep Railway/Docker builds lean
+node_modules
+dist
+.angular
+.git
+.env
+.env.*
+!.env.example
+*.md
+!DEPLOYMENT.md
+IMG_*
+*.png
+*.jpg
+*.jpeg
+*.JPG
+*.HEIC
+*.zip
+*.url
+SwimXpert_Dashboard*
+web ref.png
+prices.png
+logo swimxpert.png
+NEW*.png
+new*.png
+Johny*
+.agents
+agent-transcripts
+src
+public
+e2e
+coverage
+*.html
+!SwimXpert.Api/**/*.html

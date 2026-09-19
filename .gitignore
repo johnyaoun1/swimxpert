@@ -4,6 +4,13 @@ node_modules/
 # Angular build output
 dist/
 out-tsc/
+swimxpert-pages/
+swimxpert-pages.zip
+
+# Local uploads / scratch
+SwimXpert.Api/wwwroot/uploads/
+SwimXpert.url
+.cursor/
 
 # Angular cache
 .angular/cache/
@@ -32,6 +39,15 @@ yarn-error.log*
 **/secrets.json
 **/*.user
 
-# Local image scratch files
-*.jpeg
-*.jpg
+# Local image scratch files (repo root / misc — keep src/assets tracked)
+/*.jpeg
+/*.jpg
+/*.JPG
+/*.HEIC
+/*.png
+/*.zip
+/web ref.png
+/logo swimxpert.png
+/SwimXpert_Dashboard*
+/Johny*
+/.agents/

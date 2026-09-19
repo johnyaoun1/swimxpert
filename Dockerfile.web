@@ -1,0 +1,17 @@
+# Angular SSR + /api reverse proxy — Railway service "web"
+FROM node:20-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-bookworm-slim AS final
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=build /app/dist ./dist
+# Express + SSR bundle need these at runtime (webpack externalizes express)
+EXPOSE 4000
+CMD ["node", "dist/swimxpert/server/main.js"]

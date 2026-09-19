@@ -127,7 +127,8 @@ Set these on your host (e.g. Railway, or non-committed `.env`):
 
 ```bash
 # Required
-DATABASE_URL=Host=...;Port=5432;Database=...;Username=...;Password=...
+DATABASE_URL=postgres://user:password@host:port/railway?sslmode=require
+# (Npgsql keyword form also accepted: Host=...;Port=5432;Database=...;Username=...;Password=...)
 JWT_KEY=your-min-32-character-secret-key
 
 # CORS (required if frontend on different origin)

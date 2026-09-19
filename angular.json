@@ -28,7 +28,8 @@
               "src/favicon.ico",
               "src/assets",
               "src/sitemap.xml",
-              "src/robots.txt"
+              "src/robots.txt",
+              "src/_redirects"
             ],
             "styles": [
               "src/styles.css"
