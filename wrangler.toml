@@ -1,0 +1,8 @@
+# Cloudflare Workers static assets (Workers & Pages "wrangler deploy" flow).
+# Build runs first: npm run build → dist/swimxpert/browser
+name = "swimxpert"
+compatibility_date = "2026-09-19"
+
+[assets]
+directory = "./dist/swimxpert/browser"
+not_found_handling = "single-page-application"
