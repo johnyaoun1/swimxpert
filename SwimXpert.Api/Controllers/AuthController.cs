@@ -18,7 +18,7 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService, IWebHostEnvironment env) : ControllerBase
+public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService, IClientMatchingService clientMatching, IWebHostEnvironment env) : ControllerBase
 {
     private const int BcryptWorkFactor = 12;
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
@@ -40,6 +40,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             return BadRequest(new { message = "Full name is required." });
 
         var phone = SanitizePhone(request.Phone!);
+        var clientStatus = await clientMatching.ResolveClientStatusAsync(phone);
 
         var verificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var verificationHash = HashToken(verificationToken);
@@ -52,7 +53,8 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             FullName = fullName,
             Role = "Parent",
             CreatedAt = DateTime.UtcNow,
-            IsApproved = false,  // self-registered accounts require admin approval
+            IsApproved = true, // no longer gates dashboard; kept for admin reporting
+            ClientStatus = clientStatus,
             EmailVerified = isDev,   // auto-verified in dev so demo signups work immediately
             EmailVerificationTokenHash = isDev ? null : verificationHash,
             EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24),
@@ -108,8 +110,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         user.FailedLoginAttempts = 0;
         user.LockoutUntil = null;
         await dbContext.SaveChangesAsync();
-        if (!user.EmailVerified && !env.IsDevelopment())
-            return StatusCode(403, new { message = "Please verify your email.", code = "email_not_verified" });
+        // EmailVerified is non-blocking for login; booking is gated separately.
         if (user.TwoFactorEnabled)
             return StatusCode(202, new { message = "2FA required.", code = "2fa_required", email = user.Email });
 
@@ -305,8 +306,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     {
         if (string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.NewPassword))
             return BadRequest(new { message = "Token and new password are required." });
-        if (request.NewPassword.Length < 8)
-            return BadRequest(new { message = "Password must be at least 8 characters." });
+        var passwordError = PasswordPolicy.Validate(request.NewPassword);
+        if (passwordError is not null)
+            return BadRequest(new { message = passwordError });
         var hash = HashToken(request.Token);
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.PasswordResetTokenHash == hash);
         if (user is null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
@@ -331,7 +333,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         var role = User.FindFirstValue(ClaimTypes.Role);
         if (string.IsNullOrEmpty(id) || !int.TryParse(id, out var userId))
             return Unauthorized(new { message = "Not authenticated." });
-        var user = await dbContext.Users.AsNoTracking().Select(u => new { u.Id, u.TwoFactorEnabled, u.IsApproved }).FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await dbContext.Users.AsNoTracking()
+            .Select(u => new { u.Id, u.TwoFactorEnabled, u.IsApproved, u.EmailVerified, u.ClientStatus })
+            .FirstOrDefaultAsync(u => u.Id == userId);
         return Ok(new
         {
             id = userId,
@@ -339,7 +343,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             fullName = fullName ?? "",
             role = role ?? "Parent",
             twoFactorEnabled = user?.TwoFactorEnabled ?? false,
-            isApproved = user?.IsApproved ?? true
+            isApproved = user?.IsApproved ?? true,
+            emailVerified = user?.EmailVerified ?? false,
+            clientStatus = user?.ClientStatus ?? ClientStatuses.New
         });
     }
 
@@ -415,10 +421,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             return (false, "Email is too long.");
         if (request.FullName.Length > 255)
             return (false, "Full name is too long.");
-        if (request.Password.Length < 8)
-            return (false, "Password must be at least 8 characters.");
-        if (request.Password.Length > 128)
-            return (false, "Password is too long.");
+        var passwordError = PasswordPolicy.Validate(request.Password);
+        if (passwordError is not null)
+            return (false, passwordError);
         if (!EmailRegex.IsMatch(request.Email.Trim()))
             return (false, "Invalid email format.");
         return (true, null);
@@ -434,6 +439,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     private static string SanitizePhone(string phone)
     {
         if (string.IsNullOrWhiteSpace(phone)) return "";
+        // Keep a readable form for display; matching uses LebanesePhoneNormalizer separately.
         var t = phone.Trim();
         return t.Length > 30 ? t[..30] : t;
     }

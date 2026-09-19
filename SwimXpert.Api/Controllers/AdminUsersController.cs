@@ -101,10 +101,11 @@ public class AdminUsersController(
             return Conflict(new { message = "A user with this email already exists." });
 
         var fullName = request.FullName.Trim();
+        var passwordError = PasswordPolicy.Validate(request.Password?.Trim());
+        if (passwordError is not null)
+            return BadRequest(new { message = passwordError });
         var username = await GenerateUniqueUsernameAsync(fullName);
-        var plainPassword = string.IsNullOrWhiteSpace(request.Password)
-            ? GenerateSecurePassword()
-            : request.Password.Trim();
+        var plainPassword = request.Password!.Trim();
 
         var user = new User
         {
@@ -115,7 +116,8 @@ public class AdminUsersController(
             Password = BCrypt.Net.BCrypt.HashPassword(plainPassword),
             Role = "Parent",
             IsActive = true,
-            IsApproved = true,   // admin-created accounts are approved immediately
+            IsApproved = true,
+            ClientStatus = ClientStatuses.New,
             EmailVerified = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -163,12 +165,11 @@ public class AdminUsersController(
             return Conflict(new { message = "A user with this email already exists." });
 
         var fullName = request.FullName.Trim();
+        var passwordError = PasswordPolicy.Validate(request.Password?.Trim());
+        if (passwordError is not null)
+            return BadRequest(new { message = passwordError });
         var username = await GenerateUniqueUsernameAsync(fullName);
-        var plainPassword = string.IsNullOrWhiteSpace(request.Password)
-            ? GenerateSecurePassword()
-            : request.Password.Trim();
-        if (plainPassword.Length < 6)
-            return BadRequest(new { message = "Password must be at least 6 characters." });
+        var plainPassword = request.Password!.Trim();
 
         var user = new User
         {
@@ -229,8 +230,10 @@ public class AdminUsersController(
 
         if (!string.IsNullOrWhiteSpace(request.NewPassword))
         {
-            var plain = request.NewPassword.Trim();
-            user.Password = BCrypt.Net.BCrypt.HashPassword(plain);
+            var passwordError = PasswordPolicy.Validate(request.NewPassword.Trim());
+            if (passwordError is not null)
+                return BadRequest(new { message = passwordError });
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword.Trim());
         }
 
         await dbContext.SaveChangesAsync();
@@ -261,49 +264,30 @@ public class AdminUsersController(
         return $"{baseUsername}{RandomNumberGenerator.GetInt32(1000, 9999)}";
     }
 
-    private static string GenerateSecurePassword()
-    {
-        const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-        const string lower = "abcdefghjkmnpqrstuvwxyz";
-        const string digits = "23456789";
-        const string symbols = "!@#$%^&*";
-        const string all = upper + lower + digits + symbols;
-
-        var password = new char[12];
-        password[0] = upper[RandomNumberGenerator.GetInt32(upper.Length)];
-        password[1] = lower[RandomNumberGenerator.GetInt32(lower.Length)];
-        password[2] = digits[RandomNumberGenerator.GetInt32(digits.Length)];
-        password[3] = symbols[RandomNumberGenerator.GetInt32(symbols.Length)];
-        for (var i = 4; i < 12; i++)
-            password[i] = all[RandomNumberGenerator.GetInt32(all.Length)];
-
-        // Fisher-Yates shuffle
-        for (var i = 11; i > 0; i--)
-        {
-            var j = RandomNumberGenerator.GetInt32(i + 1);
-            (password[i], password[j]) = (password[j], password[i]);
-        }
-        return new string(password);
-    }
-
     /// <summary>
-    /// Approves a self-registered user, moving them into the active client list.
+    /// Marks a client approved (legacy admin action). Dashboard access no longer depends on this.
+    /// Does not generate or overwrite passwords.
     /// </summary>
     [HttpPut("{id:int}/approve")]
-    public async Task<IActionResult> ApproveUser(int id, [FromBody] ApproveUserRequest request)
+    public async Task<IActionResult> ApproveUser(int id, [FromBody] ApproveUserRequest? request)
     {
         var user = await dbContext.Users.FindAsync(id);
         if (user is null)
             return NotFound(new { message = "User not found." });
 
-        if (string.IsNullOrWhiteSpace(request?.NewPassword) || request.NewPassword.Length < 6)
-            return BadRequest(new { message = "A password of at least 6 characters is required to accept this account." });
+        // Optional password reset only if admin explicitly sends one
+        if (!string.IsNullOrWhiteSpace(request?.NewPassword))
+        {
+            var passwordError = PasswordPolicy.Validate(request.NewPassword);
+            if (passwordError is not null)
+                return BadRequest(new { message = passwordError });
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, 12);
+        }
 
-        user.Password   = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, 12);
         user.IsApproved = true;
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("UserApproved", "User", id.ToString(), new { user.Email });
-        return Ok(new { message = "Account accepted.", password = request.NewPassword });
+        return Ok(new { message = "Account marked approved.", email = user.Email });
     }
 
     /// <summary>

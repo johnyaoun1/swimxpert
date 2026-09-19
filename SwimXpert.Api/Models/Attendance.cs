@@ -1,5 +1,9 @@
 namespace SwimXpert.Api.Models;
 
+/// <summary>
+/// Booking / attendance row. SwimmerId is the booking subject (child OR account-holder profile).
+/// FLAG(Booking=Child): historically assumed a parent's child; IsAccountHolder profiles are valid too.
+/// </summary>
 public class Attendance
 {
     public int Id { get; set; }

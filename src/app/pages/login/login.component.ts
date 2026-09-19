@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit {
           }
           const code = err?.error?.code || err?.code;
           if (err?.status === 403 && code === 'email_not_verified') {
-            this.errorMessage = 'Please verify your email before logging in.';
+            this.errorMessage = 'Please verify your email before booking. You can still log in and use your dashboard.';
             this.showResendVerification = true;
             this.emailForResend = username;
           } else {

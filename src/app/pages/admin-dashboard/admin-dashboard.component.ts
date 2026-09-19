@@ -32,8 +32,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   pendingBookings = signal<Array<{
     id: number;
     bookingStatus: string;
-    swimmer: { id: number; name: string; level?: number };
-    client: { id: number; fullName: string; email: string; isApproved?: boolean };
+    swimmer: { id: number; name: string; level?: number; isAccountHolder?: boolean };
+    client: { id: number; fullName: string; email: string; isApproved?: boolean; clientStatus?: string; emailVerified?: boolean };
     session: { id: number; title: string; startTime: string; endTime: string };
     sessionDate: string;
     sessionPrice?: number;

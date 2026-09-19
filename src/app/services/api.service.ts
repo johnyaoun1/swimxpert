@@ -57,8 +57,26 @@ export class ApiService {
     }).pipe(catchError(this.handleError));
   }
 
-  getMe(): Observable<{ id: number; email: string; fullName: string; role: string; twoFactorEnabled?: boolean }> {
-    return this.http.get<{ id: number; email: string; fullName: string; role: string; twoFactorEnabled?: boolean }>(`${this.apiUrl}/auth/me`, {
+  getMe(): Observable<{
+    id: number;
+    email: string;
+    fullName: string;
+    role: string;
+    twoFactorEnabled?: boolean;
+    isApproved?: boolean;
+    emailVerified?: boolean;
+    clientStatus?: string;
+  }> {
+    return this.http.get<{
+      id: number;
+      email: string;
+      fullName: string;
+      role: string;
+      twoFactorEnabled?: boolean;
+      isApproved?: boolean;
+      emailVerified?: boolean;
+      clientStatus?: string;
+    }>(`${this.apiUrl}/auth/me`, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
   }
@@ -276,7 +294,14 @@ export class ApiService {
     }).pipe(catchError(this.handleError));
   }
 
-  createSwimmer(payload: { name: string; age: number; level: number; profilePictureUrl?: string | null; parentUserId?: number }): Observable<any> {
+  createSwimmer(payload: {
+    name: string;
+    age: number;
+    level: number;
+    isAccountHolder?: boolean;
+    profilePictureUrl?: string | null;
+    parentUserId?: number;
+  }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/swimmerskills`, payload, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));

@@ -29,7 +29,10 @@ export interface User {
   avatar?: string;
   /** Parent/client accounts use `user`; staff roles preserved for routing. */
   role?: 'user' | 'admin' | 'coach';
+  /** Legacy; no longer gates dashboard. Prefer emailVerified for booking UX. */
   isApproved?: boolean;
+  emailVerified?: boolean;
+  clientStatus?: 'New' | 'Returning' | string;
   /** Present when loaded from admin API (optional elsewhere). */
   phone?: string;
   username?: string;
@@ -49,6 +52,8 @@ export interface Child {
   name: string;
   age: number;
   level: number;
+  /** True when this profile is the logged-in account holder (not a child). */
+  isAccountHolder?: boolean;
   profilePicture?: string;
   skillLevels?: { level: number; completionPercent: number; skills: { name: string; isUnlocked: boolean }[] }[];
   progress: ProgressEntry[];
@@ -83,13 +88,15 @@ export class AuthService {
 
   login(identifier: string, password: string): Observable<AuthApiResponse> {
     return this.apiService.login(identifier, password).pipe(
-      tap((response: AuthApiResponse) => this.persistAuthResponse(response))
+      tap((response: AuthApiResponse) => this.persistAuthResponse(response)),
+      switchMap((response) => this.fetchMe().pipe(map(() => response)))
     );
   }
 
   register(email: string, password: string, fullName: string, phone?: string, birthDate?: string): Observable<AuthApiResponse> {
     return this.apiService.register(email, password, fullName, phone, birthDate).pipe(
-      tap((response: AuthApiResponse) => this.persistAuthResponse(response))
+      tap((response: AuthApiResponse) => this.persistAuthResponse(response)),
+      switchMap((response) => this.fetchMe().pipe(map(() => response)))
     );
   }
 
@@ -139,7 +146,15 @@ export class AuthService {
     return 'user';
   }
 
-  private meToUser(me: { id: number; email: string; fullName: string; role: string; isApproved?: boolean }): User {
+  private meToUser(me: {
+    id: number;
+    email: string;
+    fullName: string;
+    role: string;
+    isApproved?: boolean;
+    emailVerified?: boolean;
+    clientStatus?: string;
+  }): User {
     const role = AuthService.normalizeUiRole(me.role);
     const name = me.fullName || me.email?.split('@')?.[0] || 'User';
     return {
@@ -149,6 +164,8 @@ export class AuthService {
       avatar: this.generateAvatar(name),
       role,
       isApproved: me.isApproved ?? true,
+      emailVerified: me.emailVerified ?? false,
+      clientStatus: me.clientStatus ?? 'New',
       children: this.currentUser()?.children ?? [],
       quizResults: this.currentUser()?.quizResults ?? []
     };
@@ -164,9 +181,15 @@ export class AuthService {
     return user?.role?.toLowerCase() === 'coach';
   }
 
+  /** Authenticated parent/client (approval no longer required for nav / dashboard). */
   isApprovedClient(): boolean {
     const user = this.currentUser();
-    return !!user?.isApproved && !this.isAdmin() && !this.isCoach();
+    return !!user && !this.isAdmin() && !this.isCoach();
+  }
+
+  needsEmailVerification(): boolean {
+    const user = this.currentUser();
+    return !!user && !this.isAdmin() && !this.isCoach() && user.emailVerified === false;
   }
 
   getAllClients(): User[] {
@@ -300,6 +323,7 @@ export class AuthService {
       name: child.name,
       age: child.age,
       level: child.level,
+      isAccountHolder: !!child.isAccountHolder,
       profilePictureUrl: child.profilePicture || null
     }).pipe(
       map((created: any) => ({
@@ -307,6 +331,7 @@ export class AuthService {
         name: created?.name || child.name,
         age: Number(created?.age ?? child.age),
         level: Number(created?.level ?? child.level),
+        isAccountHolder: !!created?.isAccountHolder || !!child.isAccountHolder,
         profilePicture: created?.profilePictureUrl || child.profilePicture,
         skillLevels: created?.levels || [],
         progress: []
@@ -398,6 +423,7 @@ export class AuthService {
             name: s.name || 'Swimmer',
             age: Number(s.age || 0),
             level: Number(s.level || 1),
+            isAccountHolder: !!s.isAccountHolder,
             profilePicture: s.profilePictureUrl || undefined,
             skillLevels: s.levels || [],
             progress: [] as ProgressEntry[]
@@ -418,6 +444,7 @@ export class AuthService {
               name: s.name || 'Swimmer',
               age: Number(s.age || 0),
               level: Number(s.level || 1),
+              isAccountHolder: !!s.isAccountHolder,
               profilePicture: s.profilePictureUrl || undefined,
               skillLevels: s.levels || [],
               progress: entries.map((e: any) => ({

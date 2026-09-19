@@ -15,14 +15,13 @@ const clientOnlyGuard: CanActivateFn = () => {
   return true;
 };
 
-// Allows only approved real clients (IsApproved = true) to access quiz / leaderboard
+// Quiz / leaderboard: any authenticated parent (approval gate removed)
 const approvedClientGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router      = inject(Router);
   if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
   if (authService.isCoach()) return router.createUrlTree(['/coach/dashboard']);
-  const user = authService.currentUser();
-  if (!user?.isApproved) return router.createUrlTree(['/dashboard']);
+  if (authService.isAdmin()) return router.createUrlTree(['/admin']);
   return true;
 };
 

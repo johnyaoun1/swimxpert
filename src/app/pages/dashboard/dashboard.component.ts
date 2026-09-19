@@ -37,7 +37,7 @@ export class DashboardComponent implements OnInit {
   editChildForm: FormGroup;
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private swimLevelsService: SwimLevelsService,
     private attendanceService: AttendanceService,
     private fb: FormBuilder,
@@ -46,8 +46,9 @@ export class DashboardComponent implements OnInit {
     private meta: Meta
   ) {
     this.childForm = this.fb.group({
+      isAccountHolder: [false],
       name: ['', Validators.required],
-      age: [null, [Validators.required, Validators.min(3), Validators.max(18)]],
+      age: [null, [Validators.required, Validators.min(2), Validators.max(100)]],
       level: [1, Validators.required],
       profilePicture: ['']
     });
@@ -61,7 +62,7 @@ export class DashboardComponent implements OnInit {
 
     this.editChildForm = this.fb.group({
       name: ['', Validators.required],
-      age: [null, [Validators.required, Validators.min(3), Validators.max(18)]],
+      age: [null, [Validators.required, Validators.min(2), Validators.max(100)]],
       level: [1, Validators.required],
       profilePicture: ['']
     });
@@ -92,7 +93,7 @@ export class DashboardComponent implements OnInit {
   toggleAddChildForm(): void {
     this.showAddChildForm.set(!this.showAddChildForm());
     if (this.showAddChildForm()) {
-      this.childForm.reset({ level: 1 });
+      this.childForm.reset({ level: 1, isAccountHolder: false });
     }
   }
 
@@ -102,24 +103,34 @@ export class DashboardComponent implements OnInit {
     this.addChildError.set(null);
     if (!this.childForm.valid) return;
     const formValue = this.childForm.value;
+    const isAccountHolder = !!formValue.isAccountHolder;
     this.authService.addChild({
       name: formValue.name,
       age: formValue.age,
-      level: formValue.level,
+      level: Number(formValue.level) || 1,
+      isAccountHolder,
       profilePicture: formValue.profilePicture || undefined,
       progress: []
     }).subscribe({
       next: () => {
-        this.childForm.reset({ level: 1 });
+        this.childForm.reset({ level: 1, isAccountHolder: false });
         this.showAddChildForm.set(false);
         this.authService.syncChildrenFromApi().subscribe({
           next: () => this.loadSessionsForInProgressChildren()
         });
       },
       error: (err) => {
-        this.addChildError.set(err?.message || 'Failed to add child. Please try again.');
+        this.addChildError.set(err?.error?.message || err?.message || 'Failed to add swimmer. Please try again.');
       }
     });
+  }
+
+  onAccountHolderToggle(): void {
+    const holder = !!this.childForm.get('isAccountHolder')?.value;
+    if (holder) {
+      const u = this.user();
+      if (u?.name) this.childForm.patchValue({ name: u.name });
+    }
   }
 
   showAddProgress(childId: string): void {

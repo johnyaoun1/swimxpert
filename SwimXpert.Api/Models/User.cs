@@ -32,8 +32,15 @@ public class User
 
     public bool IsActive { get; set; } = true;
 
-    /// <summary>False for self-registered users until an admin explicitly approves them.</summary>
-    public bool IsApproved { get; set; } = false;
+    /// <summary>
+    /// Legacy admin-approval flag. No longer gates dashboard access or booking submit.
+    /// Kept for admin reporting; new self-registrations are set true.
+    /// </summary>
+    public bool IsApproved { get; set; } = true;
+
+    /// <summary>New | Returning — set at signup via legacy phone match.</summary>
+    [MaxLength(20)]
+    public string ClientStatus { get; set; } = ClientStatuses.New;
 
     public bool EmailVerified { get; set; }
     [MaxLength(64)]

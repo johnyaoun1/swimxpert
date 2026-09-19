@@ -12,6 +12,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Swimmer> Swimmers { get; set; } = null!;
+    public DbSet<LegacyClient> LegacyClients { get; set; } = null!;
     public DbSet<TrainingSession> TrainingSessions { get; set; } = null!;
     public DbSet<Attendance> Attendances { get; set; } = null!;
     public DbSet<Payment> Payments { get; set; } = null!;
@@ -30,11 +31,18 @@ public class ApplicationDbContext : DbContext
             .HasIndex(u => u.Email)
             .IsUnique();
 
+        modelBuilder.Entity<LegacyClient>()
+            .HasIndex(c => c.PhoneNormalized)
+            .IsUnique();
+
         modelBuilder.Entity<Swimmer>()
             .HasOne(s => s.ParentUser)
             .WithMany(u => u.Swimmers)
             .HasForeignKey(s => s.ParentUserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Swimmer>()
+            .HasIndex(s => new { s.ParentUserId, s.IsAccountHolder });
 
         modelBuilder.Entity<Attendance>()
             .HasOne(a => a.Swimmer)

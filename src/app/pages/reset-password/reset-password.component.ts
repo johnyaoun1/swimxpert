@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { strongPasswordErrorMessage, strongPasswordValidator } from '../../utils/password-policy';
 
 @Component({
   selector: 'app-reset-password',
@@ -29,7 +30,7 @@ import { ApiService } from '../../services/api.service';
               <label for="newPassword" class="block text-sm font-medium mb-1" style="color:#94a3b8;">New password</label>
               <input id="newPassword" type="password" formControlName="newPassword" class="mt-1 block w-full rounded-lg px-4 py-3" />
               @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
-                <p class="text-red-400 text-sm mt-1">Min 8 characters</p>
+                <p class="text-red-400 text-sm mt-1">{{ passwordError }}</p>
               }
             </div>
             <div>
@@ -56,16 +57,19 @@ export class ResetPasswordComponent {
   success = false;
   errorMessage = '';
 
+  get passwordError(): string {
+    return strongPasswordErrorMessage(this.form.get('newPassword')?.errors);
+  }
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private router: Router,
     private api: ApiService
   ) {
     this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
     this.form = this.fb.group(
       {
-        newPassword: ['', [Validators.required, Validators.minLength(8)]],
+        newPassword: ['', [Validators.required, strongPasswordValidator()]],
         confirmPassword: ['', Validators.required]
       },
       { validators: (g) => (g.get('newPassword')?.value === g.get('confirmPassword')?.value ? null : { mismatch: true }) }

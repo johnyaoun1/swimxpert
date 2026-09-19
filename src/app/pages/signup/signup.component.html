@@ -13,9 +13,6 @@
         Already have an account?
         <a routerLink="/login" class="font-medium" style="color:#1d9bf0">Sign in</a>
       </p>
-      <p class="mt-2 text-center text-xs text-amber-400 font-medium">
-        Your account will be reviewed by the admin before you can book sessions.
-      </p>
     </div>
 
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-5">
@@ -63,9 +60,9 @@
         <input id="password" type="password" formControlName="password" autocomplete="new-password"
           class="w-full px-4 py-2.5 rounded-lg text-white text-sm outline-none transition"
           style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)"
-          placeholder="At least 8 characters"/>
+          placeholder="Min 8 chars, 1 uppercase, 1 number"/>
         @if (signupForm.get('password')?.invalid && signupForm.get('password')?.touched) {
-          <p class="mt-1 text-xs text-red-400">Password must be at least 8 characters.</p>
+          <p class="mt-1 text-xs text-red-400">{{ passwordHint }}</p>
         }
       </div>
 

@@ -13,7 +13,8 @@ namespace SwimXpert.Api.Controllers;
 public class SessionsController(
     ApplicationDbContext dbContext,
     IAuditLogService auditLog,
-    IGoogleCalendarMutationsService googleCalendarMutations) : ControllerBase
+    IGoogleCalendarMutationsService googleCalendarMutations,
+    IWebHostEnvironment env) : ControllerBase
 {
     /// <summary>
     /// Creates a new training session. Requires Admin role.
@@ -208,6 +209,21 @@ public class SessionsController(
         if (!isAdmin && swimmer.ParentUserId != currentUserId)
             return Forbid();
 
+        if (!isAdmin)
+        {
+            var parent = await dbContext.Users.AsNoTracking()
+                .Select(u => new { u.Id, u.EmailVerified })
+                .FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
+            if (parent is null)
+                return Unauthorized(new { message = "Invalid user context." });
+            if (!parent.EmailVerified && !env.IsDevelopment())
+                return StatusCode(403, new
+                {
+                    message = "Please verify your email before booking a session.",
+                    code = "email_not_verified"
+                });
+        }
+
         // Check the slot is still free
         var overlaps = await dbContext.TrainingSessions.AnyAsync(
             s => s.StartTime < endUtc && s.EndTime > startUtc, cancellationToken);
@@ -283,13 +299,23 @@ public class SessionsController(
             {
                 a.Id,
                 a.BookingStatus,
-                swimmer = new { a.Swimmer.Id, a.Swimmer.Name, a.Swimmer.Level },
+                // FLAG(Booking=Child): Attendance.SwimmerId is the booking subject — may be a
+                // child OR the account holder (IsAccountHolder). Do not assume ParentUser ≠ swimmer.
+                swimmer = new
+                {
+                    a.Swimmer.Id,
+                    a.Swimmer.Name,
+                    a.Swimmer.Level,
+                    isAccountHolder = a.Swimmer.IsAccountHolder
+                },
                 client = new
                 {
                     a.Swimmer.ParentUser!.Id,
                     a.Swimmer.ParentUser.FullName,
                     a.Swimmer.ParentUser.Email,
-                    isApproved = a.Swimmer.ParentUser.IsApproved
+                    isApproved = a.Swimmer.ParentUser.IsApproved,
+                    clientStatus = a.Swimmer.ParentUser.ClientStatus,
+                    emailVerified = a.Swimmer.ParentUser.EmailVerified
                 },
                 session = new
                 {
@@ -324,8 +350,8 @@ public class SessionsController(
         if (attendance is null)
             return NotFound(new { message = "Booking not found." });
 
-        if (attendance.Swimmer.ParentUser is null || !attendance.Swimmer.ParentUser.IsApproved)
-            return BadRequest(new { message = "Approve the client account before confirming this booking." });
+        if (attendance.Swimmer.ParentUser is null)
+            return BadRequest(new { message = "Booking has no linked client account." });
 
         var heldPayments = await dbContext.Payments
             .Where(p => p.AttendanceId == id && p.Status == "Pending")

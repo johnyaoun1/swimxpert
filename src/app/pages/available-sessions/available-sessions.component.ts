@@ -48,7 +48,7 @@ export class AvailableSessionsComponent implements OnInit {
   // ── Add-swimmer modal (logged-in client with no swimmer yet) ─
   showAddSwimmerModal = signal(false);
   pendingSlot         = signal<AvailableSlot | null>(null);
-  addSwimmerForm      = { name: '', age: '', level: '' };
+  addSwimmerForm      = { name: '', age: '', level: '', isAccountHolder: false };
   addingSwimmer       = signal(false);
   addSwimmerError     = signal('');
 
@@ -225,11 +225,11 @@ export class AvailableSessionsComponent implements OnInit {
       this.requestStep.set(2);
     } else if (step === 2) {
       if (!this.requestForm.childName.trim()) {
-        this.requestError.set("Please enter your child's full name.");
+        this.requestError.set("Please enter the swimmer's full name.");
         return;
       }
       if (!this.requestForm.childAge) {
-        this.requestError.set("Please enter your child's age.");
+        this.requestError.set("Please enter the swimmer's age.");
         return;
       }
       // Persist to sessionStorage so step 3 jumps are possible next time
@@ -275,7 +275,7 @@ export class AvailableSessionsComponent implements OnInit {
     this.requestError.set('');
 
     const level  = this.requestForm.childLevel || 'Not sure';
-    const action = `Booking Request — Child: ${this.requestForm.childName.trim()}, Age: ${this.requestForm.childAge}, Level: ${level}, Session: ${slot.date} ${slot.startLocal}`;
+    const action = `Booking Request — Swimmer: ${this.requestForm.childName.trim()}, Age: ${this.requestForm.childAge}, Level: ${level}, Session: ${slot.date} ${slot.startLocal}`;
 
     this.http.post(`${environment.apiUrl}/leads/capture`, {
       name:         this.requestForm.name.trim(),
@@ -310,7 +310,7 @@ export class AvailableSessionsComponent implements OnInit {
         preLevel = this.numberToLevelLabel(Number(parsed.determinedLevel ?? 0));
       } catch { /* ignore */ }
     }
-    this.addSwimmerForm = { name: '', age: '', level: preLevel };
+    this.addSwimmerForm = { name: '', age: '', level: preLevel, isAccountHolder: false };
     this.showAddSwimmerModal.set(true);
   }
 
@@ -319,22 +319,34 @@ export class AvailableSessionsComponent implements OnInit {
     this.pendingSlot.set(null);
   }
 
+  onAddSwimmerAccountHolderToggle(): void {
+    if (this.addSwimmerForm.isAccountHolder) {
+      const u = this.authService.currentUser();
+      if (u?.name) this.addSwimmerForm.name = u.name;
+    }
+  }
+
   saveSwimmerAndBook(): void {
     this.addSwimmerError.set('');
     if (!this.addSwimmerForm.name.trim()) {
-      this.addSwimmerError.set("Please enter your child's name.");
+      this.addSwimmerError.set('Please enter a name.');
       return;
     }
     const age = Number(this.addSwimmerForm.age);
-    if (!age || age < 1 || age > 18) {
-      this.addSwimmerError.set('Please enter a valid age (1–18).');
+    if (!age || age < 1 || age > 100) {
+      this.addSwimmerError.set('Please enter a valid age (1–100).');
       return;
     }
     const levelMap: Record<string, number> = { Beginner: 1, Intermediate: 2, Advanced: 3, Elite: 4 };
     const levelNum = levelMap[this.addSwimmerForm.level] ?? 1;
 
     this.addingSwimmer.set(true);
-    this.apiService.createSwimmer({ name: this.addSwimmerForm.name.trim(), age, level: levelNum }).subscribe({
+    this.apiService.createSwimmer({
+      name: this.addSwimmerForm.name.trim(),
+      age,
+      level: levelNum,
+      isAccountHolder: !!this.addSwimmerForm.isAccountHolder
+    }).subscribe({
       next: (swimmer: any) => {
         const newSwimmer: SwimmerOption = {
           id: String(swimmer.id),

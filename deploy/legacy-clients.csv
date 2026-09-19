@@ -1,0 +1,5 @@
+# Optional legacy offline clients for ClientStatus=Returning matching.
+# Columns: Phone,Name
+# Phones may be +961…, 961…, 76…, 03…, 01… etc. (Lebanese).
+Phone,Name
+# 76144927,Example Returning Client

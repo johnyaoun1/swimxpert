@@ -40,12 +40,21 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             return NotFound(new { message = "Parent user not found." });
         }
 
+        if (request.IsAccountHolder)
+        {
+            var existingHolder = await dbContext.Swimmers.AnyAsync(s =>
+                s.ParentUserId == parentUserId && s.IsAccountHolder);
+            if (existingHolder)
+                return Conflict(new { message = "An account-holder swimmer profile already exists for this user." });
+        }
+
         var swimmer = new Models.Swimmer
         {
             ParentUserId = parentUserId,
             Name = request.Name.Trim(),
-            Age = request.Age,
+            Age = Math.Clamp(request.Age <= 0 ? 1 : request.Age, 1, 100),
             Level = Math.Clamp(request.Level <= 0 ? 1 : request.Level, 1, 6),
+            IsAccountHolder = request.IsAccountHolder,
             ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim(),
             SkillProgressJson = "{}",
             CreatedAt = DateTime.UtcNow
@@ -61,7 +70,8 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             swimmer.Age,
             swimmer.Level,
             swimmer.ProfilePictureUrl,
-            swimmer.SkillProgressJson
+            swimmer.SkillProgressJson,
+            swimmer.IsAccountHolder
         ));
     }
 
@@ -90,11 +100,12 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
                 s.Age,
                 s.Level,
                 s.ProfilePictureUrl,
-                s.SkillProgressJson
+                s.SkillProgressJson,
+                s.IsAccountHolder
             })
             .ToListAsync();
 
-        return Ok(swimmers.Select(s => BuildSwimmerCardResponse(s.Id, s.ParentUserId, s.Name, s.Age, s.Level, s.ProfilePictureUrl, s.SkillProgressJson)));
+        return Ok(swimmers.Select(s => BuildSwimmerCardResponse(s.Id, s.ParentUserId, s.Name, s.Age, s.Level, s.ProfilePictureUrl, s.SkillProgressJson, s.IsAccountHolder)));
     }
 
     [HttpPut("{swimmerId:int}")]
@@ -123,7 +134,7 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             swimmer.ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim();
 
         await dbContext.SaveChangesAsync();
-        return Ok(BuildSwimmerCardResponse(swimmer.Id, swimmer.ParentUserId, swimmer.Name, swimmer.Age, swimmer.Level, swimmer.ProfilePictureUrl, swimmer.SkillProgressJson));
+        return Ok(BuildSwimmerCardResponse(swimmer.Id, swimmer.ParentUserId, swimmer.Name, swimmer.Age, swimmer.Level, swimmer.ProfilePictureUrl, swimmer.SkillProgressJson, swimmer.IsAccountHolder));
     }
 
     [HttpGet("{swimmerId:int}/progress")]
@@ -260,7 +271,8 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             swimmer.Age,
             swimmer.Level,
             swimmer.ProfilePictureUrl,
-            swimmer.SkillProgressJson
+            swimmer.SkillProgressJson,
+            swimmer.IsAccountHolder
         ));
     }
 
@@ -316,7 +328,7 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
         }
     }
 
-    private static object BuildSwimmerCardResponse(int id, int parentUserId, string name, int age, int level, string? profilePictureUrl, string skillProgressJson)
+    private static object BuildSwimmerCardResponse(int id, int parentUserId, string name, int age, int level, string? profilePictureUrl, string skillProgressJson, bool isAccountHolder = false)
     {
         var progress = ParseSkillProgress(skillProgressJson);
 
@@ -350,6 +362,7 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             name,
             age,
             level,
+            isAccountHolder,
             profilePictureUrl,
             levels
         };
@@ -369,6 +382,7 @@ public class CreateSwimmerRequest
     public string Name { get; set; } = string.Empty;
     public int Age { get; set; }
     public int Level { get; set; } = 1;
+    public bool IsAccountHolder { get; set; }
     public string? ProfilePictureUrl { get; set; }
 }
 

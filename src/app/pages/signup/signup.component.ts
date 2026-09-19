@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SeoService } from '../../services/seo.service';
+import { strongPasswordValidator } from '../../utils/password-policy';
 
 @Component({
   selector: 'app-signup',
@@ -16,6 +17,7 @@ export class SignupComponent implements OnInit {
   signupForm: FormGroup;
   loading = false;
   errorMessage = '';
+  readonly passwordHint = 'Password must be at least 8 characters, with 1 uppercase letter and 1 number.';
 
   constructor(
     private fb: FormBuilder,
@@ -29,7 +31,7 @@ export class SignupComponent implements OnInit {
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, Validators.maxLength(30)]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, strongPasswordValidator()]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
