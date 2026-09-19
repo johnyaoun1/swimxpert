@@ -161,6 +161,8 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 
 app.UseMiddleware<SwimXpert.Api.Middleware.GlobalExceptionMiddleware>();
+// CORS before rate-limit/security so preflight and error responses include ACAO headers.
+app.UseCors("AngularApp");
 app.UseMiddleware<SwimXpert.Api.Middleware.SecurityHeadersMiddleware>();
 app.UseMiddleware<SwimXpert.Api.Middleware.RateLimitMiddleware>();
 
@@ -175,7 +177,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-app.UseCors("AngularApp");
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();

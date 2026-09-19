@@ -24,6 +24,13 @@ public class RateLimitMiddleware
         var method = context.Request.Method;
         var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
+        // CORS preflight must not consume rate-limit slots (and must reach UseCors).
+        if (HttpMethods.IsOptions(method))
+        {
+            await _next(context);
+            return;
+        }
+
         if (path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/api/auth/register", StringComparison.OrdinalIgnoreCase))
         {
