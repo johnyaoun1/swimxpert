@@ -28,7 +28,8 @@
               "src/favicon.ico",
               "src/assets",
               "src/sitemap.xml",
-              "src/robots.txt"
+              "src/robots.txt",
+              "src/_headers"
             ],
             "styles": [
               "src/styles.css"
@@ -62,7 +63,15 @@
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
-              ]
+              ],
+              "optimization": {
+                "scripts": true,
+                "fonts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                }
+              }
             },
             "development": {
               "buildOptimizer": false,
