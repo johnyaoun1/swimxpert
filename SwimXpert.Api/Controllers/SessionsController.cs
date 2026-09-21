@@ -51,11 +51,12 @@ public class SessionsController(
                     .ThenInclude(sw => sw.ParentUser)
             .FirstAsync(s => s.Id == session.Id);
         return CreatedAtAction(nameof(GetSessionById), new { id = session.Id },
-            ToSessionDto(created, parentFilterId: null, isStaff: true, registeredCount: created.Attendances?.Count ?? 0));
+            ToSessionDto(created, callerUserId: 0, isAdmin: true, isCoach: false, registeredCount: created.Attendances?.Count ?? 0));
     }
 
     /// <summary>
-    /// Returns sessions with optional filters. Staff (Admin/Coach) see full registrant PII.
+    /// Returns sessions with optional filters. Admin sees full registrant PII.
+    /// A coach sees parent and child details only on sessions assigned to them (CoachUserId).
     /// Parents see session logistics for all sessions in range, but registrant names only for their own children.
     /// Defaults to upcoming window (now → +90 days) when from/to are omitted. Paginated.
     /// </summary>
@@ -68,7 +69,7 @@ public class SessionsController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
-        if (!TryGetCallerContext(out var currentUserId, out var isStaff))
+        if (!TryGetCallerContext(out var currentUserId, out var isAdmin, out var isCoach))
             return Unauthorized(new { message = "Invalid user context." });
 
         page = Math.Max(1, page);
@@ -94,7 +95,6 @@ public class SessionsController(
             .Take(pageSize)
             .ToListAsync();
 
-        int? parentFilterId = isStaff ? null : currentUserId;
         var counts = await CountRegistrationsBySessionIdsAsync(sessions.Select(s => s.Id));
 
         return Ok(new
@@ -104,7 +104,7 @@ public class SessionsController(
             totalCount,
             from = fromUtc,
             to = toUtc,
-            items = sessions.Select(s => ToSessionDto(s, parentFilterId, isStaff, counts.GetValueOrDefault(s.Id)))
+            items = sessions.Select(s => ToSessionDto(s, currentUserId, isAdmin, isCoach, counts.GetValueOrDefault(s.Id)))
         });
     }
 
@@ -408,7 +408,7 @@ public class SessionsController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
-        if (!TryGetCallerContext(out var currentUserId, out var isStaff))
+        if (!TryGetCallerContext(out var currentUserId, out var isAdmin, out var isCoach))
             return Unauthorized(new { message = "Invalid user context." });
 
         page = Math.Max(1, page);
@@ -431,7 +431,6 @@ public class SessionsController(
             .Take(pageSize)
             .ToListAsync();
 
-        int? parentFilterId = isStaff ? null : currentUserId;
         var counts = await CountRegistrationsBySessionIdsAsync(sessions.Select(s => s.Id));
 
         return Ok(new
@@ -441,18 +440,19 @@ public class SessionsController(
             totalCount,
             from = now,
             to = toUtc,
-            items = sessions.Select(s => ToSessionDto(s, parentFilterId, isStaff, counts.GetValueOrDefault(s.Id)))
+            items = sessions.Select(s => ToSessionDto(s, currentUserId, isAdmin, isCoach, counts.GetValueOrDefault(s.Id)))
         });
     }
 
     /// <summary>
-    /// Returns one session by id. Parents only receive registrant PII for their own children.
+    /// Returns one session by id. Admin receives full registrant PII. A coach receives it only
+    /// when CoachUserId is that coach. Parents only receive registrant PII for their own children.
     /// </summary>
     [HttpGet("{id:int}")]
     [Authorize]
     public async Task<IActionResult> GetSessionById(int id)
     {
-        if (!TryGetCallerContext(out var currentUserId, out var isStaff))
+        if (!TryGetCallerContext(out var currentUserId, out var isAdmin, out var isCoach))
             return Unauthorized(new { message = "Invalid user context." });
 
         var session = await dbContext.TrainingSessions
@@ -464,11 +464,10 @@ public class SessionsController(
         if (session is null)
             return NotFound(new { message = "Session not found." });
 
-        int? parentFilterId = isStaff ? null : currentUserId;
         // Independent of Include / visible registrations — occupancy cannot be accidentally zeroed by PII filtering.
         var registeredCount = await dbContext.Attendances.AsNoTracking()
             .CountAsync(a => a.TrainingSessionId == id);
-        return Ok(ToSessionDto(session, parentFilterId, isStaff, registeredCount));
+        return Ok(ToSessionDto(session, currentUserId, isAdmin, isCoach, registeredCount));
     }
 
     /// <summary>
@@ -551,7 +550,7 @@ public class SessionsController(
             .FirstAsync(s => s.Id == id, cancellationToken);
         var registeredCount = await dbContext.Attendances.AsNoTracking()
             .CountAsync(a => a.TrainingSessionId == id, cancellationToken);
-        return Ok(ToSessionDto(updated, parentFilterId: null, isStaff: true, registeredCount));
+        return Ok(ToSessionDto(updated, callerUserId: 0, isAdmin: true, isCoach: false, registeredCount));
     }
 
     [HttpDelete("{id:int}")]
@@ -728,10 +727,11 @@ public class SessionsController(
         };
     }
 
-    private bool TryGetCallerContext(out int userId, out bool isStaff)
+    private bool TryGetCallerContext(out int userId, out bool isAdmin, out bool isCoach)
     {
         userId = 0;
-        isStaff = User.IsInRole("Admin") || User.IsInRole("Coach");
+        isAdmin = User.IsInRole("Admin");
+        isCoach = User.IsInRole("Coach");
         var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return int.TryParse(claim, out userId);
     }
@@ -796,25 +796,29 @@ public class SessionsController(
             .ToDictionaryAsync(x => x.SessionId, x => x.Count);
     }
 
-    /// <param name="parentFilterId">
-    /// When set (Parent callers), only that parent's children's registrations are included by name.
-    /// Staff pass null and <paramref name="isStaff"/> true for full PII.
-    /// </param>
+    /// <param name="callerUserId">Logged-in user. Admin create/update passes 0; those calls set <paramref name="isAdmin"/>.</param>
     /// <param name="registeredCount">
     /// Total attendance rows for the session from a separate COUNT(*) — never derived from the
-    /// parent-filtered registrations list.
+    /// filtered registrations list.
     /// </param>
-    private static object ToSessionDto(TrainingSession s, int? parentFilterId, bool isStaff, int registeredCount)
+    private static object ToSessionDto(TrainingSession s, int callerUserId, bool isAdmin, bool isCoach, int registeredCount)
     {
+        // Parents only. Coaches are not filtered as parents; their PII gate is session ownership.
+        int? parentFilterId = !isAdmin && !isCoach ? callerUserId : null;
+        var coachOwnsSession = isCoach && s.CoachUserId == callerUserId;
+        var fullRegistrants = isAdmin || coachOwnsSession;
+
         IEnumerable<Attendance> visibleAttendances = s.Attendances ?? [];
-        if (!isStaff && parentFilterId.HasValue)
+        if (isCoach && !isAdmin && !coachOwnsSession)
+            visibleAttendances = [];
+        else if (!fullRegistrants && parentFilterId.HasValue)
             visibleAttendances = visibleAttendances.Where(a => a.Swimmer?.ParentUserId == parentFilterId.Value);
 
         var hasOwnRegistration = parentFilterId.HasValue
             && (s.Attendances?.Any(a => a.Swimmer?.ParentUserId == parentFilterId.Value) ?? false);
 
-        // Titles often embed a child's name — hide for parents who are not registered on this session.
-        var title = isStaff || hasOwnRegistration
+        // Titles often embed a child's name — hide unless the caller is allowed to see registrants.
+        var title = fullRegistrants || hasOwnRegistration
             ? s.Title
             : "Swimming Session";
 
@@ -824,13 +828,14 @@ public class SessionsController(
                 id = a.Id,
                 swimmerId = a.SwimmerId,
                 swimmerName = a.Swimmer?.Name ?? "",
-                parentUserId = isStaff ? (a.Swimmer?.ParentUserId ?? 0) : (parentFilterId ?? 0),
-                parentName = isStaff ? (a.Swimmer?.ParentUser?.FullName ?? "") : "",
+                parentUserId = fullRegistrants ? (a.Swimmer?.ParentUserId ?? 0) : (parentFilterId ?? 0),
+                parentName = fullRegistrants ? (a.Swimmer?.ParentUser?.FullName ?? "") : "",
                 isPresent = a.IsPresent,
                 bookingStatus = a.BookingStatus
             })
             .ToList();
 
+        var staffSchedule = isAdmin || isCoach;
         return new
         {
             id = s.Id,
@@ -844,11 +849,11 @@ public class SessionsController(
             status = s.Status,
             price = s.Price,
             isPaid = s.IsPaid,
-            googleEventId = isStaff ? s.GoogleEventId : null,
+            googleEventId = staffSchedule ? s.GoogleEventId : null,
             recurrenceSeriesId = s.RecurrenceSeriesId,
-            coachUserId = isStaff ? s.CoachUserId : null,
-            coachAccepted = isStaff ? s.CoachAccepted : null,
-            coachDeclineReason = isStaff ? s.CoachDeclineReason : null,
+            coachUserId = staffSchedule ? s.CoachUserId : null,
+            coachAccepted = staffSchedule ? s.CoachAccepted : null,
+            coachDeclineReason = isAdmin || coachOwnsSession ? s.CoachDeclineReason : null,
             createdAt = s.CreatedAt,
             registrations
         };
