@@ -64,23 +64,49 @@ public class AdminUsersController(
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
     {
+        string? assignedRole = null;
+        if (!string.IsNullOrWhiteSpace(request.Role))
+        {
+            assignedRole = CanonicalRole(request.Role);
+            if (assignedRole is null)
+                return BadRequest(new { message = "Invalid role. Allowed: Parent, Coach, Admin." });
+        }
+
+        await using var tx = await dbContext.Database.BeginTransactionAsync();
         var user = await dbContext.Users.FindAsync(id);
         if (user is null)
             return NotFound(new { message = "User not found." });
 
-        if (!string.IsNullOrWhiteSpace(request.Role))
+        var previousRole = user.Role;
+        // A new Admin can only be inserted in the database. Setting Admin on anyone else is refused.
+        if (assignedRole is not null && IsAdminRole(assignedRole) && !IsAdminRole(previousRole))
         {
-            var role = request.Role.Trim();
-            if (!AllowedRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
-                return BadRequest(new { message = "Invalid role. Allowed: Parent, Coach, Admin." });
-            user.Role = role;
+            await auditLog.LogAsync("AdminPromotionBlocked", "User", id.ToString(), new { targetUserId = id });
+            await tx.CommitAsync();
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Promoting a user to Admin is not allowed." });
         }
 
+        var roleChanged = assignedRole is not null && !string.Equals(previousRole, assignedRole, StringComparison.Ordinal);
+        var deactivates = request.IsActive == false && user.IsActive;
+        var removesActiveAdmin = user.IsActive && IsAdminRole(previousRole)
+            && ((assignedRole is not null && !IsAdminRole(assignedRole)) || request.IsActive == false);
+
+        if (removesActiveAdmin && await IsLastActiveAdminAsync(user))
+            return Conflict(new { message = "Cannot demote or deactivate the last active admin." });
+
+        if (assignedRole is not null)
+            user.Role = assignedRole;
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
 
         await dbContext.SaveChangesAsync();
-        await auditLog.LogAsync("UserUpdated", "User", id.ToString(), new { request.Role, request.IsActive });
+        if (roleChanged)
+            await auditLog.LogAsync("RoleChanged", "User", id.ToString(), new { fromRole = previousRole, toRole = user.Role });
+        if (deactivates)
+            await auditLog.LogAsync("UserDisabled", "User", id.ToString(), new { role = user.Role });
+        if (!roleChanged && !deactivates)
+            await auditLog.LogAsync("UserUpdated", "User", id.ToString(), new { request.Role, request.IsActive });
+        await tx.CommitAsync();
         return Ok(new { message = "User updated successfully." });
     }
 
@@ -188,7 +214,7 @@ public class AdminUsersController(
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        await auditLog.LogAsync("CoachCreated", "User", user.Id.ToString(), new { email, username });
+        await auditLog.LogAsync("CoachCreated", "User", user.Id.ToString(), new { email, username, role = "Coach" });
 
         return Ok(new { username, password = plainPassword, email });
     }
@@ -297,6 +323,7 @@ public class AdminUsersController(
     [HttpDelete("{id:int}/reject")]
     public async Task<IActionResult> RejectUser(int id)
     {
+        await using var tx = await dbContext.Database.BeginTransactionAsync();
         var user = await dbContext.Users
             .Include(u => u.Swimmers)
             .ThenInclude(s => s.Attendances)
@@ -304,6 +331,8 @@ public class AdminUsersController(
             .FirstOrDefaultAsync(u => u.Id == id);
         if (user is null)
             return NotFound(new { message = "User not found." });
+        if (user.IsActive && IsAdminRole(user.Role) && await IsLastActiveAdminAsync(user))
+            return Conflict(new { message = "Cannot delete the last active admin." });
         if (user.IsApproved)
             return BadRequest(new { message = "Cannot reject an already-approved user." });
 
@@ -335,6 +364,7 @@ public class AdminUsersController(
         dbContext.Users.Remove(user);
         await dbContext.SaveChangesAsync();
         await auditLog.LogAsync("UserRejected", "User", id.ToString(), new { user.Email });
+        await tx.CommitAsync();
         return Ok(new { message = "Account rejected. Pending bookings were removed and online holds marked refunded." });
     }
 
@@ -344,16 +374,51 @@ public class AdminUsersController(
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> SoftDeleteUser(int id)
     {
+        await using var tx = await dbContext.Database.BeginTransactionAsync();
         var user = await dbContext.Users.FindAsync(id);
         if (user is null)
-        {
             return NotFound(new { message = "User not found." });
-        }
+
+        if (user.IsActive && IsAdminRole(user.Role) && await IsLastActiveAdminAsync(user))
+            return Conflict(new { message = "Cannot deactivate the last active admin." });
 
         user.IsActive = false;
         await dbContext.SaveChangesAsync();
-        await auditLog.LogAsync("UserDisabled", "User", id.ToString());
+        await auditLog.LogAsync("UserDisabled", "User", id.ToString(), new { role = user.Role });
+        await tx.CommitAsync();
         return Ok(new { message = "User disabled successfully." });
+    }
+
+    private static bool IsAdminRole(string? role) =>
+        string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Parent, Coach, or Admin with canonical casing. Null when the value is not allowed.</summary>
+    private static string? CanonicalRole(string role)
+    {
+        foreach (var allowed in AllowedRoles)
+        {
+            if (string.Equals(allowed, role.Trim(), StringComparison.OrdinalIgnoreCase))
+                return allowed;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// True when <paramref name="user"/> is the only active admin.
+    /// Locks active-admin rows so two concurrent demotions cannot both succeed.
+    /// Caller must already have an open transaction.
+    /// </summary>
+    private async Task<bool> IsLastActiveAdminAsync(User user)
+    {
+        if (!user.IsActive || !IsAdminRole(user.Role))
+            return false;
+
+        await dbContext.Database
+            .SqlQueryRaw<int>("""SELECT "Id" AS "Value" FROM "Users" WHERE "IsActive" = TRUE AND lower("Role") = 'admin' FOR UPDATE""")
+            .ToListAsync();
+
+        return !await dbContext.Users.AnyAsync(u =>
+            u.Id != user.Id && u.IsActive && u.Role.ToLower() == "admin");
     }
 }
 
