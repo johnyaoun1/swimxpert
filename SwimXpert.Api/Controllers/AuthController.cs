@@ -23,6 +23,12 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     private const int BcryptWorkFactor = 12;
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
+    /// <summary>
+    /// Feature gate for two-factor auth. Off unless Features:TwoFactorEnabled
+    /// (env: Features__TwoFactorEnabled) is explicitly true.
+    /// </summary>
+    private bool TwoFactorFeatureEnabled => configuration.GetValue("Features:TwoFactorEnabled", false);
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -111,7 +117,8 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         user.LockoutUntil = null;
         await dbContext.SaveChangesAsync();
         // EmailVerified is non-blocking for login; booking is gated separately.
-        if (user.TwoFactorEnabled)
+        // While the 2FA feature is off, login never branches into the 2FA flow.
+        if (TwoFactorFeatureEnabled && user.TwoFactorEnabled)
             return StatusCode(202, new { message = "2FA required.", code = "2fa_required", email = user.Email });
 
         var accessToken = GenerateJwtToken(user);
@@ -124,6 +131,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("2fa/verify")]
     public async Task<IActionResult> Verify2Fa([FromBody] Verify2FaRequest request)
     {
+        if (!TwoFactorFeatureEnabled)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code))
             return BadRequest(new { message = "Email and code are required." });
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email.Trim().ToLowerInvariant());
@@ -143,6 +153,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("2fa/setup")]
     public async Task<IActionResult> Setup2Fa()
     {
+        if (!TwoFactorFeatureEnabled)
+            return NotFound();
+
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
@@ -162,6 +175,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("2fa/enable")]
     public async Task<IActionResult> Enable2Fa([FromBody] Enable2FaRequest request)
     {
+        if (!TwoFactorFeatureEnabled)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(request.Code))
             return BadRequest(new { message = "Code is required." });
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -182,6 +198,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("2fa/disable")]
     public async Task<IActionResult> Disable2Fa([FromBody] Disable2FaRequest request)
     {
+        if (!TwoFactorFeatureEnabled)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(request.Code))
             return BadRequest(new { message = "Code is required." });
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -343,6 +362,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             fullName = fullName ?? "",
             role = role ?? "Parent",
             twoFactorEnabled = user?.TwoFactorEnabled ?? false,
+            twoFactorFeatureEnabled = TwoFactorFeatureEnabled,
             isApproved = user?.IsApproved ?? true,
             emailVerified = user?.EmailVerified ?? false,
             clientStatus = user?.ClientStatus ?? ClientStatuses.New

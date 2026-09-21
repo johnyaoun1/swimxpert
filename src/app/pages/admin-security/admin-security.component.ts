@@ -15,6 +15,9 @@ import { QRCodeModule } from 'angularx-qrcode';
 })
 export class AdminSecurityComponent implements OnInit {
   twoFactorEnabled = false;
+  /** Mirrors the server's Features:TwoFactorEnabled flag; hides all 2FA controls when false. */
+  featureEnabled = false;
+  statusLoaded = false;
   loading = false;
   message = '';
   errorMessage = '';
@@ -39,11 +42,16 @@ export class AdminSecurityComponent implements OnInit {
   loadStatus(): void {
     this.api.getMe().subscribe({
       next: (me: any) => {
+        this.featureEnabled = !!me?.twoFactorFeatureEnabled;
         this.twoFactorEnabled = !!me?.twoFactorEnabled;
+        this.statusLoaded = true;
         if (!this.twoFactorEnabled) {
           this.setupQrUri = '';
           this.setupSecret = '';
         }
+      },
+      error: () => {
+        this.statusLoaded = true;
       }
     });
   }

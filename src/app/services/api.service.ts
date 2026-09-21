@@ -63,6 +63,8 @@ export class ApiService {
     fullName: string;
     role: string;
     twoFactorEnabled?: boolean;
+    /** Server-side Features:TwoFactorEnabled gate — UI must not offer 2FA when false. */
+    twoFactorFeatureEnabled?: boolean;
     isApproved?: boolean;
     emailVerified?: boolean;
     clientStatus?: string;
@@ -73,6 +75,7 @@ export class ApiService {
       fullName: string;
       role: string;
       twoFactorEnabled?: boolean;
+      twoFactorFeatureEnabled?: boolean;
       isApproved?: boolean;
       emailVerified?: boolean;
       clientStatus?: string;
