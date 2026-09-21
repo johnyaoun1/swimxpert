@@ -172,7 +172,6 @@ app.UseMiddleware<SwimXpert.Api.Middleware.GlobalExceptionMiddleware>();
 // CORS before rate-limit/security so preflight and error responses include ACAO headers.
 app.UseCors("AngularApp");
 app.UseMiddleware<SwimXpert.Api.Middleware.SecurityHeadersMiddleware>();
-app.UseMiddleware<SwimXpert.Api.Middleware.RateLimitMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -188,6 +187,9 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+// After authentication so the per-user limit can read the JWT name identifier.
+// Anonymous limits still key off ClientIpResolver.
+app.UseMiddleware<SwimXpert.Api.Middleware.RateLimitMiddleware>();
 app.UseMiddleware<SwimXpert.Api.Middleware.MustChangePasswordMiddleware>();
 app.MapControllers();
 
@@ -322,6 +324,14 @@ using (var scope = app.Services.CreateScope())
         );
         """);
 
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" ADD COLUMN IF NOT EXISTS \"RecordedByUserId\" integer;");
+    await db.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS \"IX_Payments_RecordedByUserId\" ON \"Payments\" (\"RecordedByUserId\");");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" DROP CONSTRAINT IF EXISTS \"FK_Payments_Users_RecordedByUserId\";");
+    await db.Database.ExecuteSqlRawAsync(
+        """
+        ALTER TABLE "Payments" ADD CONSTRAINT "FK_Payments_Users_RecordedByUserId"
+        FOREIGN KEY ("RecordedByUserId") REFERENCES "Users" ("Id") ON DELETE SET NULL;
+        """);
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" ADD COLUMN IF NOT EXISTS \"AttendanceId\" integer;");
     await db.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS \"IX_Payments_AttendanceId\" ON \"Payments\" (\"AttendanceId\");");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Payments\" DROP CONSTRAINT IF EXISTS \"FK_Payments_Attendances_AttendanceId\";");

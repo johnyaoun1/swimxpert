@@ -73,6 +73,9 @@ namespace SwimXpert.Api.Migrations
                     b.Property<DateTime>("PaymentDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("RecordedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Reference")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -86,6 +89,8 @@ namespace SwimXpert.Api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RecordedByUserId");
 
                     b.HasIndex("UserId");
 
@@ -222,11 +227,18 @@ namespace SwimXpert.Api.Migrations
 
             modelBuilder.Entity("SwimXpert.Api.Models.Payment", b =>
                 {
+                    b.HasOne("SwimXpert.Api.Models.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SwimXpert.Api.Models.User", "User")
                         .WithMany("Payments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("RecordedBy");
 
                     b.Navigation("User");
                 });

@@ -1,9 +1,12 @@
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
 namespace SwimXpert.Api.Middleware;
 
 /// <summary>
-/// Simple fixed-window rate limiting per IP for auth and lead-capture endpoints.
+/// Fixed-window rate limits. Anonymous endpoints key off <see cref="ClientIpResolver"/>.
+/// Authenticated /api calls share one bucket per user id.
+/// Runs after authentication so the name-identifier claim is available.
 /// </summary>
 public class RateLimitMiddleware
 {
@@ -11,9 +14,15 @@ public class RateLimitMiddleware
     private static readonly ConcurrentDictionary<string, WindowCount> AuthAttempts = new();
     private static readonly ConcurrentDictionary<string, WindowCount> LeadAttempts = new();
     private static readonly ConcurrentDictionary<string, WindowCount> PasswordAttempts = new();
+    private static readonly ConcurrentDictionary<string, WindowCount> RefreshAttempts = new();
+    private static readonly ConcurrentDictionary<string, WindowCount> LevelFinderAttempts = new();
+    private static readonly ConcurrentDictionary<string, WindowCount> UserAttempts = new();
     private const int AuthPermitLimit = 10;
     private const int LeadPermitLimit = 20;
     private const int PasswordPermitLimit = 5;
+    private const int RefreshPermitLimit = 10;
+    private const int LevelFinderPermitLimit = 20;
+    private const int UserPermitLimit = 300;
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
     public RateLimitMiddleware(RequestDelegate next) => _next = next;
@@ -33,14 +42,28 @@ public class RateLimitMiddleware
             return;
         }
 
-        if (path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase)
+        if (path.StartsWith("/api/auth/refresh", StringComparison.OrdinalIgnoreCase) && method == "POST")
+        {
+            if (!TryConsume(RefreshAttempts, ip, RefreshPermitLimit))
+            {
+                await RejectAsync(context);
+                return;
+            }
+        }
+        else if (path.StartsWith("/api/level-finder/analyze", StringComparison.OrdinalIgnoreCase) && method == "POST")
+        {
+            if (!TryConsume(LevelFinderAttempts, ip, LevelFinderPermitLimit))
+            {
+                await RejectAsync(context);
+                return;
+            }
+        }
+        else if (path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/api/auth/register", StringComparison.OrdinalIgnoreCase))
         {
             if (!TryConsume(AuthAttempts, ip, AuthPermitLimit))
             {
-                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("""{"message":"Too many attempts. Please try again later."}""");
+                await RejectAsync(context, "Too many attempts. Please try again later.");
                 return;
             }
         }
@@ -48,9 +71,7 @@ public class RateLimitMiddleware
         {
             if (!TryConsume(LeadAttempts, ip, LeadPermitLimit))
             {
-                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("""{"message":"Too many requests. Please try again later."}""");
+                await RejectAsync(context);
                 return;
             }
         }
@@ -60,14 +81,30 @@ public class RateLimitMiddleware
         {
             if (!TryConsume(PasswordAttempts, ip, PasswordPermitLimit))
             {
-                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync("""{"message":"Too many requests. Please try again later."}""");
+                await RejectAsync(context);
+                return;
+            }
+        }
+        else if (context.User.Identity?.IsAuthenticated == true
+                 && path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+        {
+            var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var key = string.IsNullOrEmpty(userId) ? "ip:" + ip : "user:" + userId;
+            if (!TryConsume(UserAttempts, key, UserPermitLimit))
+            {
+                await RejectAsync(context);
                 return;
             }
         }
 
         await _next(context);
+    }
+
+    private static async Task RejectAsync(HttpContext context, string message = "Too many requests. Please try again later.")
+    {
+        context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync($"{{\"message\":\"{message}\"}}");
     }
 
     private static bool TryConsume(ConcurrentDictionary<string, WindowCount> store, string key, int limit)

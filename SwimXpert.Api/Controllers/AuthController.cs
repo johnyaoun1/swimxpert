@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,6 +22,9 @@ namespace SwimXpert.Api.Controllers;
 public class AuthController(ApplicationDbContext dbContext, IConfiguration configuration, ILogger<AuthController> logger, SwimXpert.Api.Services.IEmailService emailService, IClientMatchingService clientMatching, IWebHostEnvironment env) : ControllerBase
 {
     private const int BcryptWorkFactor = 12;
+    private const int MaxParentAccounts = 200;
+    /// <summary>Transaction-scoped lock so two signups cannot both pass the parent cap.</summary>
+    private const int ParentCapLockKey = 200200;
     private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
     /// <summary>
@@ -80,8 +84,15 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             Phone = e164
         };
 
+        await using var tx = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        await dbContext.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock({0})", ParentCapLockKey);
+        var parentCount = await dbContext.Users.CountAsync(u => u.Role == "Parent");
+        if (parentCount >= MaxParentAccounts)
+            return Conflict(new { message = "Registration is full. SwimXpert is not accepting new parent accounts right now." });
+
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
+        await tx.CommitAsync();
 
         if (verificationToken is not null)
             await emailService.SendVerificationEmailAsync(user.Email, user.FullName, verificationToken);

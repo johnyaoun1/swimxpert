@@ -68,6 +68,12 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(p => p.AttendanceId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Payment>()
+            .HasOne(p => p.RecordedBy)
+            .WithMany()
+            .HasForeignKey(p => p.RecordedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<TrainingSession>()
             .Property(t => t.Price)
             .HasPrecision(18, 2);

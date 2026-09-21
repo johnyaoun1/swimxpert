@@ -115,12 +115,21 @@ public class UserProfileController(ApplicationDbContext dbContext) : ControllerB
         if (caller is null)
             return Forbid();
 
+        if (request.TotalQuestions <= 0)
+            return BadRequest(new { message = "Total questions must be greater than zero." });
+        if (request.Score < 0 || request.Score > request.TotalQuestions)
+            return BadRequest(new { message = "Score must be between 0 and the number of questions." });
+
+        var percentage = (int)Math.Round(
+            100.0 * request.Score / request.TotalQuestions,
+            MidpointRounding.AwayFromZero);
+
         var quizResult = new Models.QuizResult
         {
             UserId = userId,
             Score = request.Score,
             TotalQuestions = request.TotalQuestions,
-            Percentage = request.Percentage,
+            Percentage = percentage,
             Timestamp = DateTime.UtcNow
         };
 

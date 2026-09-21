@@ -208,6 +208,7 @@ public class AdminUsersController(
             IsActive = true,
             IsApproved = true,
             EmailVerified = true,
+            MustChangePassword = true,
             CreatedAt = DateTime.UtcNow
         };
 

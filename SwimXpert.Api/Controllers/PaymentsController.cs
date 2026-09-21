@@ -88,9 +88,14 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
         if (reference is { Length: > 100 })
             reference = reference[..100];
 
+        var recorderClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(recorderClaim, out var recordedByUserId))
+            return Unauthorized(new { message = "Invalid user context." });
+
         var payment = new Payment
         {
             UserId = request.UserId,
+            RecordedByUserId = recordedByUserId,
             Amount = request.Amount,
             Method = method,
             Status = "Completed",

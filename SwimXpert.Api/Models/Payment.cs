@@ -10,6 +10,10 @@ public class Payment
     public int? UserId { get; set; }
     public User? User { get; set; }
 
+    /// <summary>Staff user who recorded the payment. Null on rows created before this column existed.</summary>
+    public int? RecordedByUserId { get; set; }
+    public User? RecordedBy { get; set; }
+
     /// <summary>Optional link to a booking (e.g. legacy online holds). Manual payments usually leave this null.</summary>
     public int? AttendanceId { get; set; }
     public Attendance? Attendance { get; set; }
