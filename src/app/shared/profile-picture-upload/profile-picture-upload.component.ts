@@ -21,6 +21,7 @@ export class ProfilePictureUploadComponent implements OnDestroy {
   errorMessage = '';
   /** Local preview. The authorized URL 404s until the swimmer row points at the file. */
   localPreview: string | null = null;
+  previewBroken = false;
 
   constructor(private apiService: ApiService) {}
 
@@ -50,7 +51,12 @@ export class ProfilePictureUploadComponent implements OnDestroy {
 
   removePhoto(): void {
     this.revokeLocalPreview();
+    this.previewBroken = false;
     this.urlChange.emit(null);
+  }
+
+  markPreviewBroken(): void {
+    this.previewBroken = true;
   }
 
   triggerFileInput(input: HTMLInputElement): void {
@@ -70,6 +76,7 @@ export class ProfilePictureUploadComponent implements OnDestroy {
       return;
     }
     this.revokeLocalPreview();
+    this.previewBroken = false;
     this.localPreview = URL.createObjectURL(file);
     this.uploading = true;
     this.apiService.uploadProfilePicture(file).subscribe({

@@ -1,8 +1,8 @@
 import { Injectable, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
-import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { catchError, filter, finalize, map, shareReplay, switchMap, take, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 export interface LeaderboardEntry {
@@ -88,7 +88,19 @@ export class AuthService {
     // Avoid auth HTTP during SSR/prerender (Node has no browser APIs).
     if (isPlatformBrowser(this.platformId)) {
       this.clearLegacyStorage();
-      this.hydrate().subscribe();
+      const shellHidden = document.documentElement.classList.contains('sx-booting');
+      if (!shellHidden) {
+        this.hydrate().subscribe();
+        return;
+      }
+      const navigationDone$ = this.router.navigated
+        ? of(true)
+        : this.router.events.pipe(
+            filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+            take(1),
+            map(() => true)
+          );
+      forkJoin([this.hydrate(), navigationDone$]).subscribe(() => this.revealShell());
     }
   }
 
@@ -214,6 +226,13 @@ export class AuthService {
       next: () => this.clearAuthState(true),
       error: () => this.clearAuthState(true)
     });
+  }
+
+  /** Drops the boot screen after the first session check and the first navigation. */
+  private revealShell(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    document.documentElement.classList.remove('sx-booting');
+    document.getElementById('sx-boot')?.remove();
   }
 
   /**

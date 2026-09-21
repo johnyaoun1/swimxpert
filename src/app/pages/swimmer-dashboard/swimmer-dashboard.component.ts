@@ -17,6 +17,7 @@ import { getLevelFocus, getChildInitial as swimChildInitial } from '../../utils/
 })
 export class SwimmerDashboardComponent implements OnInit {
   readonly registrationsByChildId = signal<Record<string, Attendance[]>>({});
+  readonly missingPhotos = signal(new Set<string>());
   readonly expandedLevelsByChildId = signal<Record<string, Set<number>>>({});
   loading = false;
   errorMessage = '';
@@ -160,10 +161,11 @@ export class SwimmerDashboardComponent implements OnInit {
     });
   }
 
-  handleImageError(event: Event, childName: string): void {
-    const img = event.target as HTMLImageElement;
-    const firstLetter = childName.charAt(0).toUpperCase();
-    const svgData = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23e5e7eb' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='40'%3E${firstLetter}%3C/text%3E%3C/svg%3E`;
-    img.src = svgData;
+  markPhotoMissing(childId: string): void {
+    this.missingPhotos.update((current) => {
+      const next = new Set(current);
+      next.add(childId);
+      return next;
+    });
   }
 }

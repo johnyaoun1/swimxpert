@@ -21,6 +21,8 @@ import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 })
 export class DashboardComponent implements OnInit {
   user = this.authService.currentUser;
+  /** Child ids whose photo request returned an error. The letter stands in for the image. */
+  readonly missingPhotos = signal(new Set<string>());
   pendingSessions = signal<Attendance[]>([]);
   readonly registrationsByChildId = signal<Record<string, Attendance[]>>({});
   /** Accordion open levels keyed by child id */
@@ -290,11 +292,12 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  handleImageError(event: Event, childName: string): void {
-    const img = event.target as HTMLImageElement;
-    const firstLetter = childName.charAt(0).toUpperCase();
-    const svgData = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23e5e7eb' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='40'%3E${firstLetter}%3C/text%3E%3C/svg%3E`;
-    img.src = svgData;
+  markPhotoMissing(childId: string): void {
+    this.missingPhotos.update((current) => {
+      const next = new Set(current);
+      next.add(childId);
+      return next;
+    });
   }
 
   openEditChildProfile(child: Child): void {

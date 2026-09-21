@@ -30,6 +30,7 @@ interface AdminCoachRow {
   styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
+  readonly missingPhotos = signal(new Set<string>());
   pendingBookings = signal<Array<{
     id: number;
     bookingStatus: string;
@@ -429,6 +430,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   getChildInitial = getChildInitial;
+
+  markPhotoMissing(childId: string): void {
+    this.missingPhotos.update((current) => {
+      const next = new Set(current);
+      next.add(childId);
+      return next;
+    });
+  }
 
   toggleSkillAccordion(childId: string, level: number): void {
     const prev = this.expandedSkillSectionsByChildId();

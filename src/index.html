@@ -35,6 +35,30 @@
 
   <!-- Performance -->
   <meta name="theme-color" content="#0a0f1e">
+  <style>
+    #sx-boot { display: none; }
+    html.sx-booting #sx-boot {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: #0a0f1e;
+      color: #94a3b8;
+      font-family: system-ui, sans-serif;
+      font-size: 0.95rem;
+    }
+    html.sx-booting app-root { display: none !important; }
+    #sx-boot img {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 9999px;
+      object-fit: cover;
+    }
+  </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
@@ -133,6 +157,35 @@
   </script>
 </head>
 <body style="background:#0a0f1e;">
+  <script>
+    (function () {
+      var path = location.pathname.replace(/\/+$/, '') || '/';
+      if (path === '/sessions/available' || path === '/checkout') return;
+      var prefixes = [
+        '/dashboard',
+        '/admin',
+        '/coach',
+        '/change-password',
+        '/quizzes',
+        '/leaderboard',
+        '/swimmer',
+        '/my-sessions',
+        '/payments',
+        '/sessions'
+      ];
+      for (var i = 0; i < prefixes.length; i++) {
+        var prefix = prefixes[i];
+        if (path === prefix || path.indexOf(prefix + '/') === 0) {
+          document.documentElement.classList.add('sx-booting');
+          return;
+        }
+      }
+    })();
+  </script>
+  <div id="sx-boot" role="status" aria-live="polite">
+    <img src="assets/logo.png" alt="">
+    <p>Loading</p>
+  </div>
   <app-root></app-root>
 </body>
 </html>

@@ -2,6 +2,7 @@ namespace SwimXpert.Api.Services;
 
 /// <summary>
 /// Saves profile pictures under wwwroot/uploads/profile-pictures/.
+/// Production mounts a Railway volume at /app/wwwroot/uploads so deploys keep the files.
 /// That folder is not served as static files. Reads go through the authorized endpoint.
 /// </summary>
 public class LocalStorageService : IStorageService
