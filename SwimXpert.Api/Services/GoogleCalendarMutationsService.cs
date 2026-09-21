@@ -17,13 +17,15 @@ namespace SwimXpert.Api.Services;
 
 public class GoogleCalendarMutationsService(
     ApplicationDbContext db,
-    IOptions<GoogleCalendarOptions> options) : IGoogleCalendarMutationsService
+    IOptions<GoogleCalendarOptions> options,
+    GoogleRefreshTokenProtector tokenProtector,
+    CalendarEncryptionStatus encryption) : IGoogleCalendarMutationsService
 {
     private readonly GoogleCalendarOptions _opt = options.Value;
 
     public async Task<(bool Ok, string? Error)> TryDeleteGoogleEventAsync(string? googleEventId, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(googleEventId))
+        if (!encryption.Ready || string.IsNullOrWhiteSpace(googleEventId))
             return (true, null);
 
         var (service, err) = await TryCreateCalendarServiceAsync(ct);
@@ -47,7 +49,7 @@ public class GoogleCalendarMutationsService(
 
     public async Task<(bool Ok, string? Error)> TryPushSessionToGoogleAsync(TrainingSession session, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(session.GoogleEventId))
+        if (!encryption.Ready || string.IsNullOrWhiteSpace(session.GoogleEventId))
             return (true, null);
 
         var (service, err) = await TryCreateCalendarServiceAsync(ct);
@@ -88,7 +90,10 @@ public class GoogleCalendarMutationsService(
             return (null, "GoogleCalendar:CalendarId is not configured.");
 
         var tracked = await db.GoogleCalendarStates.AsNoTracking().FirstOrDefaultAsync(s => s.Id == 1, ct);
-        if (string.IsNullOrEmpty(tracked?.RefreshToken))
+        var refreshToken = GoogleRefreshTokenProtector.IsProtected(tracked?.RefreshToken)
+            ? tokenProtector.Unprotect(tracked?.RefreshToken)
+            : null;
+        if (string.IsNullOrEmpty(refreshToken))
             return (null, "Google Calendar is not connected.");
 
         if (string.IsNullOrWhiteSpace(_opt.ClientId) || string.IsNullOrWhiteSpace(_opt.ClientSecret))
@@ -104,7 +109,7 @@ public class GoogleCalendarMutationsService(
             Scopes = GoogleCalendarScopes.Values
         });
 
-        var credential = new UserCredential(flow, "swimxpert", new TokenResponse { RefreshToken = tracked.RefreshToken });
+        var credential = new UserCredential(flow, "swimxpert", new TokenResponse { RefreshToken = refreshToken });
         var service = new CalendarService(new BaseClientService.Initializer
         {
             HttpClientInitializer = credential,

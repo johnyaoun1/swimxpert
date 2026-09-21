@@ -49,6 +49,7 @@ export class AdminScheduleComponent implements OnInit {
   googleConnected = signal(false);
   googleOAuthReady = signal(false);
   googleCalendarReady = signal(false);
+  googleSyncDisabled = signal(false);
   syncingGoogle = signal(false);
 
   showModal = signal(false);
@@ -141,6 +142,7 @@ export class AdminScheduleComponent implements OnInit {
   loadGoogleStatus(): void {
     this.apiService.getGoogleCalendarStatus().subscribe({
       next: (s) => {
+        this.googleSyncDisabled.set(!!s.syncDisabled);
         this.googleConnected.set(!!s.connected);
         this.googleOAuthReady.set(!!s.oauthConfigured);
         this.googleCalendarReady.set(!!s.calendarIdConfigured);

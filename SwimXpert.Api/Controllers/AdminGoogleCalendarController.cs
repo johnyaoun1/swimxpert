@@ -18,7 +18,8 @@ public class AdminGoogleCalendarController(
     ApplicationDbContext db,
     IMemoryCache cache,
     IOptions<GoogleCalendarOptions> options,
-    IGoogleCalendarSyncService syncService) : ControllerBase
+    IGoogleCalendarSyncService syncService,
+    CalendarEncryptionStatus encryption) : ControllerBase
 {
     private readonly GoogleCalendarOptions _opt = options.Value;
 
@@ -27,14 +28,29 @@ public class AdminGoogleCalendarController(
     [HttpGet("status")]
     public async Task<IActionResult> GetStatus()
     {
+        if (!encryption.Ready)
+        {
+            return Ok(new
+            {
+                connected = false,
+                lastSyncUtc = (DateTime?)null,
+                calendarIdConfigured = !string.IsNullOrWhiteSpace(_opt.CalendarId),
+                oauthConfigured = !string.IsNullOrWhiteSpace(_opt.ClientId) && !string.IsNullOrWhiteSpace(_opt.ClientSecret),
+                syncDisabled = true,
+                syncDisabledMessage = CalendarEncryptionStatus.DisabledMessage
+            });
+        }
+
         var row = await db.GoogleCalendarStates.AsNoTracking().FirstOrDefaultAsync(s => s.Id == 1);
-        var connected = !string.IsNullOrEmpty(row?.RefreshToken);
+        var connected = GoogleRefreshTokenProtector.IsProtected(row?.RefreshToken);
         return Ok(new
         {
             connected,
             lastSyncUtc = row?.LastSyncUtc,
             calendarIdConfigured = !string.IsNullOrWhiteSpace(_opt.CalendarId),
-            oauthConfigured = !string.IsNullOrWhiteSpace(_opt.ClientId) && !string.IsNullOrWhiteSpace(_opt.ClientSecret)
+            oauthConfigured = !string.IsNullOrWhiteSpace(_opt.ClientId) && !string.IsNullOrWhiteSpace(_opt.ClientSecret),
+            syncDisabled = false,
+            syncDisabledMessage = (string?)null
         });
     }
 
@@ -42,6 +58,9 @@ public class AdminGoogleCalendarController(
     [HttpGet("authorization-url")]
     public IActionResult GetAuthorizationUrl()
     {
+        if (!encryption.Ready)
+            return BadRequest(new { message = CalendarEncryptionStatus.DisabledMessage });
+
         if (string.IsNullOrWhiteSpace(_opt.ClientId) || string.IsNullOrWhiteSpace(_opt.ClientSecret))
             return BadRequest(new { message = "Google OAuth is not configured (ClientId/ClientSecret)." });
 
@@ -69,6 +88,9 @@ public class AdminGoogleCalendarController(
     [HttpPost("sync")]
     public async Task<IActionResult> PostSync(CancellationToken cancellationToken)
     {
+        if (!encryption.Ready)
+            return BadRequest(new { message = CalendarEncryptionStatus.DisabledMessage });
+
         var result = await syncService.SyncAsync(cancellationToken);
         if (result.Errors.Count > 0 && result.Created == 0 && result.Updated == 0 && result.CancelledInDb == 0)
             return BadRequest(new { message = string.Join(" ", result.Errors), result });

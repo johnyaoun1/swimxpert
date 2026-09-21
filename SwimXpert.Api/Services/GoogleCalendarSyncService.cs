@@ -18,7 +18,9 @@ namespace SwimXpert.Api.Services;
 public class GoogleCalendarSyncService(
     ApplicationDbContext db,
     IOptions<GoogleCalendarOptions> options,
-    IAuditLogService auditLog) : IGoogleCalendarSyncService
+    IAuditLogService auditLog,
+    GoogleRefreshTokenProtector tokenProtector,
+    CalendarEncryptionStatus encryption) : IGoogleCalendarSyncService
 {
     private readonly GoogleCalendarOptions _opt = options.Value;
 
@@ -29,6 +31,12 @@ public class GoogleCalendarSyncService(
         var updated = 0;
         var skipped = 0;
         var cancelled = 0;
+
+        if (!encryption.Ready)
+        {
+            errors.Add(CalendarEncryptionStatus.DisabledMessage);
+            return new GoogleCalendarSyncResult { Errors = errors };
+        }
 
         if (string.IsNullOrWhiteSpace(_opt.CalendarId))
         {
@@ -44,7 +52,10 @@ public class GoogleCalendarSyncService(
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        if (string.IsNullOrEmpty(tracked.RefreshToken))
+        var refreshToken = GoogleRefreshTokenProtector.IsProtected(tracked.RefreshToken)
+            ? tokenProtector.Unprotect(tracked.RefreshToken)
+            : null;
+        if (string.IsNullOrEmpty(refreshToken))
         {
             errors.Add("Google Calendar is not connected. Use Connect in the admin schedule first.");
             return new GoogleCalendarSyncResult { Errors = errors };
@@ -53,7 +64,7 @@ public class GoogleCalendarSyncService(
         UserCredential credential;
         try
         {
-            credential = CreateUserCredential(tracked.RefreshToken);
+            credential = CreateUserCredential(refreshToken);
         }
         catch (Exception ex)
         {

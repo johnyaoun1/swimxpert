@@ -4,6 +4,7 @@ namespace SwimXpert.Api.Models;
 public class GoogleCalendarState
 {
     public int Id { get; set; } = 1;
+    /// <summary>Data-protection ciphertext. Not the raw Google refresh token.</summary>
     public string? RefreshToken { get; set; }
     public DateTime? LastSyncUtc { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

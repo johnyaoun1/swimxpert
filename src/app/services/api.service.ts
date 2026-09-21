@@ -379,12 +379,16 @@ export class ApiService {
     lastSyncUtc: string | null;
     calendarIdConfigured: boolean;
     oauthConfigured: boolean;
+    syncDisabled: boolean;
+    syncDisabledMessage: string | null;
   }> {
     return this.http.get<{
       connected: boolean;
       lastSyncUtc: string | null;
       calendarIdConfigured: boolean;
       oauthConfigured: boolean;
+      syncDisabled: boolean;
+      syncDisabledMessage: string | null;
     }>(`${this.apiUrl}/admin/google-calendar/status`, { headers: this.getHeaders() }).pipe(catchError(this.handleError));
   }
 

@@ -28,7 +28,9 @@
           Connect once, then sync. Use <strong>calendar.events</strong> scope in Google Cloud (not read-only) so deletes and price updates can sync to Google. If you used read-only before, update the scope, then Disconnect and Connect again.
         </p>
         <div class="flex flex-wrap items-center gap-3">
-          @if (!googleOAuthReady() || !googleCalendarReady()) {
+          @if (googleSyncDisabled()) {
+            <span class="text-sm text-amber-800">Calendar sync disabled: encryption certificate missing.</span>
+          } @else if (!googleOAuthReady() || !googleCalendarReady()) {
             <span class="text-sm text-amber-800">API is missing OAuth client or Calendar ID — configure the server first.</span>
           } @else if (!googleConnected()) {
             <button type="button" class="btn-primary text-sm py-2 px-4" (click)="connectGoogleCalendar()">Connect Google Calendar</button>

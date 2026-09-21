@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using SwimXpert.Api.Data;
 using SwimXpert.Api.Models;
 using SwimXpert.Api.Options;
+using SwimXpert.Api.Services;
 
 namespace SwimXpert.Api.Controllers;
 
@@ -17,7 +18,9 @@ public class GoogleOAuthController(
     IMemoryCache cache,
     IHttpClientFactory httpFactory,
     IOptions<GoogleCalendarOptions> options,
-    ILogger<GoogleOAuthController> log) : ControllerBase
+    ILogger<GoogleOAuthController> log,
+    GoogleRefreshTokenProtector tokenProtector,
+    CalendarEncryptionStatus encryption) : ControllerBase
 {
     private readonly GoogleCalendarOptions _opt = options.Value;
 
@@ -26,6 +29,11 @@ public class GoogleOAuthController(
     public async Task<IActionResult> Callback([FromQuery] string? code, [FromQuery] string? state, CancellationToken cancellationToken)
     {
         var frontend = _opt.FrontendRedirectBaseUrl.TrimEnd('/');
+
+        if (!encryption.Ready)
+        {
+            return Redirect($"{frontend}/admin/schedule?googleError={Uri.EscapeDataString(CalendarEncryptionStatus.DisabledMessage)}");
+        }
 
         if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
         {
@@ -96,7 +104,7 @@ public class GoogleOAuthController(
             db.GoogleCalendarStates.Add(row);
         }
 
-        row.RefreshToken = refresh;
+        row.RefreshToken = tokenProtector.Protect(refresh);
         row.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
