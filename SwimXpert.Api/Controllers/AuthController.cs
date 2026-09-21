@@ -259,7 +259,18 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
 
         var user = tokenEntity.User;
         if (!user.IsActive)
+        {
+            var liveTokens = await dbContext.RefreshTokens
+                .Where(r => r.UserId == user.Id && r.RevokedAt == null)
+                .ToListAsync();
+            var revokedAt = DateTime.UtcNow;
+            foreach (var token in liveTokens)
+                token.RevokedAt = revokedAt;
+            await dbContext.SaveChangesAsync();
+            ClearAccessTokenCookie();
+            ClearRefreshTokenCookie();
             return Unauthorized(new { message = "Account disabled." });
+        }
 
         tokenEntity.RevokedAt = DateTime.UtcNow;
         var (newRefreshValue, newTokenEntity) = await CreateRefreshTokenAsync(user.Id);
@@ -272,21 +283,41 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         return Ok(new AuthResponse(user.Id, user.Email, user.FullName, user.Role));
     }
 
-    [Authorize]
+    /// <summary>
+    /// Ends the session even when the access token is expired. A valid signature is enough
+    /// to identify the user; lifetime is not required.
+    /// </summary>
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
+        var userIds = new HashSet<int>();
+        if (TryReadAccessTokenUserId() is int accessUserId)
+            userIds.Add(accessUserId);
+
+        await using var tx = await dbContext.Database.BeginTransactionAsync();
+
         var refreshValue = Request.Cookies["refresh_token"];
         if (!string.IsNullOrEmpty(refreshValue))
         {
             var hash = HashRefreshToken(refreshValue);
-            var tokenEntity = await dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == hash && r.RevokedAt == null);
+            var tokenEntity = await dbContext.RefreshTokens
+                .FirstOrDefaultAsync(r => r.TokenHash == hash && r.RevokedAt == null);
             if (tokenEntity != null)
             {
                 tokenEntity.RevokedAt = DateTime.UtcNow;
+                userIds.Add(tokenEntity.UserId);
                 await dbContext.SaveChangesAsync();
             }
         }
+
+        if (userIds.Count > 0)
+        {
+            await dbContext.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.TokenVersion, u => u.TokenVersion + 1));
+        }
+
+        await tx.CommitAsync();
         ClearAccessTokenCookie();
         ClearRefreshTokenCookie();
         return Ok(new { message = "Logged out." });
@@ -548,6 +579,46 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         return Ok(new { message = "Token is valid", user = new { id, email, role } });
     }
 
+    /// <summary>
+    /// Reads the user id from the access cookie without requiring the token to be unexpired.
+    /// A bad signature returns null.
+    /// </summary>
+    private int? TryReadAccessTokenUserId()
+    {
+        var token = Request.Cookies["access_token"];
+        if (string.IsNullOrEmpty(token))
+            return null;
+
+        try
+        {
+            var principal = new JwtSecurityTokenHandler().ValidateToken(token, CreateTokenValidationParameters(validateLifetime: false), out _);
+            var id = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(id, out var userId) ? userId : null;
+        }
+        catch (Exception ex) when (ex is SecurityTokenException or ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    private TokenValidationParameters CreateTokenValidationParameters(bool validateLifetime)
+    {
+        var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key or JWT_KEY required.");
+        var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? configuration["Jwt:Issuer"] ?? "SwimXpert.Api";
+        var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? configuration["Jwt:Audience"] ?? "SwimXpert.Client";
+        return new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = validateLifetime,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    }
+
     private string GenerateJwtToken(User user)
     {
         var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key or JWT_KEY required.");
@@ -560,7 +631,8 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role)
+            new Claim(ClaimTypes.Role, user.Role),
+            new Claim(AccessTokenClaims.Version, user.TokenVersion.ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

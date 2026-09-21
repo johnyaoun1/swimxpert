@@ -201,6 +201,7 @@ app.UseAuthorization();
 // After authentication so the per-user limit can read the JWT name identifier.
 // Anonymous limits still key off ClientIpResolver.
 app.UseMiddleware<SwimXpert.Api.Middleware.RateLimitMiddleware>();
+app.UseMiddleware<SwimXpert.Api.Middleware.TokenVersionMiddleware>();
 app.UseMiddleware<SwimXpert.Api.Middleware.MustChangePasswordMiddleware>();
 app.MapControllers();
 
@@ -286,6 +287,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"PasswordResetTokenHash\" character varying(64);");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"PasswordResetTokenExpiry\" timestamp with time zone;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"MustChangePassword\" boolean NOT NULL DEFAULT false;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"TokenVersion\" integer NOT NULL DEFAULT 0;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"TwoFactorEnabled\" boolean NOT NULL DEFAULT false;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"TwoFactorSecret\" character varying(256);");
     // Permanently remove reversible password backups if a prior build created this column.

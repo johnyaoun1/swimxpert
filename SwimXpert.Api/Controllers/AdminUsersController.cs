@@ -119,6 +119,16 @@ public class AdminUsersController(
             user.Role = assignedRole;
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
+        if (roleChanged || deactivates)
+        {
+            user.TokenVersion++;
+            var liveTokens = await dbContext.RefreshTokens
+                .Where(r => r.UserId == user.Id && r.RevokedAt == null)
+                .ToListAsync();
+            var revokedAt = DateTime.UtcNow;
+            foreach (var token in liveTokens)
+                token.RevokedAt = revokedAt;
+        }
 
         await dbContext.SaveChangesAsync();
         if (roleChanged)
@@ -331,6 +341,7 @@ public class AdminUsersController(
         var temporary = TemporaryPassword.Generate();
         user.Password = BCrypt.Net.BCrypt.HashPassword(temporary, 12);
         user.MustChangePassword = true;
+        user.TokenVersion++;
         user.PasswordResetTokenHash = null;
         user.PasswordResetTokenExpiry = null;
 

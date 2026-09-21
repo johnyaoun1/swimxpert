@@ -60,6 +60,11 @@ public class User
     /// </summary>
     public bool MustChangePassword { get; set; }
 
+    /// <summary>
+    /// Incremented to invalidate outstanding access tokens. The JWT carries the same value.
+    /// </summary>
+    public int TokenVersion { get; set; }
+
     public bool TwoFactorEnabled { get; set; }
     [MaxLength(256)]
     public string? TwoFactorSecret { get; set; }
