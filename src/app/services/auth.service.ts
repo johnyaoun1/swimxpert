@@ -2,9 +2,8 @@ import { Injectable, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { environment } from '../../environments/environment';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -74,19 +73,22 @@ export interface ProgressEntry {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly USER_KEY = 'swimxpert_user';
+  private static readonly LEGACY_USER_KEY = 'swimxpert_user';
+  private static readonly LEGACY_LEVEL_KEY = 'lf_pending_result';
 
   currentUser = signal<User | null>(null);
+  /** One in-flight /me hydration so refresh and route guards share a single request. */
+  private hydration$: Observable<boolean> | null = null;
 
   constructor(
     private router: Router,
     private apiService: ApiService,
     @Inject(PLATFORM_ID) private platformId: object
   ) {
-    // Avoid localStorage / auth HTTP during SSR/prerender (Node has no browser APIs).
+    // Avoid auth HTTP during SSR/prerender (Node has no browser APIs).
     if (isPlatformBrowser(this.platformId)) {
-      this.loadUserFromStorage();
-      this.fetchMe().subscribe();
+      this.clearLegacyStorage();
+      this.hydrate().subscribe();
     }
   }
 
@@ -111,9 +113,7 @@ export class AuthService {
   fetchMe(): Observable<boolean> {
     return this.apiService.getMe().pipe(
       tap((me) => {
-        const user = this.meToUser(me);
-        this.currentUser.set(user);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUser.set(this.meToUser(me));
       }),
       switchMap(() =>
         forkJoin([
@@ -131,9 +131,7 @@ export class AuthService {
   validateToken(): Observable<boolean> {
     return this.apiService.getMe().pipe(
       map((me) => {
-        const user = this.meToUser(me);
-        this.currentUser.set(user);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.currentUser.set(this.meToUser(me));
         return true;
       }),
       catchError(() => {
@@ -213,54 +211,36 @@ export class AuthService {
 
   logout(): void {
     this.apiService.logout().subscribe({
-      complete: () => this.clearAuthState(true)
+      next: () => this.clearAuthState(true),
+      error: () => this.clearAuthState(true)
     });
   }
 
+  /**
+   * Loads the session from GET /api/auth/me. The user, including children, is kept
+   * in memory only. A refresh shares this request with route guards.
+   */
+  hydrate(): Observable<boolean> {
+    if (this.currentUser()) return of(true);
+    if (!this.hydration$) {
+      this.hydration$ = this.fetchMe().pipe(
+        finalize(() => { this.hydration$ = null; }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.hydration$;
+  }
+
   isAuthenticated(): Observable<boolean> {
-    return this.apiService.getMe().pipe(
-      map((me) => {
-        this.currentUser.set(this.meToUser(me));
-        localStorage.setItem(this.USER_KEY, JSON.stringify(this.currentUser()));
-        return true;
-      }),
-      catchError(() => of(false))
-    );
+    return this.hydrate();
   }
 
   isAuthenticatedSync(): boolean {
     return this.currentUser() !== null;
   }
 
-  private loadUserFromStorage(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    const userStr = localStorage.getItem(this.USER_KEY);
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        // Ensure backward compatibility
-        if (!user.quizResults) user.quizResults = [];
-        if (!user.avatar) user.avatar = this.generateAvatar(user.name);
-        this.currentUser.set(user);
-      } catch (e) {
-        if (!environment.production) { console.error('Error loading user from storage', e); }
-      }
-    }
-  }
-
   getCurrentUser(): User | null {
-    const current = this.currentUser();
-    if (current) return current;
-    if (!isPlatformBrowser(this.platformId)) return null;
-
-    const raw = localStorage.getItem(this.USER_KEY);
-    if (!raw) return null;
-
-    try {
-      return JSON.parse(raw) as User;
-    } catch {
-      return null;
-    }
+    return this.currentUser();
   }
 
   persistAuthResponseFromMe(response: AuthApiResponse): void {
@@ -279,7 +259,6 @@ export class AuthService {
       children: [],
       quizResults: []
     };
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     this.currentUser.set(user);
   }
 
@@ -298,7 +277,6 @@ export class AuthService {
     const user = this.currentUser();
     if (user) {
       user.avatar = avatarUrl;
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
       this.currentUser.set({ ...user });
     }
   }
@@ -355,7 +333,6 @@ export class AuthService {
         const current = this.currentUser();
         if (!current) return;
         current.children = [...(current.children || []), newChild];
-        localStorage.setItem(this.USER_KEY, JSON.stringify(current));
         this.currentUser.set({ ...current });
       })
     );
@@ -367,7 +344,6 @@ export class AuthService {
       const childIndex = user.children.findIndex(c => c.id === childId);
       if (childIndex !== -1) {
         user.children[childIndex] = { ...user.children[childIndex], ...updates };
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
         this.currentUser.set({ ...user });
       }
     }
@@ -413,10 +389,15 @@ export class AuthService {
     );
   }
 
+  private clearLegacyStorage(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    localStorage.removeItem(AuthService.LEGACY_USER_KEY);
+    localStorage.removeItem(AuthService.LEGACY_LEVEL_KEY);
+  }
+
   private clearAuthState(redirectToLogin: boolean): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(this.USER_KEY);
-    }
+    this.clearLegacyStorage();
+    this.hydration$ = null;
     this.currentUser.set(null);
     if (redirectToLogin) {
       this.router.navigate(['/login']);
@@ -473,9 +454,9 @@ export class AuthService {
         );
       }),
       tap((mappedChildren) => {
-        const nextUser: User = { ...user, children: mappedChildren };
-        localStorage.setItem(this.USER_KEY, JSON.stringify(nextUser));
-        this.currentUser.set(nextUser);
+        const current = this.currentUser();
+        if (!current) return;
+        this.currentUser.set({ ...current, children: mappedChildren });
       }),
       map(() => void 0)
     );
@@ -495,9 +476,9 @@ export class AuthService {
           percentage: r.percentage,
           timestamp: r.timestamp ? new Date(r.timestamp) : new Date()
         }));
-        const nextUser: User = { ...user, quizResults };
-        localStorage.setItem(this.USER_KEY, JSON.stringify(nextUser));
-        this.currentUser.set(nextUser);
+        const current = this.currentUser();
+        if (!current) return;
+        this.currentUser.set({ ...current, quizResults });
       }),
       map(() => void 0)
     );

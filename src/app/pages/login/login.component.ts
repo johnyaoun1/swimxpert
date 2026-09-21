@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { LevelFinderService } from '../../services/level-finder.service';
 import { SeoService } from '../../services/seo.service';
 
 @Component({
@@ -28,6 +29,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private apiService: ApiService,
+    private levelFinder: LevelFinderService,
     private router: Router,
     private route: ActivatedRoute,
     private seo: SeoService,
@@ -141,7 +143,7 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    if (localStorage.getItem('lf_pending_result')) {
+    if (this.levelFinder.peekPendingResult()) {
       sessionStorage.removeItem('auth_return_url');
       this.router.navigate(['/level-finder'], { queryParams: { restore: '1' } });
       return;

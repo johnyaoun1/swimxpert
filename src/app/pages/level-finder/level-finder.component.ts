@@ -8,8 +8,6 @@ import { SwimLevelsService } from '../../services/swim-levels.service';
 import { AuthService } from '../../services/auth.service';
 import { SeoService } from '../../services/seo.service';
 
-const LF_RESULT_KEY = 'lf_pending_result';
-
 @Component({
   selector: 'app-level-finder',
   standalone: true,
@@ -82,20 +80,13 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
   }
 
   private tryRestoreResult(): void {
-    try {
-      const raw = localStorage.getItem(LF_RESULT_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as LevelFinderResult & { determinedLevel: number };
-        const num = saved.determinedLevel ?? this.levelFinderService.toLevelNumber(saved);
-        this.result.set(saved);
-        this.determinedLevel.set(num);
-        this.levelInfo.set(this.swimLevelsService.getLevel(num));
-        this.showResult.set(true);
-        localStorage.removeItem(LF_RESULT_KEY);
-      }
-    } catch {
-      localStorage.removeItem(LF_RESULT_KEY);
-    }
+    const saved = this.levelFinderService.takePendingResult();
+    if (!saved) return;
+    const num = saved.determinedLevel ?? this.levelFinderService.toLevelNumber(saved);
+    this.result.set(saved);
+    this.determinedLevel.set(num);
+    this.levelInfo.set(this.swimLevelsService.getLevel(num));
+    this.showResult.set(true);
   }
 
   onSubmit(): void {
@@ -123,7 +114,7 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
         this.showResult.set(true);
 
         if (!this.authService.isAuthenticatedSync()) {
-          localStorage.setItem(LF_RESULT_KEY, JSON.stringify({ ...res, determinedLevel: num }));
+          this.levelFinderService.rememberPendingResult({ ...res, determinedLevel: num });
         }
       },
       error: (err) => {

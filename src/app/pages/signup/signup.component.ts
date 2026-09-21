@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { LevelFinderService } from '../../services/level-finder.service';
 import { SeoService } from '../../services/seo.service';
 import { strongPasswordValidator } from '../../utils/password-policy';
 import { PHONE_COUNTRIES } from '../../utils/phone-countries';
@@ -24,6 +25,7 @@ export class SignupComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private levelFinder: LevelFinderService,
     private router: Router,
     private route: ActivatedRoute,
     private seo: SeoService,
@@ -97,7 +99,7 @@ export class SignupComponent implements OnInit {
       return;
     }
 
-    if (localStorage.getItem('lf_pending_result')) {
+    if (this.levelFinder.peekPendingResult()) {
       sessionStorage.removeItem('auth_return_url');
       this.router.navigate(['/level-finder'], { queryParams: { restore: '1' } });
       return;

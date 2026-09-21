@@ -17,12 +17,32 @@ export interface LevelFinderResult {
   recommendations: string[];
 }
 
+/** Held in memory for the current tab only. Not written to localStorage. */
+export interface PendingLevelResult extends LevelFinderResult {
+  determinedLevel: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class LevelFinderService {
   private http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/level-finder`;
+  private pendingResult: PendingLevelResult | null = null;
+
+  rememberPendingResult(result: PendingLevelResult): void {
+    this.pendingResult = result;
+  }
+
+  peekPendingResult(): PendingLevelResult | null {
+    return this.pendingResult;
+  }
+
+  takePendingResult(): PendingLevelResult | null {
+    const result = this.pendingResult;
+    this.pendingResult = null;
+    return result;
+  }
 
   analyzeLevel(request: LevelFinderRequest): Observable<LevelFinderResult> {
     return this.http.post<LevelFinderResult>(`${this.apiUrl}/analyze`, request);

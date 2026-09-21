@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Routes, CanActivateFn } from '@angular/router';
 import { Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 import { authGuard, redirectIfPasswordChangeRequired } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { roleGuard } from './guards/role.guard';
@@ -21,36 +22,46 @@ const clientOnlyGuard: CanActivateFn = (_route, state) => {
 const approvedClientGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router      = inject(Router);
-  if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
-  const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
-  if (forced) return forced;
-  if (authService.isCoach()) return router.createUrlTree(['/coach/dashboard']);
-  if (authService.isAdmin()) return router.createUrlTree(['/admin']);
-  return true;
+  return authService.isAuthenticated().pipe(
+    map((ok) => {
+      if (!ok) return router.createUrlTree(['/login']);
+      const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+      if (forced) return forced;
+      if (authService.isCoach()) return router.createUrlTree(['/coach/dashboard']);
+      if (authService.isAdmin()) return router.createUrlTree(['/admin']);
+      return true;
+    })
+  );
 };
 
 // Coaches cannot use parent/guest booking flows when logged in as coach
 const blockCoachGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  if (authService.isAuthenticatedSync()) {
-    const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
-    if (forced) return forced;
-  }
-  if (authService.isAuthenticatedSync() && authService.isCoach())
-    return router.createUrlTree(['/coach/dashboard']);
-  return true;
+  return authService.isAuthenticated().pipe(
+    map((ok) => {
+      if (!ok) return true;
+      const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+      if (forced) return forced;
+      if (authService.isCoach()) return router.createUrlTree(['/coach/dashboard']);
+      return true;
+    })
+  );
 };
 
 // Allows only Coach (and Admin for preview) to access coach routes
 const coachGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router      = inject(Router);
-  if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
-  const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
-  if (forced) return forced;
-  if (!authService.isCoach() && !authService.isAdmin()) return router.createUrlTree(['/']);
-  return true;
+  return authService.isAuthenticated().pipe(
+    map((ok) => {
+      if (!ok) return router.createUrlTree(['/login']);
+      const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+      if (forced) return forced;
+      if (!authService.isCoach() && !authService.isAdmin()) return router.createUrlTree(['/']);
+      return true;
+    })
+  );
 };
 
 export const routes: Routes = [

@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { SessionService, AvailableSlot } from '../../services/session.service';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { LevelFinderService } from '../../services/level-finder.service';
 import { MonthNamePipe } from '../../pipes/month-name.pipe';
 import { environment } from '../../../environments/environment';
 
@@ -26,7 +27,6 @@ interface SwimmerOption {
   level?: number;
 }
 
-const LF_RESULT_KEY  = 'lf_pending_result';
 const GUEST_INFO_KEY = 'guestBookingInfo';
 
 @Component({
@@ -69,6 +69,7 @@ export class AvailableSessionsComponent implements OnInit {
     private sessionService: SessionService,
     public authService: AuthService,
     private apiService: ApiService,
+    private levelFinder: LevelFinderService,
     private http: HttpClient,
     private route: ActivatedRoute
   ) {}
@@ -160,16 +161,7 @@ export class AvailableSessionsComponent implements OnInit {
   openRequestModal(preSlot?: AvailableSlot): void {
     this.requestError.set('');
 
-    // Read level from level-finder localStorage result
-    let preLevel = '';
-    const lfStored = localStorage.getItem(LF_RESULT_KEY);
-    if (lfStored) {
-      try {
-        const parsed = JSON.parse(lfStored);
-        const num = Number(parsed.determinedLevel ?? 0);
-        preLevel = this.numberToLevelLabel(num);
-      } catch { /* ignore */ }
-    }
+    const preLevel = this.pendingLevelLabel();
 
     // Restore previously filled info from sessionStorage
     const savedRaw = sessionStorage.getItem(GUEST_INFO_KEY);
@@ -301,15 +293,7 @@ export class AvailableSessionsComponent implements OnInit {
   openAddSwimmerModal(slot?: AvailableSlot): void {
     this.pendingSlot.set(slot ?? null);
     this.addSwimmerError.set('');
-    // Pre-fill level from level-finder result
-    let preLevel = '';
-    const lfStored = localStorage.getItem(LF_RESULT_KEY);
-    if (lfStored) {
-      try {
-        const parsed = JSON.parse(lfStored);
-        preLevel = this.numberToLevelLabel(Number(parsed.determinedLevel ?? 0));
-      } catch { /* ignore */ }
-    }
+    const preLevel = this.pendingLevelLabel();
     this.addSwimmerForm = { name: '', age: '', level: preLevel, isAccountHolder: false };
     this.showAddSwimmerModal.set(true);
   }
@@ -373,6 +357,12 @@ export class AvailableSessionsComponent implements OnInit {
   }
 
   // ── Helpers ───────────────────────────────────────────────
+  private pendingLevelLabel(): string {
+    const pending = this.levelFinder.peekPendingResult();
+    if (!pending) return '';
+    return this.numberToLevelLabel(Number(pending.determinedLevel ?? 0));
+  }
+
   private numberToLevelLabel(n: number): string {
     const map: Record<number, string> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced', 4: 'Elite' };
     return map[n] ?? '';
