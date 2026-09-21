@@ -22,7 +22,9 @@ public class RateLimitMiddleware
     {
         var path = context.Request.Path.Value ?? "";
         var method = context.Request.Method;
-        var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        // Proxy-set client IP — not X-Forwarded-For, which the caller can rotate to
+        // mint a fresh bucket per request.
+        var ip = ClientIpResolver.Resolve(context);
 
         // CORS preflight must not consume rate-limit slots (and must reach UseCors).
         if (HttpMethods.IsOptions(method))

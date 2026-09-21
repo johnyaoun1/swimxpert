@@ -39,9 +39,16 @@ public class AuditLogService : IAuditLogService
             TargetId = targetId?.Length > 50 ? targetId[..50] : targetId,
             Details = details == null ? null : JsonSerializer.Serialize(details),
             Timestamp = DateTime.UtcNow,
-            IpAddress = http.Connection.RemoteIpAddress?.ToString()?.Length > 45 ? null : http.Connection.RemoteIpAddress?.ToString()
+            // Proxy-set client IP (same source as rate limiting) — not RemoteIpAddress,
+            // which X-Forwarded-For spoofing can poison.
+            IpAddress = TruncateIp(ClientIpResolver.Resolve(http))
         };
         _db.AuditLogs.Add(entry);
         await _db.SaveChangesAsync(ct);
     }
+
+    // AuditLogs.IpAddress is varchar(45). Values that cannot fit are stored as null,
+    // matching the previous RemoteIpAddress truncation.
+    private static string? TruncateIp(string? ip) =>
+        string.IsNullOrEmpty(ip) || ip.Length > 45 ? null : ip;
 }

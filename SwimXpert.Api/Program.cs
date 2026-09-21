@@ -34,9 +34,15 @@ if (!string.IsNullOrWhiteSpace(allowedHostsEnv))
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
-    // Railway's proxy IPs are dynamic — clear known networks/proxies so headers are accepted.
+    // Only one trusted hop: Railway's edge proxy → this container.
+    options.ForwardLimit = 1;
+    // Railway's edge IPs are dynamic but always reach the container over the internal
+    // network, so trust forwarded headers only from private ranges — never from a
+    // request that arrived directly from the public internet.
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
+    foreach (var network in SwimXpert.Api.TrustedProxyNetworks.All)
+        options.KnownNetworks.Add(network);
 });
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
