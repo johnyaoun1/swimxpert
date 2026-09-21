@@ -114,7 +114,9 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
     }
 
     /// <summary>
-    /// Returns payment history for a user.
+    /// Payment history for one user. Admin may read any user. A parent may read only
+    /// their own. Coaches are refused: Payment has no recorder column, so this list
+    /// cannot be limited to payments that coach recorded.
     /// </summary>
     [HttpGet("user/{userId:int}")]
     [Authorize]
@@ -124,8 +126,10 @@ public class PaymentsController(ApplicationDbContext dbContext) : ControllerBase
         if (!int.TryParse(userIdClaim, out var currentUserId))
             return Unauthorized(new { message = "Invalid user context." });
 
-        var isStaff = User.IsInRole("Admin") || User.IsInRole("Coach");
-        if (!isStaff && userId != currentUserId)
+        if (User.IsInRole("Coach"))
+            return Forbid();
+
+        if (!User.IsInRole("Admin") && userId != currentUserId)
             return Forbid();
 
         var payments = await dbContext.Payments
