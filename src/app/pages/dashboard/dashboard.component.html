@@ -13,9 +13,9 @@
               [style.zIndex]="10 - i"
               class="rounded-full border-4 border-white shadow-lg ring-2 ring-white/50 bg-sky-900/40"
             >
-              @if (child.profilePicture) {
+              @if (child.profilePicture | profileSrc; as src) {
                 <img 
-                  [src]="child.profilePicture" 
+                  [src]="src" 
                   [alt]="child.name"
                   class="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover transition-transform hover:scale-110"
                   (error)="handleImageError($event, child.name)"
@@ -268,9 +268,9 @@
                     </svg>
 
                     <div class="aqua-rings__photo">
-                      @if (child.profilePicture) {
+                      @if (child.profilePicture | profileSrc; as src) {
                         <img
-                          [src]="child.profilePicture"
+                          [src]="src"
                           [alt]="child.name"
                           (error)="handleImageError($event, child.name)"
                         />

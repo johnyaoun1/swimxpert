@@ -1,7 +1,7 @@
 <div class="profile-picture-upload">
-  @if (currentPreview) {
+  @if ((localPreview || currentPreview) | profileSrc; as src) {
     <div class="preview-wrapper">
-      <img [src]="currentPreview" alt="Profile" class="preview-img" />
+      <img [src]="src" alt="Profile" class="preview-img" />
       <div class="preview-overlay">
         <button type="button" class="btn-change" (click)="triggerFileInput(fileInput)" [disabled]="disabled || uploading">
           {{ uploading ? 'Uploading…' : 'Change photo' }}

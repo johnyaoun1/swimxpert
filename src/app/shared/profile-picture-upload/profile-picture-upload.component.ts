@@ -1,15 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { ProfileSrcPipe } from '../../pipes/profile-src.pipe';
 import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-profile-picture-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProfileSrcPipe],
   templateUrl: './profile-picture-upload.component.html',
   styleUrls: ['./profile-picture-upload.component.scss']
 })
-export class ProfilePictureUploadComponent {
+export class ProfilePictureUploadComponent implements OnDestroy {
   @Input() currentPreview: string | null = null;
   @Input() placeholderLabel = 'Choose photo';
   @Input() disabled = false;
@@ -18,6 +19,8 @@ export class ProfilePictureUploadComponent {
 
   uploading = false;
   errorMessage = '';
+  /** Local preview. The authorized URL 404s until the swimmer row points at the file. */
+  localPreview: string | null = null;
 
   constructor(private apiService: ApiService) {}
 
@@ -41,7 +44,12 @@ export class ProfilePictureUploadComponent {
     event.stopPropagation();
   }
 
+  ngOnDestroy(): void {
+    this.revokeLocalPreview();
+  }
+
   removePhoto(): void {
+    this.revokeLocalPreview();
     this.urlChange.emit(null);
   }
 
@@ -61,6 +69,8 @@ export class ProfilePictureUploadComponent {
       this.errorMessage = 'Use JPG, PNG, GIF or WebP.';
       return;
     }
+    this.revokeLocalPreview();
+    this.localPreview = URL.createObjectURL(file);
     this.uploading = true;
     this.apiService.uploadProfilePicture(file).subscribe({
       next: (res) => {
@@ -68,9 +78,16 @@ export class ProfilePictureUploadComponent {
         this.uploading = false;
       },
       error: (err) => {
+        this.revokeLocalPreview();
         this.errorMessage = err?.message || 'Upload failed. Try again.';
         this.uploading = false;
       }
     });
+  }
+
+  private revokeLocalPreview(): void {
+    if (!this.localPreview) return;
+    URL.revokeObjectURL(this.localPreview);
+    this.localPreview = null;
   }
 }

@@ -184,6 +184,17 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+// Profile photos are not public. /uploads returns 404; GET /api/profile-pictures checks ownership first.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/uploads"))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next();
+});
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -198,6 +209,16 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.EnsureCreatedAsync();
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Swimmers\" ADD COLUMN IF NOT EXISTS \"ProfilePictureUrl\" character varying(500);");
+    // Older local uploads were saved as absolute URLs. Keep the path; leave Cloudinary locators unchanged.
+    await db.Database.ExecuteSqlRawAsync("""
+        UPDATE "Swimmers"
+        SET "ProfilePictureUrl" = regexp_replace(
+            "ProfilePictureUrl",
+            '^https?://[^/]+(/uploads/profile-pictures/[a-fA-F0-9]{{32}}\.(jpg|jpeg|png|gif|webp))$',
+            '\1'
+        )
+        WHERE "ProfilePictureUrl" ~ '^https?://[^/]+/uploads/profile-pictures/[a-fA-F0-9]{{32}}\.(jpg|jpeg|png|gif|webp)$';
+    """);
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Swimmers\" ADD COLUMN IF NOT EXISTS \"SkillProgressJson\" text NOT NULL DEFAULT '{{}}';");
     await db.Database.ExecuteSqlRawAsync("""
         CREATE TABLE IF NOT EXISTS "LeadCaptures" (

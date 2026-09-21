@@ -53,7 +53,28 @@ public class AdminUsersController(
             })
             .ToListAsync();
 
-        return Ok(users);
+        return Ok(users.Select(u => new
+        {
+            u.id,
+            u.username,
+            u.email,
+            u.fullName,
+            u.role,
+            u.isActive,
+            u.isApproved,
+            u.phone,
+            u.createdAt,
+            swimmers = u.swimmers.Select(s => new
+            {
+                s.Id,
+                s.Name,
+                s.Age,
+                s.Level,
+                ProfilePictureUrl = ProfilePictureFiles.ToAuthorizedPath(s.ProfilePictureUrl),
+                s.SkillProgressJson,
+                s.CreatedAt
+            })
+        }));
     }
 
     /// <summary>

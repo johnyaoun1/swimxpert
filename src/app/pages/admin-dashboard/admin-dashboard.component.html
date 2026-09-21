@@ -876,8 +876,8 @@
                             <div class="absolute inset-0 rounded-full border-[12px] border-red-400/80"></div>
                             <div class="absolute inset-3 rounded-full border-[10px] border-sky-300"></div>
                             <div class="absolute inset-6 rounded-full border-[8px] border-emerald-300/90"></div>
-                            @if (child.profilePicture) {
-                              <img [src]="child.profilePicture" [alt]="child.name" class="absolute inset-8 w-[calc(100%-4rem)] h-[calc(100%-4rem)] rounded-full object-cover border-4 border-white shadow-md">
+                            @if (child.profilePicture | profileSrc; as src) {
+                              <img [src]="src" [alt]="child.name" class="absolute inset-8 w-[calc(100%-4rem)] h-[calc(100%-4rem)] rounded-full object-cover border-4 border-white shadow-md">
                             } @else {
                               <div class="absolute inset-8 rounded-full bg-gradient-to-br from-sky-200 to-sky-300 flex items-center justify-center border-4 border-white shadow-md">
                                 <span class="text-4xl font-bold text-sky-700">{{ getChildInitial(child.name) }}</span>

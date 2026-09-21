@@ -8,13 +8,14 @@ import { SwimLevelsService } from '../../services/swim-levels.service';
 import { AttendanceService, Attendance } from '../../services/attendance.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { ProfileSrcPipe } from '../../pipes/profile-src.pipe';
 import { ProfilePictureUploadComponent } from '../../shared/profile-picture-upload/profile-picture-upload.component';
 import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, ProfilePictureUploadComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, ProfilePictureUploadComponent, ProfileSrcPipe],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

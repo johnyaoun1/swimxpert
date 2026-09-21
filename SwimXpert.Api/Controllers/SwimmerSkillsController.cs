@@ -10,7 +10,10 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api/swimmerskills")]
-public class SwimmerSkillsController(ApplicationDbContext dbContext, ParentBookingGate bookingGate) : ControllerBase
+public class SwimmerSkillsController(
+    ApplicationDbContext dbContext,
+    ParentBookingGate bookingGate,
+    IStorageService storageService) : ControllerBase
 {
     [HttpPost]
     [Authorize]
@@ -48,6 +51,9 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext, ParentBooki
                 return Conflict(new { message = "An account-holder swimmer profile already exists for this user." });
         }
 
+        if (!ProfilePictureFiles.TryStore(request.ProfilePictureUrl, null, storageService, out var storedPicture, out var pictureError))
+            return BadRequest(new { message = pictureError });
+
         var pictureDenial = await DenyPendingProfilePictureAsync(currentUserId, request.ProfilePictureUrl, null);
         if (pictureDenial is not null)
             return pictureDenial;
@@ -59,7 +65,7 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext, ParentBooki
             Age = Math.Clamp(request.Age <= 0 ? 1 : request.Age, 1, 100),
             Level = Math.Clamp(request.Level <= 0 ? 1 : request.Level, 1, 6),
             IsAccountHolder = request.IsAccountHolder,
-            ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim(),
+            ProfilePictureUrl = storedPicture,
             SkillProgressJson = "{}",
             CreatedAt = DateTime.UtcNow
         };
@@ -136,10 +142,13 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext, ParentBooki
             swimmer.Level = Math.Clamp(request.Level.Value, 1, 6);
         if (request.ProfilePictureUrl != null)
         {
+            if (!ProfilePictureFiles.TryStore(request.ProfilePictureUrl, swimmer.ProfilePictureUrl, storageService, out var storedPicture, out var pictureError))
+                return BadRequest(new { message = pictureError });
+
             var pictureDenial = await DenyPendingProfilePictureAsync(userId, request.ProfilePictureUrl, swimmer.ProfilePictureUrl);
             if (pictureDenial is not null)
                 return pictureDenial;
-            swimmer.ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim();
+            swimmer.ProfilePictureUrl = storedPicture;
         }
 
         await dbContext.SaveChangesAsync();
@@ -372,21 +381,23 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext, ParentBooki
             age,
             level,
             isAccountHolder,
-            profilePictureUrl,
+            profilePictureUrl = ProfilePictureFiles.ToAuthorizedPath(profilePictureUrl),
             levels
         };
     }
 
     /// <summary>
-    /// A pending parent may keep or clear a picture, but cannot attach a new URL.
-    /// The upload endpoint is blocked the same way; this stops a pasted URL from bypassing it.
+    /// A pending parent may keep or clear a picture, but cannot attach a different file.
+    /// The same file name counts as unchanged, even when the stored locator and the browser path differ.
     /// </summary>
     private async Task<IActionResult?> DenyPendingProfilePictureAsync(int userId, string? incomingUrl, string? existingUrl)
     {
-        var incoming = string.IsNullOrWhiteSpace(incomingUrl) ? null : incomingUrl.Trim();
-        if (incoming is null)
+        if (string.IsNullOrWhiteSpace(incomingUrl))
             return null;
-        if (existingUrl is not null && string.Equals(existingUrl.Trim(), incoming, StringComparison.Ordinal))
+
+        if (ProfilePictureFiles.TryGetFileName(incomingUrl, out var incomingName)
+            && ProfilePictureFiles.TryGetFileName(existingUrl, out var existingName)
+            && incomingName.Equals(existingName, StringComparison.OrdinalIgnoreCase))
             return null;
 
         var denial = await bookingGate.DenyIfParentPendingAsync(User, userId);

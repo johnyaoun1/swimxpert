@@ -5,12 +5,13 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Attendance, AttendanceService } from '../../services/attendance.service';
 import { AuthService, Child } from '../../services/auth.service';
+import { ProfileSrcPipe } from '../../pipes/profile-src.pipe';
 import { getLevelFocus, getChildInitial as swimChildInitial } from '../../utils/swim-utils';
 
 @Component({
   selector: 'app-swimmer-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ProfileSrcPipe],
   templateUrl: './swimmer-dashboard.component.html',
   styleUrls: ['./swimmer-dashboard.component.scss']
 })

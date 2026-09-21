@@ -85,9 +85,9 @@
             </svg>
 
             <div class="aqua-rings__photo">
-              @if (child.profilePicture) {
+              @if (child.profilePicture | profileSrc; as src) {
                 <img
-                  [src]="child.profilePicture"
+                  [src]="src"
                   [alt]="child.name"
                   (error)="handleImageError($event, child.name)"
                 />

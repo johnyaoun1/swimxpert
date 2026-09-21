@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { AuthService, User } from '../../services/auth.service';
+import { ProfileSrcPipe } from '../../pipes/profile-src.pipe';
 import { getLevelFocus, getChildInitial } from '../../utils/swim-utils';
 import { SessionService, Session, SessionStatus } from '../../services/session.service';
 import { AttendanceService, Attendance } from '../../services/attendance.service';
@@ -24,7 +25,7 @@ interface AdminCoachRow {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ProfileSrcPipe],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
