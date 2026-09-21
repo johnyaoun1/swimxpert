@@ -45,13 +45,23 @@
       </div>
 
       <div>
-        <label for="phone" class="block text-sm font-medium text-slate-300 mb-1">Phone <span class="text-rose-400">*</span></label>
-        <input id="phone" type="tel" formControlName="phone" autocomplete="tel" maxlength="30"
-          class="w-full px-4 py-2.5 rounded-lg text-white text-sm outline-none transition"
-          style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)"
-          placeholder="Your mobile or best contact number"/>
+        <label for="phone" class="block text-sm font-medium text-slate-300 mb-1">Mobile number <span class="text-rose-400">*</span></label>
+        <div class="flex gap-2">
+          <select id="phoneRegion" formControlName="phoneRegion" autocomplete="tel-country-code"
+            aria-label="Country code"
+            class="px-2 py-2.5 rounded-lg text-white text-sm outline-none"
+            style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);max-width:11rem">
+            @for (country of countries; track country.iso) {
+              <option [value]="country.iso" style="color:#0f172a">{{ country.name }} ({{ country.dial }})</option>
+            }
+          </select>
+          <input id="phone" type="tel" formControlName="phone" autocomplete="tel" maxlength="30"
+            class="flex-1 min-w-0 px-4 py-2.5 rounded-lg text-white text-sm outline-none transition"
+            style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)"
+            [placeholder]="signupForm.get('phoneRegion')?.value === 'LB' ? '03xxxxxx or 71xxxxxx' : 'Mobile number'"/>
+        </div>
         @if (signupForm.get('phone')?.invalid && signupForm.get('phone')?.touched) {
-          <p class="mt-1 text-xs text-red-400">Phone number is required (max 30 characters).</p>
+          <p class="mt-1 text-xs text-red-400">A mobile number is required.</p>
         }
       </div>
 

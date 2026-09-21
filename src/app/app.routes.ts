@@ -1,44 +1,54 @@
 import { inject } from '@angular/core';
 import { Routes, CanActivateFn } from '@angular/router';
 import { Router } from '@angular/router';
-import { authGuard } from './guards/auth.guard';
+import { authGuard, redirectIfPasswordChangeRequired } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { roleGuard } from './guards/role.guard';
 import { AuthService } from './services/auth.service';
 
 // Prevents admins AND coaches from accessing the client dashboard
-const clientOnlyGuard: CanActivateFn = () => {
+const clientOnlyGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router      = inject(Router);
+  const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+  if (forced) return forced;
   if (authService.isAdmin())  return router.createUrlTree(['/admin']);
   if (authService.isCoach())  return router.createUrlTree(['/coach/dashboard']);
   return true;
 };
 
 // Quiz / leaderboard: any authenticated parent (approval gate removed)
-const approvedClientGuard: CanActivateFn = () => {
+const approvedClientGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router      = inject(Router);
   if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
+  const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+  if (forced) return forced;
   if (authService.isCoach()) return router.createUrlTree(['/coach/dashboard']);
   if (authService.isAdmin()) return router.createUrlTree(['/admin']);
   return true;
 };
 
 // Coaches cannot use parent/guest booking flows when logged in as coach
-const blockCoachGuard: CanActivateFn = () => {
+const blockCoachGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  if (authService.isAuthenticatedSync()) {
+    const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+    if (forced) return forced;
+  }
   if (authService.isAuthenticatedSync() && authService.isCoach())
     return router.createUrlTree(['/coach/dashboard']);
   return true;
 };
 
 // Allows only Coach (and Admin for preview) to access coach routes
-const coachGuard: CanActivateFn = () => {
+const coachGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router      = inject(Router);
   if (!authService.isAuthenticatedSync()) return router.createUrlTree(['/login']);
+  const forced = redirectIfPasswordChangeRequired(authService, router, state.url);
+  if (forced) return forced;
   if (!authService.isCoach() && !authService.isAdmin()) return router.createUrlTree(['/']);
   return true;
 };
@@ -59,6 +69,7 @@ export const routes: Routes = [
   { path: 'signup', loadComponent: () => import('./pages/signup/signup.component').then((m) => m.SignupComponent), title: 'Sign Up - SwimXpert' },
   { path: 'verify-email', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent), title: 'Verify Email - SwimXpert' },
   { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent), title: 'Forgot Password - SwimXpert' },
+  { path: 'change-password', loadComponent: () => import('./pages/change-password/change-password.component').then((m) => m.ChangePasswordComponent), title: 'Change Password - SwimXpert', canActivate: [authGuard] },
   { path: 'reset-password', loadComponent: () => import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent), title: 'Reset Password - SwimXpert' },
   { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent), title: 'Dashboard - SwimXpert', canActivate: [authGuard, clientOnlyGuard] },
   { path: 'admin', loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent), title: 'Admin Dashboard - SwimXpert', canActivate: [adminGuard] },

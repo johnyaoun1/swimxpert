@@ -67,7 +67,7 @@ export class AvailableSessionsComponent implements OnInit {
 
   constructor(
     private sessionService: SessionService,
-    private authService: AuthService,
+    public authService: AuthService,
     private apiService: ApiService,
     private http: HttpClient,
     private route: ActivatedRoute

@@ -5,6 +5,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SeoService } from '../../services/seo.service';
 import { strongPasswordValidator } from '../../utils/password-policy';
+import { PHONE_COUNTRIES } from '../../utils/phone-countries';
 
 @Component({
   selector: 'app-signup',
@@ -18,6 +19,7 @@ export class SignupComponent implements OnInit {
   loading = false;
   errorMessage = '';
   readonly passwordHint = 'Password must be at least 8 characters, with 1 uppercase letter and 1 number.';
+  readonly countries = PHONE_COUNTRIES;
 
   constructor(
     private fb: FormBuilder,
@@ -30,6 +32,7 @@ export class SignupComponent implements OnInit {
     this.signupForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
+      phoneRegion: ['LB', Validators.required],
       phone: ['', [Validators.required, Validators.maxLength(30)]],
       password: ['', [Validators.required, strongPasswordValidator()]],
       confirmPassword: ['', Validators.required]
@@ -65,8 +68,8 @@ export class SignupComponent implements OnInit {
     if (this.signupForm.valid) {
       this.loading = true;
       this.errorMessage = '';
-      const { name, email, phone, password } = this.signupForm.value;
-      this.authService.signup(email, password, name, phone.trim()).subscribe({
+      const { name, email, phone, phoneRegion, password } = this.signupForm.value;
+      this.authService.signup(email, password, name, phone.trim(), phoneRegion).subscribe({
         next: (response) => {
           if (response?.id != null) {
             this.redirectAfterAuth();
@@ -75,8 +78,8 @@ export class SignupComponent implements OnInit {
           }
           this.loading = false;
         },
-        error: () => {
-          this.errorMessage = 'Signup failed. Please try again.';
+        error: (err) => {
+          this.errorMessage = err?.message || 'Signup failed. Please try again.';
           this.loading = false;
         }
       });

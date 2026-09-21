@@ -14,7 +14,7 @@ public class SessionsController(
     ApplicationDbContext dbContext,
     IAuditLogService auditLog,
     IGoogleCalendarMutationsService googleCalendarMutations,
-    IWebHostEnvironment env) : ControllerBase
+    ParentBookingGate bookingGate) : ControllerBase
 {
     /// <summary>
     /// Creates a new training session. Requires Admin role.
@@ -209,20 +209,9 @@ public class SessionsController(
         if (!isAdmin && swimmer.ParentUserId != currentUserId)
             return Forbid();
 
-        if (!isAdmin)
-        {
-            var parent = await dbContext.Users.AsNoTracking()
-                .Select(u => new { u.Id, u.EmailVerified })
-                .FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
-            if (parent is null)
-                return Unauthorized(new { message = "Invalid user context." });
-            if (!parent.EmailVerified && !env.IsDevelopment())
-                return StatusCode(403, new
-                {
-                    message = "Please verify your email before booking a session.",
-                    code = "email_not_verified"
-                });
-        }
+        var denial = await bookingGate.DenyIfParentCannotBookAsync(User, currentUserId, cancellationToken);
+        if (denial is not null)
+            return StatusCode(denial.StatusCode, new { message = denial.Message, code = denial.Code });
 
         // Check the slot is still free
         var overlaps = await dbContext.TrainingSessions.AnyAsync(

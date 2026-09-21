@@ -36,6 +36,12 @@
 <section class="section-padding premium-section">
   <div class="container mx-auto">
 
+    @if (authService.needsAccountApproval()) {
+      <div class="mb-6 rounded-2xl border-2 border-sky-300 bg-sky-50 p-5">
+        <p class="text-base font-bold text-sky-950">Your account is awaiting approval. We'll confirm with you on WhatsApp.</p>
+      </div>
+    }
+
     <!-- Swimmer selector (logged-in only) -->
     @if (isLoggedIn() && swimmers().length > 0) {
       <div class="card mb-8">

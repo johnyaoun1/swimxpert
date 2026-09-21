@@ -106,6 +106,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IClientMatchingService, ClientMatchingService>();
+builder.Services.AddScoped<ParentBookingGate>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient();
@@ -187,6 +188,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<SwimXpert.Api.Middleware.MustChangePasswordMiddleware>();
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
@@ -238,7 +240,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"Username\" character varying(100);");
     await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS \"IX_Users_Username\" ON \"Users\" (\"Username\") WHERE \"Username\" IS NOT NULL;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"Phone\" character varying(30);");
-    // IsApproved: default true — no longer gates dashboard; kept for admin reporting.
+    // IsApproved: existing rows stay approved. Self-signup sets false in Register.
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsApproved\" boolean NOT NULL DEFAULT true;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"EmailVerified\" boolean NOT NULL DEFAULT true;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"ClientStatus\" character varying(20) NOT NULL DEFAULT 'New';");
@@ -260,6 +262,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"LockoutUntil\" timestamp with time zone;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"PasswordResetTokenHash\" character varying(64);");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"PasswordResetTokenExpiry\" timestamp with time zone;");
+    await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"MustChangePassword\" boolean NOT NULL DEFAULT false;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"TwoFactorEnabled\" boolean NOT NULL DEFAULT false;");
     await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"TwoFactorSecret\" character varying(256);");
     // Permanently remove reversible password backups if a prior build created this column.

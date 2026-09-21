@@ -29,9 +29,13 @@ export interface User {
   avatar?: string;
   /** Parent/client accounts use `user`; staff roles preserved for routing. */
   role?: 'user' | 'admin' | 'coach';
-  /** Legacy; no longer gates dashboard. Prefer emailVerified for booking UX. */
+  /** False until an admin approves a self-registered parent. Login stays allowed. */
   isApproved?: boolean;
+  /** True after an admin sets a temporary password. The account must replace it before anything else. */
+  mustChangePassword?: boolean;
   emailVerified?: boolean;
+  /** Server flag Features:EmailVerificationRequired. */
+  emailVerificationRequired?: boolean;
   clientStatus?: 'New' | 'Returning' | string;
   /** Present when loaded from admin API (optional elsewhere). */
   phone?: string;
@@ -93,15 +97,15 @@ export class AuthService {
     );
   }
 
-  register(email: string, password: string, fullName: string, phone?: string, birthDate?: string): Observable<AuthApiResponse> {
-    return this.apiService.register(email, password, fullName, phone, birthDate).pipe(
+  register(email: string, password: string, fullName: string, phone?: string, birthDate?: string, phoneRegion?: string): Observable<AuthApiResponse> {
+    return this.apiService.register(email, password, fullName, phone, birthDate, phoneRegion).pipe(
       tap((response: AuthApiResponse) => this.persistAuthResponse(response)),
       switchMap((response) => this.fetchMe().pipe(map(() => response)))
     );
   }
 
-  signup(email: string, password: string, name: string, phone: string): Observable<AuthApiResponse> {
-    return this.register(email, password, name, phone);
+  signup(email: string, password: string, name: string, phone: string, phoneRegion = 'LB'): Observable<AuthApiResponse> {
+    return this.register(email, password, name, phone, undefined, phoneRegion);
   }
 
   fetchMe(): Observable<boolean> {
@@ -153,7 +157,9 @@ export class AuthService {
     role: string;
     isApproved?: boolean;
     emailVerified?: boolean;
+    emailVerificationRequired?: boolean;
     clientStatus?: string;
+    mustChangePassword?: boolean;
   }): User {
     const role = AuthService.normalizeUiRole(me.role);
     const name = me.fullName || me.email?.split('@')?.[0] || 'User';
@@ -165,6 +171,8 @@ export class AuthService {
       role,
       isApproved: me.isApproved ?? true,
       emailVerified: me.emailVerified ?? false,
+      emailVerificationRequired: me.emailVerificationRequired === true,
+      mustChangePassword: me.mustChangePassword === true,
       clientStatus: me.clientStatus ?? 'New',
       children: this.currentUser()?.children ?? [],
       quizResults: this.currentUser()?.quizResults ?? []
@@ -189,7 +197,14 @@ export class AuthService {
 
   needsEmailVerification(): boolean {
     const user = this.currentUser();
-    return !!user && !this.isAdmin() && !this.isCoach() && user.emailVerified === false;
+    return !!user && !this.isAdmin() && !this.isCoach()
+      && user.emailVerificationRequired === true
+      && user.emailVerified === false;
+  }
+
+  needsAccountApproval(): boolean {
+    const user = this.currentUser();
+    return !!user && !this.isAdmin() && !this.isCoach() && user.isApproved === false;
   }
 
   getAllClients(): User[] {

@@ -22,7 +22,18 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
           })
         );
       }
-      if (error.status === 401 || error.status === 403 || error.status === 423) {
+      const code = error.error?.code;
+      if (error.status === 403 && code === 'must_change_password') {
+        if (!router.url.startsWith('/change-password')) {
+          router.navigate(['/change-password']);
+        }
+        return throwError(() => new Error(error.error?.message || 'Set a new password before continuing.'));
+      }
+
+      const serverMessage = typeof error.error?.message === 'string' ? error.error.message.trim() : '';
+      // A 403 that explains itself (pending account, picture upload, booking rule) stays on the page.
+      const explained403 = error.status === 403 && serverMessage.length > 0;
+      if ((error.status === 401 || error.status === 403 || error.status === 423) && !explained403) {
         if (error.status === 423) {
           const sec = (error as any).error?.secondsRemaining ?? 0;
           router.navigate(['/login'], {

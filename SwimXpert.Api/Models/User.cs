@@ -33,8 +33,8 @@ public class User
     public bool IsActive { get; set; } = true;
 
     /// <summary>
-    /// Legacy admin-approval flag. No longer gates dashboard access or booking submit.
-    /// Kept for admin reporting; new self-registrations are set true.
+    /// Self-registered parents start false and cannot book until an admin approves them.
+    /// Dashboard login is allowed. Admin-created accounts are set true.
     /// </summary>
     public bool IsApproved { get; set; } = true;
 
@@ -53,6 +53,12 @@ public class User
     [MaxLength(64)]
     public string? PasswordResetTokenHash { get; set; }
     public DateTime? PasswordResetTokenExpiry { get; set; }
+
+    /// <summary>
+    /// Set when an admin issues a temporary password. The account cannot use the API
+    /// until they choose a new password.
+    /// </summary>
+    public bool MustChangePassword { get; set; }
 
     public bool TwoFactorEnabled { get; set; }
     [MaxLength(256)]

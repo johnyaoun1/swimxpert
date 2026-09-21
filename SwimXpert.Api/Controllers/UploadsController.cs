@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SwimXpert.Api.Services;
@@ -6,7 +7,7 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api")]
-public class UploadsController(IStorageService storageService) : ControllerBase
+public class UploadsController(IStorageService storageService, ParentBookingGate bookingGate) : ControllerBase
 {
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
     private const int MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
@@ -15,6 +16,14 @@ public class UploadsController(IStorageService storageService) : ControllerBase
     [Authorize]
     public async Task<IActionResult> UploadProfilePicture(IFormFile? file, CancellationToken ct = default)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid user context." });
+
+        var denial = await bookingGate.DenyIfParentPendingAsync(User, userId, ct);
+        if (denial is not null)
+            return StatusCode(denial.StatusCode, new { message = denial.Message, code = denial.Code });
+
         if (file is null || file.Length == 0)
             return BadRequest(new { message = "No file uploaded." });
 

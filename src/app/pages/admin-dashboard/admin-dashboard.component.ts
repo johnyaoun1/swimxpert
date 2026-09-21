@@ -113,6 +113,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   editClientError       = signal('');
   editClientSuccess     = signal(false);
   editClientSavedPw     = signal('');
+  editClientForcedReset = signal(false);
 
   // ── Add Child ────────────────────────────────────────────────
   showAddChildModal   = signal(false);
@@ -262,15 +263,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   approvingUserId = signal<number | null>(null);
   rejectingUserId = signal<number | null>(null);
 
-  // ── Accept Self-Registered modal ────────────────────────────
-  showAcceptModal    = signal(false);
-  acceptTarget       = signal<{ id: number; name: string; email: string } | null>(null);
-  acceptPassword     = '';
-  acceptConfirmPw    = '';
-  acceptLoading      = signal(false);
-  acceptError        = signal('');
-  acceptSuccess      = signal('');
-
   transformAdminUsers(apiUsers: any[]): User[] {
     const pending = (apiUsers || [])
       .filter((u) => {
@@ -345,57 +337,25 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  openAcceptModal(account: { id: number; name: string; email: string }): void {
-    this.acceptTarget.set(account);
-    this.acceptPassword  = '';
-    this.acceptConfirmPw = '';
-    this.acceptError.set('');
-    this.acceptSuccess.set('');
-    this.showAcceptModal.set(true);
+  whatsAppUrl(phone?: string): string | null {
+    const digits = (phone || '').replace(/\D/g, '');
+    return digits ? `https://wa.me/${digits}` : null;
   }
 
-  closeAcceptModal(): void {
-    this.showAcceptModal.set(false);
-    this.acceptTarget.set(null);
-  }
-
-  submitAcceptAccount(): void {
-    const target = this.acceptTarget();
-    if (!target) return;
-    if (!this.acceptPassword || this.acceptPassword.length < 6) {
-      this.acceptError.set('Password must be at least 6 characters.');
-      return;
-    }
-    if (this.acceptPassword !== this.acceptConfirmPw) {
-      this.acceptError.set('Passwords do not match.');
-      return;
-    }
-    this.acceptLoading.set(true);
-    this.acceptError.set('');
-    this.apiService.approveUser(target.id, this.acceptPassword).subscribe({
+  approvePendingAccount(userId: number): void {
+    this.approvingUserId.set(userId);
+    this.apiService.approveUser(userId).subscribe({
       next: () => {
-        this.acceptLoading.set(false);
-        this.acceptSuccess.set(this.acceptPassword);
-        this.pendingAccounts.update(list => list.filter(a => a.id !== target.id));
+        this.approvingUserId.set(null);
+        this.pendingAccounts.update(list => list.filter(a => a.id !== userId));
         this.loadDataFromApi();
       },
-      error: (e: any) => {
-        this.acceptLoading.set(false);
-        this.acceptError.set(e?.error?.message || 'Failed to accept account.');
-      }
+      error: () => this.approvingUserId.set(null)
     });
   }
 
-  generateAcceptPassword(): void {
-    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
-    const pw = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    this.acceptPassword  = pw;
-    this.acceptConfirmPw = pw;
-    this.acceptError.set('');
-  }
-
   rejectPendingAccount(userId: number): void {
-    if (!confirm('Remove this pending account? The registration will be permanently deleted.')) return;
+    if (!confirm('Reject this account? The registration will be permanently deleted.')) return;
     this.rejectingUserId.set(userId);
     this.apiService.rejectPendingUser(userId).subscribe({
       next: () => {
@@ -994,6 +954,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.showEditPw = false;
     this.editClientError.set('');
     this.editClientSuccess.set(false);
+    this.editClientSavedPw.set('');
+    this.editClientForcedReset.set(false);
     this.showEditClientModal.set(true);
   }
 
@@ -1022,11 +984,31 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: () => {
         this.editClientSavedPw.set(savedPw);
+        this.editClientForcedReset.set(false);
         this.editClientLoading.set(false);
         this.editClientSuccess.set(true);
       },
       error: (err) => {
         this.editClientError.set(err?.message || 'Failed to update profile.');
+        this.editClientLoading.set(false);
+      }
+    });
+  }
+
+  setTemporaryPassword(): void {
+    const id = this.editingClientId();
+    if (!id) return;
+    this.editClientLoading.set(true);
+    this.editClientError.set('');
+    this.apiService.resetUserPassword(id).subscribe({
+      next: (res) => {
+        this.editClientSavedPw.set(res.temporaryPassword);
+        this.editClientForcedReset.set(true);
+        this.editClientLoading.set(false);
+        this.editClientSuccess.set(true);
+      },
+      error: (err) => {
+        this.editClientError.set(err?.message || 'Could not set a temporary password.');
         this.editClientLoading.set(false);
       }
     });

@@ -259,7 +259,9 @@ public class AdminUsersController(
             var passwordError = PasswordPolicy.Validate(request.NewPassword.Trim());
             if (passwordError is not null)
                 return BadRequest(new { message = passwordError });
-            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword.Trim());
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword.Trim(), 12);
+            // A password typed here is the one they keep. Forced rotation uses reset-password.
+            user.MustChangePassword = false;
         }
 
         await dbContext.SaveChangesAsync();
@@ -288,6 +290,41 @@ public class AdminUsersController(
                 return candidate;
         }
         return $"{baseUsername}{RandomNumberGenerator.GetInt32(1000, 9999)}";
+    }
+
+    /// <summary>
+    /// Issues a one-time password. The parent or coach must replace it on next login.
+    /// Admin accounts are refused so the only owner cannot be locked out from this screen.
+    /// The password is returned once and is not written to the audit log.
+    /// </summary>
+    [HttpPost("{id:int}/reset-password")]
+    public async Task<IActionResult> ResetPassword(int id)
+    {
+        var user = await dbContext.Users.FindAsync(id);
+        if (user is null)
+            return NotFound(new { message = "User not found." });
+        if (IsAdminRole(user.Role))
+            return BadRequest(new { message = "Admin passwords are not reset from this screen." });
+
+        var temporary = TemporaryPassword.Generate();
+        user.Password = BCrypt.Net.BCrypt.HashPassword(temporary, 12);
+        user.MustChangePassword = true;
+        user.PasswordResetTokenHash = null;
+        user.PasswordResetTokenExpiry = null;
+
+        var refreshTokens = await dbContext.RefreshTokens
+            .Where(r => r.UserId == user.Id && r.RevokedAt == null)
+            .ToListAsync();
+        foreach (var token in refreshTokens)
+            token.RevokedAt = DateTime.UtcNow;
+
+        await dbContext.SaveChangesAsync();
+        await auditLog.LogAsync("PasswordResetByAdmin", "User", user.Id.ToString(), new { user.Email });
+        return Ok(new
+        {
+            temporaryPassword = temporary,
+            message = "Temporary password set. They must choose a new password on next login."
+        });
     }
 
     /// <summary>

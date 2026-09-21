@@ -4,13 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SwimXpert.Api.Data;
 using SwimXpert.Api.Models;
+using SwimXpert.Api.Services;
 
 namespace SwimXpert.Api.Controllers;
 
 
 [ApiController]
 [Route("api/registrations")]
-public class RegistrationsController(ApplicationDbContext dbContext) : ControllerBase
+public class RegistrationsController(ApplicationDbContext dbContext, ParentBookingGate bookingGate) : ControllerBase
 {
    
     [HttpGet]
@@ -50,6 +51,10 @@ public class RegistrationsController(ApplicationDbContext dbContext) : Controlle
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdClaim, out var currentUserId))
             return Unauthorized(new { message = "Invalid user context." });
+
+        var denial = await bookingGate.DenyIfParentCannotBookAsync(User, currentUserId);
+        if (denial is not null)
+            return StatusCode(denial.StatusCode, new { message = denial.Message, code = denial.Code });
 
         var swimmer = await dbContext.Swimmers.FindAsync(request.SwimmerId);
         if (swimmer is null)

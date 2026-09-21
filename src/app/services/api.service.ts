@@ -41,12 +41,13 @@ export class ApiService {
     );
   }
 
-  register(email: string, password: string, fullName: string, phone?: string, birthDate?: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/register`, { 
-      email, 
-      password, 
-      fullName, 
+  register(email: string, password: string, fullName: string, phone?: string, birthDate?: string, phoneRegion?: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/register`, {
+      email,
+      password,
+      fullName,
       phone: phone || '',
+      phoneRegion: phoneRegion || 'LB',
       birthDate: birthDate || null
     }).pipe(catchError(this.handleError));
   }
@@ -65,9 +66,11 @@ export class ApiService {
     twoFactorEnabled?: boolean;
     /** Server-side Features:TwoFactorEnabled gate — UI must not offer 2FA when false. */
     twoFactorFeatureEnabled?: boolean;
+    emailVerificationRequired?: boolean;
     isApproved?: boolean;
     emailVerified?: boolean;
     clientStatus?: string;
+    mustChangePassword?: boolean;
   }> {
     return this.http.get<{
       id: number;
@@ -76,9 +79,11 @@ export class ApiService {
       role: string;
       twoFactorEnabled?: boolean;
       twoFactorFeatureEnabled?: boolean;
+      emailVerificationRequired?: boolean;
       isApproved?: boolean;
       emailVerified?: boolean;
       clientStatus?: string;
+      mustChangePassword?: boolean;
     }>(`${this.apiUrl}/auth/me`, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
@@ -98,6 +103,12 @@ export class ApiService {
 
   forgotPassword(email: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/auth/forgot-password`, { email }, {
+      headers: this.getHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/change-password`, { currentPassword, newPassword }, {
       headers: this.getHeaders()
     }).pipe(catchError(this.handleError));
   }
@@ -264,10 +275,11 @@ export class ApiService {
     ).pipe(catchError(this.handleError));
   }
 
-  approveUser(id: number, newPassword: string): Observable<{ message: string; password: string }> {
-    return this.http.put<{ message: string; password: string }>(
+  approveUser(id: number, newPassword?: string): Observable<{ message: string }> {
+    const body = newPassword ? { newPassword } : {};
+    return this.http.put<{ message: string }>(
       `${this.apiUrl}/admin/users/${id}/approve`,
-      { newPassword },
+      body,
       { headers: this.getHeaders() }
     ).pipe(catchError(this.handleError));
   }
@@ -275,6 +287,14 @@ export class ApiService {
   rejectPendingUser(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
       `${this.apiUrl}/admin/users/${id}/reject`, { headers: this.getHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  resetUserPassword(id: number): Observable<{ temporaryPassword: string; message: string }> {
+    return this.http.post<{ temporaryPassword: string; message: string }>(
+      `${this.apiUrl}/admin/users/${id}/reset-password`,
+      {},
+      { headers: this.getHeaders() }
     ).pipe(catchError(this.handleError));
   }
 

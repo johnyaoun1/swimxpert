@@ -29,6 +29,12 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     /// </summary>
     private bool TwoFactorFeatureEnabled => configuration.GetValue("Features:TwoFactorEnabled", false);
 
+    /// <summary>
+    /// Off unless Features:EmailVerificationRequired
+    /// (env: Features__EmailVerificationRequired) is explicitly true.
+    /// </summary>
+    private bool EmailVerificationRequired => configuration.GetValue("Features:EmailVerificationRequired", false);
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -45,13 +51,20 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         if (string.IsNullOrWhiteSpace(fullName))
             return BadRequest(new { message = "Full name is required." });
 
-        var phone = SanitizePhone(request.Phone!);
-        var clientStatus = await clientMatching.ResolveClientStatusAsync(phone);
+        var (phoneOk, e164, phoneError) = MobilePhone.TryNormalize(request.Phone, request.PhoneRegion);
+        if (!phoneOk)
+            return BadRequest(new { message = phoneError });
+        if (await PhoneAlreadyUsedAsync(e164!))
+            return Conflict(new { message = "An account with this phone number already exists." });
 
-        var verificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        var verificationHash = HashToken(verificationToken);
+        var clientStatus = await clientMatching.ResolveClientStatusAsync(e164);
 
-        bool isDev = env.IsDevelopment();
+        var requireEmail = EmailVerificationRequired;
+        var markVerified = !requireEmail || env.IsDevelopment();
+        string? verificationToken = requireEmail && !markVerified
+            ? Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            : null;
+
         var user = new User
         {
             Email = email,
@@ -59,18 +72,19 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             FullName = fullName,
             Role = "Parent",
             CreatedAt = DateTime.UtcNow,
-            IsApproved = true, // no longer gates dashboard; kept for admin reporting
+            IsApproved = false,
             ClientStatus = clientStatus,
-            EmailVerified = isDev,   // auto-verified in dev so demo signups work immediately
-            EmailVerificationTokenHash = isDev ? null : verificationHash,
-            EmailVerificationTokenExpiry = isDev ? null : DateTime.UtcNow.AddHours(24),
-            Phone = phone
+            EmailVerified = markVerified,
+            EmailVerificationTokenHash = verificationToken is null ? null : HashToken(verificationToken),
+            EmailVerificationTokenExpiry = verificationToken is null ? null : DateTime.UtcNow.AddHours(24),
+            Phone = e164
         };
 
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        await emailService.SendVerificationEmailAsync(user.Email, user.FullName, verificationToken);
+        if (verificationToken is not null)
+            await emailService.SendVerificationEmailAsync(user.Email, user.FullName, verificationToken);
 
         var accessToken = GenerateJwtToken(user);
         var (refreshToken, _) = await CreateRefreshTokenAsync(user.Id);
@@ -270,6 +284,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpGet("verify-email")]
     public async Task<IActionResult> VerifyEmail([FromQuery] string? token)
     {
+        if (!EmailVerificationRequired)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(token))
             return BadRequest(new { message = "Token is required." });
         var hash = HashToken(token);
@@ -286,6 +303,9 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("resend-verification")]
     public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request)
     {
+        if (!EmailVerificationRequired)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(request.Email))
             return BadRequest(new { message = "Email is required." });
         var email = request.Email.Trim().ToLowerInvariant();
@@ -305,6 +325,11 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
+        // Same switch as verification email. Off in production until SMTP is configured,
+        // so this cannot pretend a reset message was sent.
+        if (!EmailVerificationRequired)
+            return NotFound();
+
         if (string.IsNullOrWhiteSpace(request.Email))
             return Ok(new { message = "If an account exists, a reset link was sent." });
         var email = request.Email.Trim().ToLowerInvariant();
@@ -333,6 +358,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         if (user is null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
             return BadRequest(new { message = "Invalid or expired reset token." });
         user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, BcryptWorkFactor);
+        user.MustChangePassword = false;
         user.PasswordResetTokenHash = null;
         user.PasswordResetTokenExpiry = null;
         var refreshTokens = await dbContext.RefreshTokens.Where(r => r.UserId == user.Id && r.RevokedAt == null).ToListAsync();
@@ -340,6 +366,33 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             rt.RevokedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync();
         return Ok(new { message = "Password reset. You can now log in." });
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(id, out var userId))
+            return Unauthorized(new { message = "Not authenticated." });
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest(new { message = "Current password and new password are required." });
+        var passwordError = PasswordPolicy.Validate(request.NewPassword);
+        if (passwordError is not null)
+            return BadRequest(new { message = passwordError });
+        if (request.NewPassword == request.CurrentPassword)
+            return BadRequest(new { message = "Choose a password that is different from the temporary one." });
+
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return Unauthorized(new { message = "Not authenticated." });
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.Password))
+            return BadRequest(new { message = "Current password is incorrect." });
+
+        user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, BcryptWorkFactor);
+        user.MustChangePassword = false;
+        await dbContext.SaveChangesAsync();
+        return Ok(new { message = "Password updated." });
     }
 
     [Authorize]
@@ -353,7 +406,7 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         if (string.IsNullOrEmpty(id) || !int.TryParse(id, out var userId))
             return Unauthorized(new { message = "Not authenticated." });
         var user = await dbContext.Users.AsNoTracking()
-            .Select(u => new { u.Id, u.TwoFactorEnabled, u.IsApproved, u.EmailVerified, u.ClientStatus })
+            .Select(u => new { u.Id, u.TwoFactorEnabled, u.IsApproved, u.EmailVerified, u.ClientStatus, u.MustChangePassword })
             .FirstOrDefaultAsync(u => u.Id == userId);
         return Ok(new
         {
@@ -363,9 +416,11 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
             role = role ?? "Parent",
             twoFactorEnabled = user?.TwoFactorEnabled ?? false,
             twoFactorFeatureEnabled = TwoFactorFeatureEnabled,
+            emailVerificationRequired = EmailVerificationRequired,
             isApproved = user?.IsApproved ?? true,
             emailVerified = user?.EmailVerified ?? false,
-            clientStatus = user?.ClientStatus ?? ClientStatuses.New
+            clientStatus = user?.ClientStatus ?? ClientStatuses.New,
+            mustChangePassword = user?.MustChangePassword ?? false
         });
     }
 
@@ -456,12 +511,20 @@ public class AuthController(ApplicationDbContext dbContext, IConfiguration confi
         return normalized.Length > 255 ? normalized[..255] : normalized;
     }
 
-    private static string SanitizePhone(string phone)
+    private async Task<bool> PhoneAlreadyUsedAsync(string e164)
     {
-        if (string.IsNullOrWhiteSpace(phone)) return "";
-        // Keep a readable form for display; matching uses LebanesePhoneNormalizer separately.
-        var t = phone.Trim();
-        return t.Length > 30 ? t[..30] : t;
+        if (await dbContext.Users.AnyAsync(u => u.Phone == e164))
+            return true;
+
+        var key = LebanesePhoneNormalizer.Normalize(e164);
+        if (string.IsNullOrEmpty(key))
+            return false;
+
+        var existing = await dbContext.Users.AsNoTracking()
+            .Where(u => u.Phone != null && u.Phone != "")
+            .Select(u => u.Phone!)
+            .ToListAsync();
+        return existing.Any(p => LebanesePhoneNormalizer.Normalize(p) == key);
     }
 
     [Authorize]
@@ -527,6 +590,9 @@ public class RegisterRequest
     public string? FullName { get; set; }
     [MaxLength(30)]
     public string? Phone { get; set; }
+    /// <summary>ISO 3166-1 alpha-2 region for the national number. Defaults to Lebanon.</summary>
+    [MaxLength(2)]
+    public string? PhoneRegion { get; set; }
 }
 
 public record AuthResponse(int Id, string Email, string FullName, string Role);
@@ -544,6 +610,14 @@ public class ForgotPasswordRequest
 public class ResetPasswordRequest
 {
     public string? Token { get; set; }
+    public string? NewPassword { get; set; }
+}
+
+public class ChangePasswordRequest
+{
+    [MaxLength(128)]
+    public string? CurrentPassword { get; set; }
+    [MaxLength(128)]
     public string? NewPassword { get; set; }
 }
 

@@ -112,6 +112,12 @@ export class LoginComponent implements OnInit {
   }
 
   private redirectAfterAuth(): void {
+    if (this.authService.currentUser()?.mustChangePassword) {
+      sessionStorage.removeItem('auth_return_url');
+      this.router.navigate(['/change-password']);
+      return;
+    }
+
     const storedReturn = sessionStorage.getItem('auth_return_url');
     const queryReturn  = this.route.snapshot.queryParamMap.get('returnUrl');
     const target = storedReturn || queryReturn;

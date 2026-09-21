@@ -530,9 +530,8 @@
               <thead>
                 <tr class="border-b border-gray-200">
                   <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
                   <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
-                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Registered</th>
+                  <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Signed up</th>
                   <th scope="col" class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
@@ -540,25 +539,28 @@
                 @for (account of pendingAccounts(); track account.id) {
                   <tr class="border-b border-gray-100 hover:bg-orange-50 transition-colors">
                     <td class="py-3 px-4 font-semibold text-gray-800">{{ account.name }}</td>
-                    <td class="py-3 px-4 text-sm text-gray-600">{{ account.email }}</td>
-                    <td class="py-3 px-4 text-sm text-gray-600">{{ account.phone || '-' }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ account.phone || '—' }}</td>
                     <td class="py-3 px-4 text-sm text-gray-500">{{ formatLeadDate(account.createdAt) }}</td>
                     <td class="py-3 px-4">
-                      <div class="flex items-center gap-2">
+                      <div class="flex flex-wrap items-center gap-2">
+                        @if (whatsAppUrl(account.phone); as wa) {
+                          <a [href]="wa" target="_blank" rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white"
+                            style="background:#128C7E">
+                            Message on WhatsApp
+                          </a>
+                        }
                         <button
-                          (click)="openAcceptModal(account)"
-                          [disabled]="rejectingUserId() === account.id"
+                          (click)="approvePendingAccount(account.id)"
+                          [disabled]="approvingUserId() === account.id || rejectingUserId() === account.id"
                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
                           style="background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 2px 8px rgba(22,163,74,.3)"
                         >
-                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                          </svg>
-                          Accept &amp; Set Password
+                          Approve
                         </button>
                         <button
                           (click)="rejectPendingAccount(account.id)"
-                          [disabled]="rejectingUserId() === account.id"
+                          [disabled]="approvingUserId() === account.id || rejectingUserId() === account.id"
                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-white disabled:opacity-60"
                           style="background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 2px 8px rgba(220,38,38,.3)"
                         >
@@ -567,7 +569,7 @@
                           } @else {
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                           }
-                          Delete
+                          Reject
                         </button>
                       </div>
                     </td>
@@ -1481,6 +1483,9 @@
                 <code class="flex-1 font-mono text-base font-bold text-gray-900 bg-white px-3 py-2 rounded border border-amber-200 tracking-widest select-all">{{ editClientSavedPw() }}</code>
                 <button type="button" (click)="copyToClipboardDash(editClientSavedPw())" class="px-3 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-semibold transition-colors whitespace-nowrap">Copy</button>
               </div>
+              @if (editClientForcedReset()) {
+                <p class="text-sm text-amber-800 mt-2">They must choose a new password the next time they sign in.</p>
+              }
             </div>
           }
           <div class="text-center">
@@ -1513,6 +1518,12 @@
               </button>
               <button type="button" (click)="generateEditPw()" [disabled]="editClientLoading()" class="px-3 py-1 text-xs font-semibold rounded-lg border border-violet-300 text-violet-700 hover:bg-violet-50 whitespace-nowrap">Generate</button>
             </div>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p class="text-sm text-amber-900 mb-2">Set a temporary password they must replace on next login. Share it on WhatsApp. It is shown once.</p>
+            <button type="button" (click)="setTemporaryPassword()" [disabled]="editClientLoading()" class="px-3 py-2 text-xs font-semibold rounded-lg border border-amber-300 text-amber-900 hover:bg-amber-100 disabled:opacity-50">
+              Set temporary password
+            </button>
           </div>
         </div>
         <div class="flex justify-end gap-3 px-6 pb-6">
@@ -1596,82 +1607,3 @@
   </div>
 }
 
-<!-- ── Accept Self-Registered: Set Password Modal ──────────────── -->
-@if (showAcceptModal()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.6)">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-      <!-- Header -->
-      <div class="px-6 pt-6 pb-4 border-b border-gray-100">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:rgba(22,163,74,.1)">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">Accept Account</h3>
-            <p class="text-sm text-gray-500">Set a password for <strong>{{ acceptTarget()?.name }}</strong></p>
-          </div>
-        </div>
-      </div>
-
-      <div class="px-6 py-5">
-        @if (acceptSuccess()) {
-          <div class="text-center py-4">
-            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>
-            <p class="font-semibold text-gray-800 mb-1">Account accepted!</p>
-            <p class="text-sm text-gray-500 mb-3">Share these credentials with <strong>{{ acceptTarget()?.name }}</strong>:</p>
-            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left space-y-1.5 mb-4">
-              <p class="text-sm"><span class="font-semibold text-gray-600">Email:</span> <span class="text-gray-800">{{ acceptTarget()?.email }}</span></p>
-              <p class="text-sm"><span class="font-semibold text-gray-600">Password:</span> <span class="font-mono text-blue-700 font-bold">{{ acceptSuccess() }}</span></p>
-            </div>
-            <button (click)="closeAcceptModal()" class="w-full py-2.5 rounded-xl font-semibold text-white text-sm" style="background:linear-gradient(135deg,#16a34a,#15803d)">Done</button>
-          </div>
-        } @else {
-          <div class="space-y-4">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block text-sm font-medium text-gray-700">New Password *</label>
-                <button type="button" (click)="generateAcceptPassword()"
-                  class="text-xs font-semibold px-2.5 py-1 rounded-lg text-white"
-                  style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
-                  ⚡ Generate
-                </button>
-              </div>
-              <input type="text" [(ngModel)]="acceptPassword" placeholder="Min. 6 characters"
-                class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"/>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
-              <input type="text" [(ngModel)]="acceptConfirmPw" placeholder="Repeat the password"
-                class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"/>
-            </div>
-            @if (acceptError()) {
-              <p class="text-sm text-red-600 font-medium">{{ acceptError() }}</p>
-            }
-          </div>
-          <div class="flex gap-3 mt-6">
-            <button (click)="closeAcceptModal()" [disabled]="acceptLoading()"
-              class="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">Cancel</button>
-            <button (click)="submitAcceptAccount()" [disabled]="acceptLoading()"
-              class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
-              style="background:linear-gradient(135deg,#16a34a,#15803d)">
-              @if (acceptLoading()) {
-                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                Accepting…
-              } @else {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                Accept Account
-              }
-            </button>
-          </div>
-        }
-      </div>
-    </div>
-  </div>
-}

@@ -10,7 +10,7 @@ namespace SwimXpert.Api.Controllers;
 
 [ApiController]
 [Route("api/swimmerskills")]
-public class SwimmerSkillsController(ApplicationDbContext dbContext) : ControllerBase
+public class SwimmerSkillsController(ApplicationDbContext dbContext, ParentBookingGate bookingGate) : ControllerBase
 {
     [HttpPost]
     [Authorize]
@@ -47,6 +47,10 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             if (existingHolder)
                 return Conflict(new { message = "An account-holder swimmer profile already exists for this user." });
         }
+
+        var pictureDenial = await DenyPendingProfilePictureAsync(currentUserId, request.ProfilePictureUrl, null);
+        if (pictureDenial is not null)
+            return pictureDenial;
 
         var swimmer = new Models.Swimmer
         {
@@ -131,7 +135,12 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
         if (request.Level.HasValue)
             swimmer.Level = Math.Clamp(request.Level.Value, 1, 6);
         if (request.ProfilePictureUrl != null)
+        {
+            var pictureDenial = await DenyPendingProfilePictureAsync(userId, request.ProfilePictureUrl, swimmer.ProfilePictureUrl);
+            if (pictureDenial is not null)
+                return pictureDenial;
             swimmer.ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim();
+        }
 
         await dbContext.SaveChangesAsync();
         return Ok(BuildSwimmerCardResponse(swimmer.Id, swimmer.ParentUserId, swimmer.Name, swimmer.Age, swimmer.Level, swimmer.ProfilePictureUrl, swimmer.SkillProgressJson, swimmer.IsAccountHolder));
@@ -366,6 +375,24 @@ public class SwimmerSkillsController(ApplicationDbContext dbContext) : Controlle
             profilePictureUrl,
             levels
         };
+    }
+
+    /// <summary>
+    /// A pending parent may keep or clear a picture, but cannot attach a new URL.
+    /// The upload endpoint is blocked the same way; this stops a pasted URL from bypassing it.
+    /// </summary>
+    private async Task<IActionResult?> DenyPendingProfilePictureAsync(int userId, string? incomingUrl, string? existingUrl)
+    {
+        var incoming = string.IsNullOrWhiteSpace(incomingUrl) ? null : incomingUrl.Trim();
+        if (incoming is null)
+            return null;
+        if (existingUrl is not null && string.Equals(existingUrl.Trim(), incoming, StringComparison.Ordinal))
+            return null;
+
+        var denial = await bookingGate.DenyIfParentPendingAsync(User, userId);
+        if (denial is null)
+            return null;
+        return StatusCode(denial.StatusCode, new { message = denial.Message, code = denial.Code });
     }
 }
 
