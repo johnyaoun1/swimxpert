@@ -337,8 +337,10 @@ using (var scope = app.Services.CreateScope())
 
     var adminEmail = Environment.GetEnvironmentVariable("INITIAL_ADMIN_EMAIL");
     var adminPassword = Environment.GetEnvironmentVariable("INITIAL_ADMIN_PASSWORD");
-    if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword)
-        && !await db.Users.AnyAsync(u => u.Email == adminEmail.Trim().ToLowerInvariant()))
+    // Seed only when the database has no admin. An existing admin with a different
+    // email must not cause a second admin to be created.
+    var hasAdmin = await db.Users.AnyAsync(u => u.Role.ToLower() == "admin");
+    if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword) && !hasAdmin)
     {
         db.Users.Add(new User
         {
