@@ -89,6 +89,10 @@
                 <img
                   [src]="src"
                   [alt]="child.name"
+                  width="120"
+                  height="120"
+                  loading="lazy"
+                  decoding="async"
                   (error)="markPhotoMissing(child.id)"
                 />
               } @else {

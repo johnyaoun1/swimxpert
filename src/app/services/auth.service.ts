@@ -125,14 +125,19 @@ export class AuthService {
   fetchMe(): Observable<boolean> {
     return this.apiService.getMe().pipe(
       tap((me) => {
+        if (!me) {
+          this.clearAuthState(false);
+          return;
+        }
         this.currentUser.set(this.meToUser(me));
       }),
-      switchMap(() =>
-        forkJoin([
+      switchMap((me) => {
+        if (!me) return of(false);
+        return forkJoin([
           this.syncChildrenFromApi().pipe(catchError(() => of(void 0))),
           this.syncQuizResultsFromApi().pipe(catchError(() => of(void 0)))
-        ]).pipe(map(() => true))
-      ),
+        ]).pipe(map(() => true));
+      }),
       catchError(() => {
         this.clearAuthState(false);
         return of(false);
@@ -143,6 +148,10 @@ export class AuthService {
   validateToken(): Observable<boolean> {
     return this.apiService.getMe().pipe(
       map((me) => {
+        if (!me) {
+          this.clearAuthState(false);
+          return false;
+        }
         this.currentUser.set(this.meToUser(me));
         return true;
       }),

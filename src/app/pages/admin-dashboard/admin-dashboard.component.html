@@ -782,7 +782,7 @@
               >
                 <div class="flex items-center gap-3">
                   @if (client.avatar) {
-                    <img [src]="client.avatar" [alt]="client.name" class="w-12 h-12 rounded-full">
+                    <img [src]="client.avatar" [alt]="client.name" class="w-12 h-12 rounded-full" width="48" height="48" loading="lazy" decoding="async">
                   } @else {
                     <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
                       <span class="text-lg font-bold text-primary-600">{{ client.name.charAt(0) }}</span>
@@ -877,7 +877,7 @@
                             <div class="absolute inset-3 rounded-full border-[10px] border-sky-300"></div>
                             <div class="absolute inset-6 rounded-full border-[8px] border-emerald-300/90"></div>
                             @if (!missingPhotos().has(child.id) && (child.profilePicture | profileSrc); as src) {
-                              <img [src]="src" [alt]="child.name" class="absolute inset-8 w-[calc(100%-4rem)] h-[calc(100%-4rem)] rounded-full object-cover border-4 border-white shadow-md" (error)="markPhotoMissing(child.id)">
+                              <img [src]="src" [alt]="child.name" class="absolute inset-8 w-[calc(100%-4rem)] h-[calc(100%-4rem)] rounded-full object-cover border-4 border-white shadow-md" width="96" height="96" loading="lazy" decoding="async" (error)="markPhotoMissing(child.id)">
                             } @else {
                               <div class="absolute inset-8 rounded-full bg-gradient-to-br from-sky-200 to-sky-300 flex items-center justify-center border-4 border-white shadow-md">
                                 <span class="text-4xl font-bold text-sky-700">{{ getChildInitial(child.name) }}</span>

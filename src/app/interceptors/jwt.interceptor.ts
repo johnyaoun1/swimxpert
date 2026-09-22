@@ -15,9 +15,11 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
         return api.refresh().pipe(
           switchMap(() => next(authReq)),
           catchError((refreshErr) => {
-            router.navigate(['/login'], {
-              queryParams: { message: 'Session expired. Please login again.', returnUrl: router.url }
-            });
+            if (!req.url.includes('/auth/me')) {
+              router.navigate(['/login'], {
+                queryParams: { message: 'Session expired. Please login again.', returnUrl: router.url }
+              });
+            }
             return throwError(() => refreshErr);
           })
         );

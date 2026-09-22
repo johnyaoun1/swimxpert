@@ -1,9 +1,9 @@
 // Shared shell for login & signup.
-// Replace `src/assets/auth/login-signup-bg.png` with your photo (same path/name),
+// Replace `src/assets/auth/login-signup-bg.webp` with your photo (same path/name),
 // URL is relative to this file: `src/app/styles/` → `src/assets/auth/`.
 // or change $auth-bg-image to another filename under `src/assets/`.
 
-$auth-bg-image: url('../../assets/auth/login-signup-bg.png');
+$auth-bg-image: url('../../assets/auth/login-signup-bg.webp');
 
 .auth-page {
   position: relative;

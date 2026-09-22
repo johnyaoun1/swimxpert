@@ -175,6 +175,19 @@ builder.Services.AddAuthentication(options =>
             if (!string.IsNullOrEmpty(token))
                 context.Token = token;
             return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            // Guests on public pages call GET /api/auth/me. A 401 shows up as a browser
+            // console error. No access cookie means there is no session to restore.
+            if (HttpMethods.IsGet(context.Request.Method)
+                && context.Request.Path.Equals("/api/auth/me", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(context.Request.Cookies["access_token"]))
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status204NoContent;
+            }
+            return Task.CompletedTask;
         }
     };
 });

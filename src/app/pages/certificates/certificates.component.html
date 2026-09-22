@@ -1,4 +1,4 @@
-<div class="hero-gradient text-white py-20 relative overflow-hidden min-h-[min(48vh,24rem)] md:min-h-[min(52vh,28rem)]" style="background-image:linear-gradient(rgba(6,14,36,0.65),rgba(13,27,62,0.72)),url('/assets/swimmer-dark.png');background-size:cover,cover;background-position:center,50% 36%;background-repeat:no-repeat,no-repeat;">
+<div class="hero-gradient text-white py-20 relative overflow-hidden min-h-[min(48vh,24rem)] md:min-h-[min(52vh,28rem)]" style="background-image:linear-gradient(rgba(6,14,36,0.65),rgba(13,27,62,0.72)),url('/assets/swimmer-dark.webp');background-size:cover,cover;background-position:center,50% 36%;background-repeat:no-repeat,no-repeat;">
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
     <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
@@ -131,7 +131,7 @@
       </div>
       <div class="pdf-viewer-content">
         @if (selectedCertificate.type === 'image') {
-          <img [src]="selectedCertificate.filePath" [alt]="selectedCertificate.title" class="w-full h-auto max-h-[80vh] object-contain" />
+          <img [src]="selectedCertificate.filePath" [alt]="selectedCertificate.title" class="w-full h-auto max-h-[80vh] object-contain" width="1600" height="1131" loading="lazy" decoding="async" />
         } @else {
           <iframe 
             [src]="selectedCertificate.filePath | safeUrl" 

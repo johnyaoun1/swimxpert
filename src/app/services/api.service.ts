@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -71,7 +71,7 @@ export class ApiService {
     emailVerified?: boolean;
     clientStatus?: string;
     mustChangePassword?: boolean;
-  }> {
+  } | null> {
     return this.http.get<{
       id: number;
       email: string;
@@ -85,8 +85,15 @@ export class ApiService {
       clientStatus?: string;
       mustChangePassword?: boolean;
     }>(`${this.apiUrl}/auth/me`, {
-      headers: this.getHeaders()
-    }).pipe(catchError(this.handleError));
+      headers: this.getHeaders(),
+      observe: 'response'
+    }).pipe(
+      map((res) => (res.status === 204 ? null : res.body)),
+      catchError((err: HttpErrorResponse) => {
+        if (err.status === 401) return of(null);
+        return this.handleError(err);
+      })
+    );
   }
 
   logout(): Observable<any> {

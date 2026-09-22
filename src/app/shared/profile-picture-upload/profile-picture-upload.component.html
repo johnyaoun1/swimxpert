@@ -1,7 +1,7 @@
 <div class="profile-picture-upload">
   @if (!previewBroken && ((localPreview || currentPreview) | profileSrc); as src) {
     <div class="preview-wrapper">
-      <img [src]="src" alt="Profile" class="preview-img" (error)="markPreviewBroken()" />
+      <img [src]="src" alt="Profile" class="preview-img" width="120" height="120" decoding="async" (error)="markPreviewBroken()" />
       <div class="preview-overlay">
         <button type="button" class="btn-change" (click)="triggerFileInput(fileInput)" [disabled]="disabled || uploading">
           {{ uploading ? 'Uploading…' : 'Change photo' }}

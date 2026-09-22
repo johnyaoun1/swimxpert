@@ -19,14 +19,17 @@
         @for (image of images; track image.id) {
           <div
             class="card p-0 overflow-hidden cursor-pointer group animate-scale-in"
-         `   [style.animation-delay.s]="(image.id - 1) * 0.1"
+            [style.animation-delay.s]="(image.id - 1) * 0.1"
             (click)="selectImage(image)"
           >
             <div class="overflow-hidden">
               <img
                 [src]="image.src"
                 [alt]="image.alt"
+                width="600"
+                height="400"
                 loading="lazy"
+                decoding="async"
                 class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
               />
             </div>
