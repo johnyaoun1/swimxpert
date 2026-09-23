@@ -1,116 +1,280 @@
-// Home component styles
+// Public homepage — near-black canvas, one aqua accent.
+// Plain CSS rather than @apply so the type scale stays readable in one place.
 
-@keyframes waterRipple {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
+$ink: #0a0a0a;
+$ink-800: #111111;
+$aqua: #00c2b8;
+$aqua-600: #00a49c;
+$paper: #ffffff;
+$muted: #b8b8b8; // 9.2:1 on $ink
+
+:host {
+  display: block;
+  background: $ink;
+  color: $paper;
+  font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-.water-ripple {
-  animation: waterRipple 2s ease-out infinite;
+/* ---------- Type ---------- */
+
+.display {
+  font-family: 'Anton', Impact, Haettenschweiler, sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.015em;
+  line-height: 0.92;
+  margin: 0;
+  text-wrap: balance;
+
+  &--xl { font-size: clamp(2.75rem, 12vw, 7rem); }
+  &--lg { font-size: clamp(2.25rem, 9vw, 5rem); }
+  &--md { font-size: clamp(1.9rem, 7vw, 3.25rem); }
 }
 
-.card-animate {
-  animation: slideUp 0.6s ease-out forwards;
-  opacity: 0;
-  &:nth-child(1) { animation-delay: 0.1s; }
-  &:nth-child(2) { animation-delay: 0.2s; }
-  &:nth-child(3) { animation-delay: 0.3s; }
+.accent { color: $aqua; }
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: $aqua;
+  margin: 0 0 1.25rem;
 }
 
-.card {
+.lede {
+  font-size: clamp(1.05rem, 3.4vw, 1.375rem);
+  line-height: 1.5;
+  color: $paper;
+  margin: 1.5rem 0 0;
+  max-width: 34ch;
+}
+
+.body-copy {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.65;
+  color: $muted;
+  margin: 1.5rem 0 0;
+  max-width: 46ch;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  padding: 0 1.75rem;
+  border-radius: 999px;
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+
+  &--accent {
+    background: $aqua;
+    color: #000; // 8.9:1
+    &:hover { background: $aqua-600; }
+  }
+
+  &--ghost {
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: $paper;
+    &:hover { background: rgba(255, 255, 255, 0.1); }
+  }
+
+  &--lg { min-height: 3.75rem; padding: 0 2.5rem; }
+
+  &:active { transform: translateY(1px); }
+  &:focus-visible { outline: 3px solid $aqua; outline-offset: 3px; }
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
   position: relative;
+  // Cancels the app shell's pt-[57px] so the hero runs under the fixed header.
+  margin-top: -57px;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
   overflow: hidden;
-  &::before {
-    content: '';
+  background: $ink;
+
+  &__media {
     position: absolute;
-    top: 50%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 35%;
+    pointer-events: none;
+  }
+
+  // Keeps white text above 4.5:1 regardless of what the footage is doing.
+  &__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgba(10, 10, 10, 0.96) 0%, rgba(10, 10, 10, 0.55) 45%, rgba(10, 10, 10, 0.5) 100%);
+  }
+
+  &__inner {
+    position: relative;
+    width: 100%;
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 0 1rem 5.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.875rem;
+    margin-top: 2.25rem;
+  }
+
+  &__cue {
+    position: absolute;
     left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(29, 155, 240, 0.1);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-  }
-  &:hover::before {
-    width: 300px;
-    height: 300px;
+    bottom: 1.75rem;
+    width: 1px;
+    height: 3rem;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.85));
+    animation: cue 2.4s ease-in-out infinite;
   }
 }
 
-// ============================================================
-// RESPONSIVE
-// ============================================================
+@keyframes cue {
+  0%, 100% { opacity: 0.25; transform: scaleY(0.6); transform-origin: bottom; }
+  50%      { opacity: 1;    transform: scaleY(1);   transform-origin: bottom; }
+}
 
-// Extra-small phones (< 390px)
-@media (max-width: 389px) {
-  // Hero
-  .hero-gradient {
-    .container {
-      padding-top: 2.5rem;
-      padding-bottom: 5rem; // keep space above wave
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    h1 {
-      font-size: 1.625rem;
-      line-height: 1.2;
-      span { display: inline; }
-    }
-    p { font-size: 0.9375rem; }
+/* ---------- Bands ---------- */
 
-    // CTA buttons stack vertically
-    .flex.gap-4 {
+.wrap {
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  &--narrow { max-width: 56rem; }
+}
+
+.band {
+  padding: clamp(5rem, 16vw, 11rem) 0;
+
+  &--statement { background: $ink; }
+  &--location  { background: $ink-800; }
+
+  &--closing {
+    background: $ink;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    .lede { margin-left: auto; margin-right: auto; }
+    .btn  { margin-top: 2.5rem; }
+  }
+
+  .btn { margin-top: 2.25rem; }
+}
+
+/* ---------- Split sections ---------- */
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+
+  &__media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__copy {
+    padding: clamp(3rem, 10vw, 5.5rem) 1rem;
+    background: $ink;
+  }
+}
+
+@media (min-width: 900px) {
+  .split {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+
+    &__media { aspect-ratio: auto; min-height: 34rem; }
+
+    &__copy {
+      display: flex;
       flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-      a { text-align: center; }
+      justify-content: center;
+      padding: 4rem clamp(2rem, 5vw, 5rem);
     }
+
+    &--reverse .split__media { order: 2; }
   }
 
-  // Icon in hero
-  .w-20.h-20 { width: 3rem; height: 3rem; }
-
-  // Feature cards
-  .interactive-card.premium-container {
-    padding: 1.25rem !important;
-    .w-24.h-24 { width: 3.5rem; height: 3.5rem; }
-    h3 { font-size: 1.125rem; }
-    p { font-size: 0.9375rem; }
-  }
-
-  // Journey section
-  .text-9xl { font-size: 4rem !important; }
+  .hero__inner { padding-bottom: 7rem; }
 }
 
-// Small phones (390 – 639px)
-@media (min-width: 390px) and (max-width: 639px) {
-  .hero-gradient {
-    .container {
-      padding-top: 3rem;
-      padding-bottom: 5.5rem;
-      padding-left: 1.25rem;
-      padding-right: 1.25rem;
-    }
-    h1 { font-size: 2.125rem; line-height: 1.15; }
-    p { font-size: 1rem; }
+/* ---------- Floating WhatsApp ---------- */
 
-    .flex.gap-4 {
-      flex-direction: column;
-      align-items: stretch;
-      a { text-align: center; }
-    }
-  }
+.wa-float {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: $aqua;
+  color: #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.2s ease;
 
-  .interactive-card.premium-container {
-    padding: 1.5rem !important;
+  &:hover { background: $aqua-600; }
+  &:focus-visible { outline: 3px solid $paper; outline-offset: 3px; }
+}
+
+@media (min-width: 900px) {
+  .wa-float { display: none; }
+}
+
+/* ---------- Reveal ---------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+
+  &.is-visible {
+    opacity: 1;
+    transform: none;
   }
 }
 
-// Tablet (640 – 767px)
-@media (min-width: 640px) and (max-width: 767px) {
-  .hero-gradient {
-    h1 { font-size: 2.75rem; }
-    p  { font-size: 1.125rem; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
+
+  .hero__cue { animation: none; }
+
+  .btn { transition: none; }
 }

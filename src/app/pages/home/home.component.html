@@ -1,171 +1,198 @@
-<header class="hero-gradient text-white relative overflow-hidden min-h-[min(70vh,36rem)] md:min-h-[min(78vh,40rem)]" aria-label="Hero">
-  <!-- Above-the-fold LCP image: eager (not lazy) -->
-  <img
-    src="/assets/swimmer-butterfly.webp"
-    alt=""
-    class="hero-lcp-img absolute inset-0 w-full h-full object-cover pointer-events-none"
-    style="object-position: 38% 45%;"
-    width="679"
-    height="1024"
-    loading="eager"
-    fetchpriority="high"
-    decoding="async"
+<!-- HERO -->
+<header class="hero" aria-label="SwimXpert">
+  <video
+    data-hero-video
+    class="hero__media"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    poster="/assets/swimmer-butterfly.webp"
     aria-hidden="true"
-  />
-  <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(rgba(6,14,36,0.62),rgba(13,27,62,0.72));" aria-hidden="true"></div>
+    tabindex="-1"
+  >
+    <source src="/assets/video/hero.webm" type="video/webm" />
+    <source src="/assets/video/hero.mp4" type="video/mp4" />
+  </video>
+  <div class="hero__scrim" aria-hidden="true"></div>
 
-  <!-- Animated background elements -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-    <div class="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full blur-3xl floating-element"></div>
-    <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-300 opacity-10 rounded-full blur-3xl floating-element-delayed"></div>
-    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-300 opacity-5 rounded-full blur-3xl animate-pulse-slow"></div>
+  <div class="hero__inner">
+    <p class="eyebrow">Dekwaneh &middot; Mar Roukoz</p>
+    <h1 class="display display--xl">
+      Water is a<br />skill for life
+    </h1>
+    <p class="lede">
+      Private and small-group swimming lessons in Lebanon, from age 2&frac12;.
+    </p>
+    <div class="hero__actions">
+      <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+        Message us on WhatsApp
+      </a>
+      <a routerLink="/swim-lessons" class="btn btn--ghost">View lessons</a>
+    </div>
   </div>
-  
-  <!-- Floating water waves -->
-  <div class="absolute bottom-0 left-0 right-0 h-32 overflow-hidden pointer-events-none" aria-hidden="true">
-    <svg class="absolute bottom-0 w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
-      <path d="M0,60 C300,100 600,20 900,60 C1050,80 1150,40 1200,60 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.1)" class="animate-wave"></path>
-      <path d="M0,80 C300,120 600,40 900,80 C1050,100 1150,60 1200,80 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.05)" class="animate-wave" style="animation-delay: 1s;"></path>
-    </svg>
-  </div>
-  
-  <div class="container mx-auto px-4 py-24 md:py-32 relative z-10">
-    <div class="max-w-3xl mx-auto text-center animate-fade-in">
-      <div class="inline-block mb-6 animate-scale-in floating-element">
+
+  <span class="hero__cue" aria-hidden="true"></span>
+</header>
+
+<!-- The app shell already supplies the main landmark; don't nest another here. -->
+  <!-- STATEMENT -->
+  <section class="band band--statement" data-reveal aria-label="Our approach">
+    <div class="wrap wrap--narrow">
+      <h2 class="display display--lg">
+        Confidence first.<br /><span class="accent">Technique always.</span>
+      </h2>
+      <p class="body-copy">
+        Small classes. Coaches who stay with your child season after season.
+        Progress you can actually see.
+      </p>
+      <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+        Message us on WhatsApp
+      </a>
+    </div>
+  </section>
+
+  <!-- PROGRAMS -->
+  <section aria-label="Programs">
+    <article class="split" data-reveal>
+      <div class="split__media">
         <img
-          src="assets/logo.webp"
-          alt="SwimXpert logo - Professional swimming lessons in Lebanon"
-          class="h-28 w-28 md:h-36 md:w-36 object-cover rounded-full ring-4 ring-white/40 drop-shadow-2xl"
-          width="144"
-          height="144"
-          loading="eager"
+          src="/assets/swimmer-freestyle.webp"
+          alt="A swimmer mid-stroke during a private freestyle lesson"
+          width="1024"
+          height="682"
+          loading="lazy"
           decoding="async"
         />
       </div>
-      <h1 class="text-5xl md:text-7xl font-extrabold mb-6 animate-slide-down">
-        <span class="inline-block hover:scale-110 transition-transform duration-300">Dive</span>
-        <span class="inline-block mx-2 hover:scale-110 transition-transform duration-300" style="animation-delay: 0.1s;">Into</span>
-        <span class="inline-block hover:scale-110 transition-transform duration-300" style="animation-delay: 0.2s;">Excellence</span>
-      </h1>
-      <p class="text-xl md:text-2xl mb-8 text-blue-100 animate-slide-up leading-relaxed">Professional swimming lessons for all ages. Build confidence, learn skills, and have fun in the water!</p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in" style="animation-delay: 0.3s;">
-        <a routerLink="/level-finder" class="btn-primary group relative overflow-hidden" title="Find your swimming level with our quick quiz - SwimXpert Lebanon">
-          <span class="relative z-10">Find Your Level</span>
-        </a>
-        <a routerLink="/swim-lessons" class="btn-secondary bg-white bg-opacity-10 backdrop-blur-sm border-white text-white hover:bg-white hover:text-primary-600" title="View swimming lesson programs and levels in Lebanon">
-          View Lessons
+      <div class="split__copy">
+        <p class="eyebrow">01 &mdash; Private</p>
+        <h3 class="display display--md">One coach.<br />One swimmer.</h3>
+        <p class="body-copy">
+          Undivided attention, from first float to competitive stroke work.
+        </p>
+        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+          Message us on WhatsApp
         </a>
       </div>
-    </div>
-  </div>
-</header>
+    </article>
 
-<main id="main-content">
-<section class="premium-section section-padding" aria-label="Why Choose SwimXpert">
-  <div class="section-container relative z-10">
-    <div class="text-center mb-16 animate-slide-down">
-      <div class="inline-block mb-4">
-        <span class="inline-block px-4 py-2 rounded-full font-bold text-sm uppercase tracking-wide text-primary-400" style="background:rgba(29,155,240,0.12); border:1px solid rgba(29,155,240,0.2);">
-          Why Choose Us
-        </span>
+    <article class="split split--reverse" data-reveal>
+      <div class="split__media">
+        <img
+          src="/assets/swimmer-action.webp"
+          alt="Children swimming together in a small group lesson"
+          width="1024"
+          height="493"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
-      <h2 class="text-5xl md:text-6xl font-extrabold text-white mb-6">
-        <span class="text-gradient">Why Choose</span> SwimXpert?
-      </h2>
-      <p class="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed" style="color:#94a3b8;">Expert instructors, proven curriculum, and a safe learning environment for swimmers of all levels.</p>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-      <article class="interactive-card premium-container text-center animate-slide-up group">
-        <div class="relative z-10">
-          <div class="w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element" style="background:linear-gradient(135deg,#1d9bf0,#00c4ff);">
-            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-extrabold mb-3 text-white group-hover:text-gradient transition-all duration-300">Safe & Secure</h3>
-          <p class="leading-relaxed text-lg" style="color:#94a3b8;">Certified instructors and safety-first approach ensure a secure learning environment.</p>
-        </div>
-        <div class="absolute top-4 right-4 w-2 h-2 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-      </article>
-      
-      <article class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.1s;">
-        <div class="relative z-10">
-          <div class="w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element-delayed" style="background:linear-gradient(135deg,#00c4ff,#1d9bf0);">
-            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-extrabold mb-3 text-white group-hover:text-gradient transition-all duration-300">Proven Curriculum</h3>
-          <p class="leading-relaxed text-lg" style="color:#94a3b8;">Structured 6-level program designed to build skills progressively from beginner to advanced.</p>
-        </div>
-        <div class="absolute top-4 right-4 w-2 h-2 bg-accent-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-      </article>
-      
-      <article class="interactive-card premium-container text-center animate-slide-up group" style="animation-delay: 0.2s;">
-        <div class="relative z-10">
-          <div class="w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 floating-element" style="background:linear-gradient(135deg,#1d9bf0,#00c4ff);">
-            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-extrabold mb-3 text-white group-hover:text-gradient transition-all duration-300">Expert Instructors</h3>
-          <p class="leading-relaxed text-lg" style="color:#94a3b8;">Certified, experienced teachers dedicated to helping every student succeed.</p>
-        </div>
-        <div class="absolute top-4 right-4 w-2 h-2 bg-primary-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-      </article>
-    </div>
-  </div>
-</section>
+      <div class="split__copy">
+        <p class="eyebrow">02 &mdash; Semi-private</p>
+        <h3 class="display display--md">Two to four.<br />Never more.</h3>
+        <p class="body-copy">
+          Friends and siblings learn faster together, without losing coach time.
+        </p>
+        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+          Message us on WhatsApp
+        </a>
+      </div>
+    </article>
 
-<section class="section-padding" style="background:#0d1635;" aria-label="Ready to start your swimming journey">
-  <div class="container mx-auto">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-      <div>
-        <h2 class="text-4xl font-bold text-white mb-6">Ready to Start Your Swimming Journey?</h2>
-        <p class="text-lg mb-6" style="color:#94a3b8;">Our Level Finder helps you determine the perfect starting point for your child's swimming education. Answer a few simple questions and we'll recommend the ideal level.</p>
-        <a routerLink="/level-finder" class="btn-primary inline-block" title="Take the level finder quiz to find the right swimming class in Lebanon">Find Your Level Now</a>
+    <article class="split" data-reveal>
+      <div class="split__media">
+        <img
+          src="/assets/swimmer-underwater.webp"
+          alt="A swimmer moving slowly underwater during an aqua therapy session"
+          width="1024"
+          height="642"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
-      <div class="premium-container interactive-card text-center group">
-        <div class="relative z-10">
-          <div class="inline-block mb-6">
-            <div class="text-9xl font-black text-gradient mb-4 floating-element inline-block relative">
-              <span class="relative z-10">6</span>
-              <div class="absolute inset-0 bg-gradient-to-br from-primary-400 to-accent-400 blur-3xl opacity-30 -z-10"></div>
-            </div>
-          </div>
-          <h3 class="text-3xl font-extrabold mb-3 text-white group-hover:text-gradient transition-all duration-300">Swim Levels</h3>
-          <p class="font-semibold text-lg" style="color:#94a3b8;">From early swim lessons to advanced competitive preparation</p>
-        </div>
-        <div class="absolute top-6 right-6 w-20 h-20 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-10 floating-element blur-xl"></div>
-        <div class="absolute bottom-6 left-6 w-16 h-16 bg-gradient-to-br from-accent-300 to-primary-300 rounded-full opacity-10 floating-element-delayed blur-xl"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary-700 rounded-full opacity-20 blur-2xl animate-pulse-slow"></div>
+      <div class="split__copy">
+        <p class="eyebrow">03 &mdash; Aqua therapy</p>
+        <h3 class="display display--md">Move without<br />the impact.</h3>
+        <p class="body-copy">
+          Water-based sessions for recovery, mobility and therapeutic movement.
+        </p>
+        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+          Message us on WhatsApp
+        </a>
+      </div>
+    </article>
+
+    <article class="split split--reverse" data-reveal>
+      <div class="split__media">
+        <img
+          src="/assets/swimmer-dark.webp"
+          alt="An adult training in the pool during an aqua gym session"
+          width="1024"
+          height="682"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+      <div class="split__copy">
+        <p class="eyebrow">04 &mdash; Aqua gym</p>
+        <h3 class="display display--md">Strength,<br />low impact.</h3>
+        <p class="body-copy">
+          Conditioning and endurance work that your joints will thank you for.
+        </p>
+        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+          Message us on WhatsApp
+        </a>
+      </div>
+    </article>
+  </section>
+
+  <!-- LOCATION -->
+  <section class="band band--location" data-reveal aria-label="Where we swim">
+    <div class="wrap">
+      <p class="eyebrow">Where we swim</p>
+      <h2 class="display display--lg">Cap Sur Ville<br />Country Club</h2>
+      <p class="body-copy">
+        Dekwaneh &middot; Mar Roukoz. Open Monday to Saturday, 9:00&ndash;20:30.
+        Seasonal &mdash; closed October through December.
+      </p>
+      <div class="hero__actions">
+        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
+          Message us on WhatsApp
+        </a>
+        <a routerLink="/locations" class="btn btn--ghost">Get directions</a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="section-padding relative overflow-hidden min-h-[280px] md:min-h-[340px]" aria-label="Join SwimXpert">
-  <img
-    src="/assets/swimmer-dark.webp"
-    alt=""
-    class="absolute inset-0 w-full h-full object-cover pointer-events-none"
-    style="object-position: 50% 38%;"
-    width="1024"
-    height="682"
-    loading="lazy"
-    decoding="async"
-    aria-hidden="true"
-  />
-  <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(rgba(6,14,36,0.72),rgba(13,27,62,0.80));" aria-hidden="true"></div>
-  <div class="absolute inset-0" aria-hidden="true">
-    <div class="absolute top-10 right-10 w-64 h-64 rounded-full blur-3xl floating-element" style="background:rgba(29,155,240,0.1);"></div>
-    <div class="absolute bottom-10 left-10 w-80 h-80 rounded-full blur-3xl floating-element-delayed" style="background:rgba(0,196,255,0.08);"></div>
-  </div>
-  <div class="container mx-auto text-center relative z-10">
-    <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4 animate-slide-down">Join Hundreds of Happy Swimmers</h2>
-    <p class="text-xl md:text-2xl mb-8 animate-slide-up" style="color:#94a3b8;">Start your swimming journey today</p>
-    <a routerLink="/signup" class="btn-primary inline-block animate-scale-in" style="animation-delay: 0.2s;" title="Create your SwimXpert account and start swimming lessons in Lebanon">Get Started</a>
-  </div>
-</section>
-</main>
+  <!-- CLOSING -->
+  <section class="band band--closing" data-reveal aria-label="Book a lesson">
+    <div class="wrap wrap--narrow">
+      <h2 class="display display--xl">Start<br />this week</h2>
+      <p class="lede">Tell us your child&rsquo;s age and we&rsquo;ll find the right class.</p>
+      <a [href]="whatsappUrl" class="btn btn--accent btn--lg" target="_blank" rel="noopener">
+        Message us on WhatsApp
+      </a>
+    </div>
+  </section>
+
+<!-- FLOATING WHATSAPP (mobile) -->
+<a
+  [href]="whatsappUrl"
+  class="wa-float"
+  target="_blank"
+  rel="noopener"
+  aria-label="Message SwimXpert on WhatsApp"
+>
+  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false">
+    <path
+      fill="currentColor"
+      d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.48-1.75-1.65-2.05-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.75-.71 2-1.4.25-.69.25-1.28.17-1.4-.07-.13-.27-.2-.57-.35z"
+    />
+    <path
+      fill="currentColor"
+      d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.13h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.11.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.24-8.24a8.2 8.2 0 0 1 8.23 8.25c0 4.54-3.69 8.21-8.24 8.21z"
+    />
+  </svg>
+</a>
