@@ -92,3 +92,11 @@ Optional (features degrade gracefully when absent):
 
 ### Production deployment
 See `DEPLOYMENT.md`. Targets Railway (API) + static hosting (frontend). Frontend `environment.prod.ts` must point `apiUrl` to the deployed API before building.
+
+## Working agreement (git & risk)
+
+1. Never commit or push without showing the diff first and getting explicit approval.
+2. Never commit secrets, API keys, or credentials. If one is found, stop and report it instead of proceeding.
+3. For risky changes (auth, payments, access control, anything touching money or children's data), explain the change and its risk before it's approved.
+4. After approval, commit with a clear message, then wait to be told "push" before pushing to origin/main.
+5. If a change requires a manual Railway/Cloudflare/Google Cloud setting, state exactly what to set and where, and wait for confirmation before assuming it's done.
