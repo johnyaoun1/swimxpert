@@ -9,9 +9,9 @@ Browser  →  https://swimxpert.com/         →  Cloudflare Worker (prerendered
          →  https://api.swimxpert.com/api  →  Railway service "api" → Postgres
 ```
 
-`www.swimxpert.com` and `app.swimxpert.com` both 301 to the apex. Those redirects are
-configured in Cloudflare, not in this repo — there is no redirect logic in the Worker
-or in the build output.
+`www.swimxpert.com` and `app.swimxpert.com` both 301 to the apex via Cloudflare Redirect
+Rules — see "Cloudflare dashboard settings" below. There is no redirect logic in this
+repo.
 
 | Piece | Setting |
 |--------|---------|
@@ -20,9 +20,7 @@ or in the build output.
 | CORS | `CORS_ALLOWED_ORIGINS` = exact FE origins + `AllowCredentials()` (never `*`) |
 | Angular | `withCredentials: true` on API calls |
 
-**Important:** Browsers only accept `Domain=.swimxpert.com` cookies when the API response host is under `swimxpert.com` (e.g. `api.swimxpert.com`). Cookies set from `*.up.railway.app` with that Domain are rejected.
-
-Interim Railway public URL (until DNS): `https://api-production-3b21e.up.railway.app`
+**Important:** Browsers only accept `Domain=.swimxpert.com` cookies when the API response host is under `swimxpert.com` (e.g. `api.swimxpert.com`). Cookies set from `*.up.railway.app` with that Domain are rejected — which is why the Railway-generated URL is not usable for authenticated traffic.
 
 ---
 
@@ -34,7 +32,7 @@ Interim Railway public URL (until DNS): `https://api-production-3b21e.up.railway
 - [x] Postgres plugin running
 - [x] API deployed (`SwimXpert.Api/Dockerfile` via `RAILWAY_DOCKERFILE_PATH`)
 - [x] Public domain generated
-- [ ] Custom domain `api.swimxpert.com` DNS (Cloudflare → Railway)
+- [x] Custom domain `api.swimxpert.com` DNS (Cloudflare → Railway)
 - [x] Env (see also `deploy/railway.env.example`):
   - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
   - `JWT_KEY` (unique, not the well-known DevKey)
@@ -68,10 +66,40 @@ Also dashboard-managed and never covered by `railway.toml`: env vars (see
 
 ### Frontend — Cloudflare
 
-- [ ] Cloudflare Pages/Workers project created
-- [x] `environment.prod.ts` points at live API URL (update again when `api.swimxpert.com` is live)
+- [x] Cloudflare Worker created (`wrangler.toml`, static assets from `dist/swimxpert/browser`)
+- [x] `environment.prod.ts` → `apiUrl: 'https://api.swimxpert.com/api'`
 - [x] DNS: `swimxpert.com` apex → Cloudflare (`www` + `app.swimxpert.com` 301 → apex)
-- [ ] Deploy production build (`npm run build`)
+- [x] Production build deployed (auto-deploys on push to `main`)
+
+### Cloudflare dashboard settings — Worker `swimxpert`
+
+Like Railway, the frontend's routing config lives in the Cloudflare dashboard, not in
+this repo. `wrangler.toml` only declares the Worker name and the static-asset directory.
+
+**Custom domains** (Workers & Pages → `swimxpert` → Custom Domains and Routes), all
+Production:
+
+| Domain | Purpose |
+|--------|---------|
+| `swimxpert.com` | Serves the site |
+| `www.swimxpert.com` | Exists only so the hostname resolves; redirected before the Worker runs |
+| `app.swimxpert.com` | Legacy domain, same — redirected before the Worker runs |
+
+The Production `workers.dev` URL is **disabled** (Preview stays enabled), so the site is
+reachable only through the domains above.
+
+**Redirect Rules** (zone `swimxpert.com` → Rules → Redirect Rules), both wildcard, 301,
+preserve query string:
+
+| Rule | Request URL | Target |
+|------|-------------|--------|
+| Redirect from WWW to root | `https://www.swimxpert.com/*` | `https://swimxpert.com/${1}` |
+| app to root | `https://app.swimxpert.com/*` | `https://swimxpert.com/${1}` |
+
+Redirect Rules run **before** the Worker serves anything, so a redirected hostname never
+reaches the asset handler. Both hostnames must still exist as Worker custom domains — a
+hostname that does not resolve returns `DNS_PROBE_FINISHED_NXDOMAIN` and the rule never
+gets a chance to fire.
 
 ---
 
