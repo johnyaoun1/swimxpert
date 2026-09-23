@@ -40,7 +40,7 @@ repo.
   - `AUTH_COOKIE_SECURE=true`
   - `CORS_ALLOWED_ORIGINS=https://swimxpert.com,https://www.swimxpert.com`
   - `FRONTEND_URL=https://swimxpert.com`
-  - `ALLOWED_HOSTS=*` (tighten after custom domain is live)
+  - `ALLOWED_HOSTS=api.swimxpert.com;api-production-3b21e.up.railway.app`
   - Optional: `CLOUDINARY_*`, `SMTP_*`, `INITIAL_ADMIN_*`
 
 ### Railway dashboard settings — service `api`
