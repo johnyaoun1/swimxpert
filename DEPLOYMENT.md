@@ -41,6 +41,27 @@ Interim Railway public URL (until DNS): `https://api-production-3b21e.up.railway
   - `ALLOWED_HOSTS=*` (tighten after custom domain is live)
   - Optional: `CLOUDINARY_*`, `SMTP_*`, `INITIAL_ADMIN_*`
 
+### Railway dashboard settings — service `api`
+
+Build/deploy config lives in the Railway dashboard, not in the repo. Config as Code
+(`railway.toml`) was removed: Railway stops reading it on 2026-12-01, and its
+Infrastructure as Code replacement (`.railway/railway.ts`) is a declarative model whose
+applies can delete undeclared resources — not worth the risk against a Postgres with no
+automatic backups, for three settings that are already defaults or set elsewhere.
+
+Re-create by hand if the service is ever rebuilt (service `api` → **Settings**):
+
+| Setting | Value |
+|---------|-------|
+| Build → Builder | Dockerfile (resolved from `RAILWAY_DOCKERFILE_PATH`) |
+| Build → Dockerfile Path | `SwimXpert.Api/Dockerfile` |
+| Build → Root Directory | unset (repo root — the Dockerfile path is relative to it) |
+| Deploy → Restart Policy | On Failure, max retries 10 |
+
+Also dashboard-managed and never covered by `railway.toml`: env vars (see
+`deploy/railway.env.example`), the `api-volume` mount at `/app/wwwroot/uploads`, the
+`api.swimxpert.com` custom domain, and the EU West (Amsterdam) region pin.
+
 ### Frontend — Cloudflare
 
 - [ ] Cloudflare Pages/Workers project created
