@@ -37,7 +37,7 @@ Interim Railway public URL (until DNS): `https://api-production-3b21e.up.railway
   - `AUTH_COOKIE_DOMAIN=.swimxpert.com`
   - `AUTH_COOKIE_SECURE=true`
   - `CORS_ALLOWED_ORIGINS=http://localhost:4200,https://app.swimxpert.com,https://swimxpert.com,https://www.swimxpert.com`
-  - `FRONTEND_URL=https://app.swimxpert.com`
+  - `FRONTEND_URL=https://swimxpert.com`
   - `ALLOWED_HOSTS=*` (tighten after custom domain is live)
   - Optional: `CLOUDINARY_*`, `SMTP_*`, `INITIAL_ADMIN_*`
 

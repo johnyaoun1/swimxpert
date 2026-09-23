@@ -33,6 +33,9 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+
+# Local-only project context (not for the public repo)
+PROJECT-CONTEXT.md
 **/appsettings.Production.json
 **/appsettings.*.Production.json
 **/appsettings.Development.json
