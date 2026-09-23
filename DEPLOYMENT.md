@@ -2,12 +2,16 @@
 
 ## Topology (current): Cloudflare frontend + Railway API/Postgres
 
-Frontend and API are **different subdomains** of `swimxpert.com` (same *site*, different *origins*):
+Frontend (apex) and API (`api.` subdomain) are **different origins under the same site**:
 
 ```
-Browser  →  https://app.swimxpert.com/     →  Cloudflare (Angular SSR / Pages)
+Browser  →  https://swimxpert.com/         →  Cloudflare Worker (prerendered Angular assets)
          →  https://api.swimxpert.com/api  →  Railway service "api" → Postgres
 ```
+
+`www.swimxpert.com` and `app.swimxpert.com` both 301 to the apex. Those redirects are
+configured in Cloudflare, not in this repo — there is no redirect logic in the Worker
+or in the build output.
 
 | Piece | Setting |
 |--------|---------|
@@ -36,7 +40,7 @@ Interim Railway public URL (until DNS): `https://api-production-3b21e.up.railway
   - `JWT_KEY` (unique, not the well-known DevKey)
   - `AUTH_COOKIE_DOMAIN=.swimxpert.com`
   - `AUTH_COOKIE_SECURE=true`
-  - `CORS_ALLOWED_ORIGINS=http://localhost:4200,https://app.swimxpert.com,https://swimxpert.com,https://www.swimxpert.com`
+  - `CORS_ALLOWED_ORIGINS=https://swimxpert.com,https://www.swimxpert.com`
   - `FRONTEND_URL=https://swimxpert.com`
   - `ALLOWED_HOSTS=*` (tighten after custom domain is live)
   - Optional: `CLOUDINARY_*`, `SMTP_*`, `INITIAL_ADMIN_*`
@@ -66,7 +70,7 @@ Also dashboard-managed and never covered by `railway.toml`: env vars (see
 
 - [ ] Cloudflare Pages/Workers project created
 - [x] `environment.prod.ts` points at live API URL (update again when `api.swimxpert.com` is live)
-- [ ] DNS: `app.swimxpert.com` (and optionally apex) → Cloudflare
+- [x] DNS: `swimxpert.com` apex → Cloudflare (`www` + `app.swimxpert.com` 301 → apex)
 - [ ] Deploy production build (`npm run build`)
 
 ---
