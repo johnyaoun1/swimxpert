@@ -59,6 +59,9 @@
       object-fit: cover;
     }
   </style>
+  <!-- Blocking (not deferred, not a module): must run before app-root paints.
+       External rather than inline so script-src 'self' covers it. -->
+  <script src="assets/boot.js"></script>
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
 
@@ -154,31 +157,6 @@
   </script>
 </head>
 <body style="background:#0a0f1e;">
-  <script>
-    (function () {
-      var path = location.pathname.replace(/\/+$/, '') || '/';
-      if (path === '/sessions/available' || path === '/checkout') return;
-      var prefixes = [
-        '/dashboard',
-        '/admin',
-        '/coach',
-        '/change-password',
-        '/quizzes',
-        '/leaderboard',
-        '/swimmer',
-        '/my-sessions',
-        '/payments',
-        '/sessions'
-      ];
-      for (var i = 0; i < prefixes.length; i++) {
-        var prefix = prefixes[i];
-        if (path === prefix || path.indexOf(prefix + '/') === 0) {
-          document.documentElement.classList.add('sx-booting');
-          return;
-        }
-      }
-    })();
-  </script>
   <div id="sx-boot" role="status" aria-live="polite">
     <img src="assets/logo.webp" alt="" width="72" height="72" loading="lazy">
     <p>Loading</p>
