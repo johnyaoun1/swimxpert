@@ -2,20 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-
-// Routes that get the redesigned dark treatment. Anything not listed here —
-// dashboard, admin, coach, auth screens — keeps the original navy header.
-const PUBLIC_ROUTES = new Set([
-  '/',
-  '/about',
-  '/locations',
-  '/swim-lessons',
-  '/level-finder',
-  '/contact',
-  '/faq',
-  '/gallery',
-  '/certificates'
-]);
+import { isPublicUrl } from '../public-routes';
 
 @Component({
   selector: 'app-header',
@@ -32,8 +19,7 @@ export class HeaderComponent implements OnInit {
   constructor(public authService: AuthService) {}
 
   get isPublicRoute(): boolean {
-    const path = this.router.url.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
-    return PUBLIC_ROUTES.has(path);
+    return isPublicUrl(this.router.url);
   }
 
   ngOnInit(): void {}

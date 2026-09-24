@@ -1,7 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { isPublicUrl } from '../public-routes';
 
 @Component({
   selector: 'app-footer',
@@ -12,5 +14,10 @@ import { AuthService } from '../../services/auth.service';
 })
 export class FooterComponent {
   readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   currentYear = new Date().getFullYear();
+
+  get isPublicRoute(): boolean {
+    return isPublicUrl(this.router.url);
+  }
 }

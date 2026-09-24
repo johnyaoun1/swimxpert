@@ -21,7 +21,8 @@
 
   <div class="hero__inner">
     <h1 class="hero__title">Learn to swim<br />for life</h1>
-    <p class="hero__lede">Private and small-group lessons in Dekwaneh, from age 2&frac12;.</p>
+    <!-- Literal ½: Angular's template parser does not know &frac12; and emits it raw. -->
+    <p class="hero__lede">Private and small-group lessons in Dekwaneh, from age 2½.</p>
     <div class="hero__actions">
       <a [href]="whatsappUrl" class="btn btn--solid" target="_blank" rel="noopener">
         Message us on WhatsApp

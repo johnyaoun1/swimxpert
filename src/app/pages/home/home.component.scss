@@ -31,7 +31,7 @@ $media-max: 120rem;
 .eyebrow {
   margin: 0 0 1.25rem;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: $slate-600;
@@ -106,25 +106,28 @@ $media-max: 120rem;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.62) saturate(0.78) contrast(1.05);
+  // Heavy on purpose: the source photos are bright, saturated pool shots with
+  // coloured lane ropes. This pulls them into one moody set and hides upscaling.
+  filter: brightness(0.46) saturate(0.55) contrast(1.1);
 }
 
 .media__scrim {
   position: absolute;
   inset: 0;
+  // Phone: the card sits centred over the image, so darken evenly rather than
+  // directionally.
   background: linear-gradient(
-    to right,
-    rgba(3, 8, 17, 0.88) 0%,
-    rgba(3, 8, 17, 0.55) 45%,
-    rgba(3, 8, 17, 0.35) 100%
+    to bottom,
+    rgba(3, 8, 17, 0.55) 0%,
+    rgba(3, 8, 17, 0.74) 100%
   );
 
   &--hero {
     background: linear-gradient(
       to top,
-      rgba(3, 8, 17, 0.94) 0%,
-      rgba(3, 8, 17, 0.6) 45%,
-      rgba(3, 8, 17, 0.45) 100%
+      rgba(3, 8, 17, 0.95) 0%,
+      rgba(3, 8, 17, 0.66) 48%,
+      rgba(3, 8, 17, 0.5) 100%
     );
   }
 }
@@ -158,16 +161,18 @@ $media-max: 120rem;
 
   &__title {
     @extend %headline;
-    font-size: clamp(3rem, 11vw, 8.5rem);
+    // Min is 2.625rem so "LEARN TO SWIM" holds one line at 390px instead of
+    // breaking into a ragged three.
+    font-size: clamp(2.625rem, 11vw, 8.5rem);
     text-transform: uppercase;
   }
 
   &__lede {
     margin: 1.75rem 0 0;
     max-width: 34ch;
-    font-size: clamp(1rem, 2.6vw, 1.25rem);
-    line-height: 1.5;
-    color: $slate-300;
+    font-size: clamp(1.0625rem, 2.6vw, 1.5rem);
+    line-height: 1.45;
+    color: $paper;
   }
 
   &__actions {
@@ -200,8 +205,8 @@ $media-max: 120rem;
   &__card {
     position: relative;
     width: 100%;
-    max-width: 30rem;
-    padding: clamp(2rem, 5vw, 3.25rem);
+    max-width: 32rem;
+    padding: clamp(2.25rem, 4.5vw, 4.25rem);
     background: $paper;
     color: $navy-900;
   }
@@ -213,9 +218,9 @@ $media-max: 120rem;
   }
 
   &__body {
-    margin: 1.5rem 0 2rem;
-    font-size: 1rem;
-    line-height: 1.65;
+    margin: 1.5rem 0 2.25rem;
+    font-size: 1.0625rem;
+    line-height: 1.6;
     color: $slate-600; // 7.4:1 on white
   }
 }
@@ -272,11 +277,32 @@ $media-max: 120rem;
 @media (min-width: 900px) {
   .hero__inner { padding-bottom: 7rem; }
 
+  // Near-full-viewport so each section reads as its own screen rather than a
+  // band you scroll past.
   .feature {
-    min-height: 44rem;
+    min-height: min(92vh, 56rem);
     padding: 7rem clamp(2rem, 6vw, 6rem);
 
     &--right { justify-content: flex-end; }
+  }
+
+  // Darken toward whichever edge the card sits on.
+  .media__scrim {
+    background: linear-gradient(
+      to right,
+      rgba(3, 8, 17, 0.9) 0%,
+      rgba(3, 8, 17, 0.55) 52%,
+      rgba(3, 8, 17, 0.3) 100%
+    );
+  }
+
+  .feature--right .media__scrim {
+    background: linear-gradient(
+      to left,
+      rgba(3, 8, 17, 0.9) 0%,
+      rgba(3, 8, 17, 0.55) 52%,
+      rgba(3, 8, 17, 0.3) 100%
+    );
   }
 }
 

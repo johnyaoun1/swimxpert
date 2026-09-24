@@ -76,3 +76,19 @@ footer {
     gap: 1.5rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Public footer variant (see DESIGN.md)
+   Signed-in pages keep the original gradient and glow.
+--------------------------------------------------------------------------- */
+
+.site-footer--public {
+  /* Overrides an inline gradient, hence !important. */
+  background: #030811 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+
+  /* The blurred blue orbs read as decoration from a different design. */
+  .footer-decor { display: none; }
+
+  a:hover { color: #00c4ff; }
+}
