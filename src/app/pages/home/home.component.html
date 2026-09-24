@@ -1,181 +1,157 @@
 <!-- HERO -->
 <header class="hero" aria-label="SwimXpert">
-  <video
-    data-hero-video
-    class="hero__media"
-    autoplay
-    muted
-    loop
-    playsinline
-    preload="metadata"
-    poster="/assets/swimmer-butterfly.webp"
-    aria-hidden="true"
-    tabindex="-1"
-  >
-    <source src="/assets/video/hero.webm" type="video/webm" />
-    <source src="/assets/video/hero.mp4" type="video/mp4" />
-  </video>
-  <div class="hero__scrim" aria-hidden="true"></div>
-
-  <div class="hero__inner">
-    <p class="eyebrow">Dekwaneh &middot; Mar Roukoz</p>
-    <h1 class="display display--xl">
-      Water is a<br />skill for life
-    </h1>
-    <p class="lede">
-      Private and small-group swimming lessons in Lebanon, from age 2&frac12;.
-    </p>
-    <div class="hero__actions">
-      <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-        Message us on WhatsApp
-      </a>
-      <a routerLink="/swim-lessons" class="btn btn--ghost">View lessons</a>
-    </div>
+  <div class="hero__media">
+    <video
+      data-hero-video
+      class="media__img"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/assets/swimmer-butterfly.webp"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      <source src="/assets/video/hero.webm" type="video/webm" />
+      <source src="/assets/video/hero.mp4" type="video/mp4" />
+    </video>
+    <div class="media__scrim media__scrim--hero" aria-hidden="true"></div>
   </div>
 
-  <span class="hero__cue" aria-hidden="true"></span>
+  <div class="hero__inner">
+    <h1 class="hero__title">Learn to swim<br />for life</h1>
+    <p class="hero__lede">Private and small-group lessons in Dekwaneh, from age 2&frac12;.</p>
+    <div class="hero__actions">
+      <a [href]="whatsappUrl" class="btn btn--solid" target="_blank" rel="noopener">
+        Message us on WhatsApp
+      </a>
+      <a routerLink="/swim-lessons" class="link">View lessons</a>
+    </div>
+  </div>
 </header>
 
 <!-- The app shell already supplies the main landmark; don't nest another here. -->
-  <!-- STATEMENT -->
-  <section class="band band--statement" data-reveal aria-label="Our approach">
-    <div class="wrap wrap--narrow">
-      <h2 class="display display--lg">
-        Confidence first.<br /><span class="accent">Technique always.</span>
-      </h2>
-      <p class="body-copy">
-        Small classes. Coaches who stay with your child season after season.
-        Progress you can actually see.
-      </p>
-      <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-        Message us on WhatsApp
-      </a>
-    </div>
-  </section>
 
-  <!-- PROGRAMS -->
-  <section aria-label="Programs">
-    <article class="split" data-reveal>
-      <div class="split__media">
-        <img
-          src="/assets/swimmer-freestyle.webp"
-          alt="A swimmer mid-stroke during a private freestyle lesson"
-          width="1024"
-          height="682"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-      <div class="split__copy">
-        <p class="eyebrow">01 &mdash; Private</p>
-        <h3 class="display display--md">One coach.<br />One swimmer.</h3>
-        <p class="body-copy">
-          Undivided attention, from first float to competitive stroke work.
-        </p>
-        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-          Message us on WhatsApp
-        </a>
-      </div>
-    </article>
+<!-- FEATURES — one repeated pattern: full-bleed media, one white card. -->
+<section class="feature" data-reveal aria-labelledby="f-private">
+  <div class="feature__media">
+    <img
+      src="/assets/swimmer-freestyle.webp"
+      alt="A swimmer mid-stroke during a private freestyle lesson"
+      class="media__img"
+      width="1024"
+      height="682"
+      loading="lazy"
+      decoding="async"
+    />
+    <div class="media__scrim" aria-hidden="true"></div>
+  </div>
+  <div class="feature__card">
+    <p class="eyebrow">Private</p>
+    <h2 class="feature__title" id="f-private">One coach,<br />one swimmer</h2>
+    <p class="feature__body">
+      Undivided attention, from a first float to competitive stroke work.
+    </p>
+    <a routerLink="/swim-lessons" class="link link--dark">See lesson types</a>
+  </div>
+</section>
 
-    <article class="split split--reverse" data-reveal>
-      <div class="split__media">
-        <img
-          src="/assets/swimmer-action.webp"
-          alt="Children swimming together in a small group lesson"
-          width="1024"
-          height="493"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-      <div class="split__copy">
-        <p class="eyebrow">02 &mdash; Semi-private</p>
-        <h3 class="display display--md">Two to four.<br />Never more.</h3>
-        <p class="body-copy">
-          Friends and siblings learn faster together, without losing coach time.
-        </p>
-        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-          Message us on WhatsApp
-        </a>
-      </div>
-    </article>
+<section class="feature feature--right" data-reveal aria-labelledby="f-semi">
+  <div class="feature__media">
+    <img
+      src="/assets/swimmer-action.webp"
+      alt="Children swimming together during a small group lesson"
+      class="media__img"
+      width="1024"
+      height="493"
+      loading="lazy"
+      decoding="async"
+    />
+    <div class="media__scrim" aria-hidden="true"></div>
+  </div>
+  <div class="feature__card">
+    <p class="eyebrow">Semi-private</p>
+    <h2 class="feature__title" id="f-semi">Two to four,<br />never more</h2>
+    <p class="feature__body">
+      Friends and siblings progress faster together, without losing coach time.
+    </p>
+    <a routerLink="/level-finder" class="link link--dark">Find your child&rsquo;s level</a>
+  </div>
+</section>
 
-    <article class="split" data-reveal>
-      <div class="split__media">
-        <img
-          src="/assets/swimmer-underwater.webp"
-          alt="A swimmer moving slowly underwater during an aqua therapy session"
-          width="1024"
-          height="642"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-      <div class="split__copy">
-        <p class="eyebrow">03 &mdash; Aqua therapy</p>
-        <h3 class="display display--md">Move without<br />the impact.</h3>
-        <p class="body-copy">
-          Water-based sessions for recovery, mobility and therapeutic movement.
-        </p>
-        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-          Message us on WhatsApp
-        </a>
-      </div>
-    </article>
+<section class="feature" data-reveal aria-labelledby="f-therapy">
+  <div class="feature__media">
+    <img
+      src="/assets/swimmer-underwater.webp"
+      alt="A swimmer moving slowly underwater during an aqua therapy session"
+      class="media__img"
+      width="1024"
+      height="642"
+      loading="lazy"
+      decoding="async"
+    />
+    <div class="media__scrim" aria-hidden="true"></div>
+  </div>
+  <div class="feature__card">
+    <p class="eyebrow">Aqua therapy</p>
+    <h2 class="feature__title" id="f-therapy">Movement<br />without impact</h2>
+    <p class="feature__body">
+      Water-based sessions for recovery, mobility and therapeutic movement.
+    </p>
+    <a routerLink="/contact" class="link link--dark">Ask about aqua therapy</a>
+  </div>
+</section>
 
-    <article class="split split--reverse" data-reveal>
-      <div class="split__media">
-        <img
-          src="/assets/swimmer-dark.webp"
-          alt="An adult training in the pool during an aqua gym session"
-          width="1024"
-          height="682"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-      <div class="split__copy">
-        <p class="eyebrow">04 &mdash; Aqua gym</p>
-        <h3 class="display display--md">Strength,<br />low impact.</h3>
-        <p class="body-copy">
-          Conditioning and endurance work that your joints will thank you for.
-        </p>
-        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-          Message us on WhatsApp
-        </a>
-      </div>
-    </article>
-  </section>
+<section class="feature feature--right" data-reveal aria-labelledby="f-gym">
+  <div class="feature__media">
+    <img
+      src="/assets/swimmer-dark.webp"
+      alt="An adult training in the pool during an aqua gym session"
+      class="media__img"
+      width="1024"
+      height="682"
+      loading="lazy"
+      decoding="async"
+    />
+    <div class="media__scrim" aria-hidden="true"></div>
+  </div>
+  <div class="feature__card">
+    <p class="eyebrow">Aqua gym</p>
+    <h2 class="feature__title" id="f-gym">Strength,<br />low impact</h2>
+    <p class="feature__body">
+      Conditioning and endurance work that your joints will thank you for.
+    </p>
+    <a routerLink="/contact" class="link link--dark">Ask about aqua gym</a>
+  </div>
+</section>
 
-  <!-- LOCATION -->
-  <section class="band band--location" data-reveal aria-label="Where we swim">
-    <div class="wrap">
-      <p class="eyebrow">Where we swim</p>
-      <h2 class="display display--lg">Cap Sur Ville<br />Country Club</h2>
-      <p class="body-copy">
-        Dekwaneh &middot; Mar Roukoz. Open Monday to Saturday, 9:00&ndash;20:30.
-        Seasonal &mdash; closed October through December.
-      </p>
-      <div class="hero__actions">
-        <a [href]="whatsappUrl" class="btn btn--accent" target="_blank" rel="noopener">
-          Message us on WhatsApp
-        </a>
-        <a routerLink="/locations" class="btn btn--ghost">Get directions</a>
-      </div>
-    </div>
-  </section>
+<!-- No photo of the club exists yet, so this band stays typographic rather than
+     stretching a 1024x341 banner into a tall section. -->
+<section class="band" data-reveal aria-labelledby="f-where">
+  <div class="band__inner">
+    <p class="eyebrow eyebrow--onDark">Where we swim</p>
+    <h2 class="band__title" id="f-where">Cap Sur Ville Country Club</h2>
+    <p class="band__body">
+      Dekwaneh, Mar Roukoz. Monday to Saturday, 9:00&ndash;20:30.
+      Closed October through December.
+    </p>
+    <a routerLink="/locations" class="link">Get directions</a>
+  </div>
+</section>
 
-  <!-- CLOSING -->
-  <section class="band band--closing" data-reveal aria-label="Book a lesson">
-    <div class="wrap wrap--narrow">
-      <h2 class="display display--xl">Start<br />this week</h2>
-      <p class="lede">Tell us your child&rsquo;s age and we&rsquo;ll find the right class.</p>
-      <a [href]="whatsappUrl" class="btn btn--accent btn--lg" target="_blank" rel="noopener">
-        Message us on WhatsApp
-      </a>
-    </div>
-  </section>
+<!-- CLOSING -->
+<section class="closing" data-reveal aria-label="Book a lesson">
+  <div class="closing__inner">
+    <h2 class="closing__title">Start this week</h2>
+    <p class="closing__lede">
+      Tell us your child&rsquo;s age and we&rsquo;ll find the right class.
+    </p>
+    <a [href]="whatsappUrl" class="btn btn--solid btn--lg" target="_blank" rel="noopener">
+      Message us on WhatsApp
+    </a>
+  </div>
+</section>
 
 <!-- FLOATING WHATSAPP (mobile) -->
 <a

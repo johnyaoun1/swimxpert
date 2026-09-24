@@ -1,12 +1,6 @@
-/* Self-hosted: CSP allows font-src 'self' only, so no font CDN. */
-@font-face {
-  font-family: 'Anton';
-  src: url('/assets/fonts/anton-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
+/* Self-hosted: CSP allows font-src 'self' only, so no font CDN.
+   One family for the public pages — size and spacing carry the hierarchy,
+   not a second display face. See DESIGN.md. */
 @font-face {
   font-family: 'Archivo';
   src: url('/assets/fonts/archivo-var.woff2') format('woff2');

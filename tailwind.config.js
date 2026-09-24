@@ -5,19 +5,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        // Public redesign only. `sans` is deliberately left alone so signed-in
-        // pages keep rendering in the system stack they were designed against.
-        display: ['Anton', 'Impact', 'Haettenschweiler', 'sans-serif'],
-        body: ['Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-      },
       colors: {
-        // Public redesign: near-black canvas, one restrained aqua accent.
-        // aqua on ink measures 8.9:1, and black on aqua the same, so either
-        // direction clears 4.5:1.
-        ink: { DEFAULT: '#0A0A0A', 900: '#0A0A0A', 800: '#111111', 700: '#181818', 600: '#242424' },
-        aqua: { DEFAULT: '#00C2B8', 400: '#2BD9CF', 500: '#00C2B8', 600: '#00A49C' },
-
         // Deep-navy / electric-blue dark theme (Beswim-style)
         primary: {
           50:  '#e8f4ff',
