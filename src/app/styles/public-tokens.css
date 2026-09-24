@@ -1,0 +1,192 @@
+/* =============================================================================
+   SwimXpert public design tokens
+   -----------------------------------------------------------------------------
+   The single source of truth for the public pages. Documented in DESIGN.md.
+
+   SCOPING: these are deliberately not on :root. They apply only where the public
+   treatment is switched on — the app shell's main element on public routes, and
+   the public header/footer variants — so dashboard, admin, coach and the auth
+   screens cannot inherit them and are visually untouched.
+
+   Public page stylesheets must use these tokens and nothing else: no raw hex,
+   no raw px, no one-off durations.
+============================================================================= */
+
+.sx-public,
+.site-header--public,
+.site-footer--public {
+  /* ---------- Colour (by role, not by hue) ----------
+     Every pairing below is >= 4.5:1; measured ratios are in DESIGN.md. */
+  --sx-bg: #030811;                    /* page canvas (navy-950) */
+  --sx-bg-alt: #060e24;                /* alternate band (navy-900) */
+  --sx-surface: #ffffff;               /* cards */
+
+  --sx-text-primary: #ffffff;          /* on --sx-bg — 20.1:1 */
+  --sx-text-muted: #cbd5e1;            /* on --sx-bg — 13.5:1 */
+  --sx-text-on-surface: #060e24;       /* on --sx-surface — 19.2:1 */
+  --sx-text-muted-on-surface: #475569; /* on --sx-surface — 7.4:1 */
+
+  --sx-accent: #00c4ff;                /* on --sx-bg — 9.9:1 */
+
+  /* Bare channels, for gradients and rings that need an alpha. Keep in step
+     with --sx-bg and --sx-accent above. */
+  --sx-bg-rgb: 3 8 17;
+  --sx-accent-rgb: 0 196 255;
+
+  --sx-button-bg: #ffffff;
+  --sx-button-bg-hover: #cbd5e1;
+  --sx-button-text: #060e24;           /* on button bg — 19.2:1 */
+  --sx-button-blue: #0d5a96;           /* white on it — 7.2:1 */
+  --sx-button-blue-hover: #1d9bf0;     /* decorative; pair with dark text only */
+
+  /* ---------- Borders ----------
+     Cards carry no border. Hairlines separate bands only. */
+  --sx-border-width-none: 0;
+  --sx-border-width-hairline: 1px;
+  --sx-border-color: rgba(255, 255, 255, 0.08);
+  --sx-border-color-strong: rgba(255, 255, 255, 0.16);
+
+  /* Focus rings — never remove these, only restyle. */
+  --sx-focus-width: 3px;
+  --sx-focus-width-sm: 2px;
+
+  /* ---------- Radius ----------
+     Square everywhere. --sx-radius-round is only for the floating button. */
+  --sx-radius-none: 0;
+  --sx-radius-round: 9999px;
+
+  /* ---------- Shadow ----------
+     None by default. One token exists, for the floating button alone. */
+  --sx-shadow-none: none;
+  --sx-shadow-subtle: 0 10px 30px rgba(0, 0, 0, 0.45);
+
+  /* ---------- Spacing (4px base) ---------- */
+  --sx-space-1: 4px;
+  --sx-space-2: 8px;
+  --sx-space-3: 16px;
+  --sx-space-4: 24px;
+  --sx-space-5: 32px;
+  --sx-space-6: 48px;
+  --sx-space-7: 64px;
+  --sx-space-8: 96px;
+  --sx-space-9: 128px;
+
+  /* ---------- Typography ----------
+     One family. Size and spacing carry the hierarchy. */
+  --sx-font: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --sx-hero-size: clamp(2.625rem, 11vw, 8.5rem);
+  --sx-hero-weight: 500;
+  --sx-hero-leading: 1.02;
+  --sx-hero-tracking: -0.025em;
+
+  --sx-h1-size: clamp(2.5rem, 9vw, 6rem);
+  --sx-h1-weight: 500;
+  --sx-h1-leading: 1.02;
+  --sx-h1-tracking: -0.025em;
+
+  --sx-h2-size: clamp(2rem, 6vw, 4rem);
+  --sx-h2-weight: 500;
+  --sx-h2-leading: 1.05;
+  --sx-h2-tracking: -0.02em;
+
+  --sx-h3-size: clamp(1.9rem, 4.6vw, 3.25rem);
+  --sx-h3-weight: 500;
+  --sx-h3-leading: 1.05;
+  --sx-h3-tracking: -0.02em;
+
+  --sx-lede-size: clamp(1.0625rem, 2.6vw, 1.5rem);
+  --sx-lede-weight: 400;
+  --sx-lede-leading: 1.45;
+
+  --sx-body-size: 1.0625rem;
+  --sx-body-weight: 400;
+  --sx-body-leading: 1.6;
+
+  --sx-small-size: 0.9375rem;
+  --sx-small-leading: 1.5;
+
+  --sx-eyebrow-size: 0.6875rem;
+  --sx-eyebrow-weight: 700;
+  --sx-eyebrow-tracking: 0.24em;
+
+  --sx-button-size: 0.875rem;
+  --sx-button-weight: 600;
+  --sx-button-tracking: 0.08em;
+
+  /* Chrome: wordmark, nav links, header/footer CTA. */
+  --sx-wordmark-size: 1.0625rem;
+  --sx-wordmark-size-lg: 1.25rem;
+  --sx-wordmark-tracking: 0.2em;
+
+  --sx-nav-size: 0.8125rem;
+  --sx-nav-weight: 500;
+  --sx-nav-tracking: 0.05em;
+
+  --sx-cta-size: 0.75rem;
+  --sx-cta-tracking: 0.1em;
+
+  /* Comfortable measures — stops long lines reading as a wall of text. */
+  --sx-measure-lede: 34ch;
+  --sx-measure-body: 46ch;
+  --sx-measure-narrow: 32ch;
+
+  /* ---------- Layout ---------- */
+  --sx-content-max: 82rem;   /* hero and wide sections */
+  --sx-band-max: 60rem;      /* typographic bands */
+  --sx-closing-max: 48rem;   /* centred closing block */
+  --sx-card-max: 32rem;      /* white card, desktop */
+  --sx-media-max: 120rem;    /* caps upscaling of 1024px sources */
+
+  --sx-gutter: var(--sx-space-4);
+  --sx-gutter-lg: clamp(2rem, 6vw, 6rem);
+
+  --sx-hero-min: 100svh;
+  --sx-section-min-phone: 56vh;      /* photo height on phones */
+  --sx-section-media-max-phone: 30rem;
+  --sx-section-min-desktop: min(92vh, 56rem);
+  --sx-card-overlap: -5rem;          /* card lifts over the photo edge */
+
+  --sx-header-offset: 57px;          /* app shell pt-[57px] */
+
+  /* ---------- Image treatment ----------
+     One grade for every photo. --lift is for sources already dark. */
+  --sx-img-brightness: 0.72;
+  --sx-img-saturate: 0.74;
+  --sx-img-contrast: 1.06;
+
+  --sx-img-brightness-lift: 0.94;
+  --sx-img-saturate-lift: 0.8;
+  --sx-img-contrast-lift: 1.02;
+
+  /* ---------- Opacity ---------- */
+  --sx-opacity-scrim-soft: 0.12;
+  --sx-opacity-scrim-mid: 0.45;
+  --sx-opacity-scrim-strong: 0.6;
+  --sx-opacity-scrim-max: 0.94;
+  --sx-opacity-hidden: 0;
+  --sx-opacity-full: 1;
+
+  /* Edge fade: every photo section melts into the canvas top and bottom, so two
+     photos never butt together with a hard cut. */
+  --sx-fade-size: clamp(3rem, 9vw, 7rem);
+
+  /* ---------- Motion ----------
+     One duration, one easing. Reveals get the slow token. */
+  --sx-duration: 200ms;
+  --sx-duration-slow: 800ms;
+  --sx-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --sx-ease-out: ease-out;
+  --sx-reveal-shift: 1.25rem;
+}
+
+/* One switch turns all motion off for everything below. */
+@media (prefers-reduced-motion: reduce) {
+  .sx-public,
+  .site-header--public,
+  .site-footer--public {
+    --sx-duration: 0ms;
+    --sx-duration-slow: 0ms;
+    --sx-reveal-shift: 0;
+  }
+}

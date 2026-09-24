@@ -1,51 +1,35 @@
-// Public homepage. Rules and rationale live in DESIGN.md at the repo root —
-// keep the two in step when changing anything here.
-
-// Brand palette (tailwind.config.js)
-$navy-950: #030811;
-$navy-900: #060e24;
-$navy-800: #0d1b3e;
-$primary-500: #1d9bf0; // decorative only — white on it is 3.0:1, never text
-$primary-700: #0d5a96; // white on this is 7.2:1
-$accent-500: #00c4ff; // 9.9:1 on navy-950
-$paper: #ffffff;
-$slate-300: #cbd5e1; // 13.5:1 on navy-950
-$slate-600: #475569; // 7.4:1 on white
-
-// One family. Size and spacing carry the hierarchy, not a second face.
-$sans: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-
-// Source photos are 1024px wide. Beyond this the upscale starts to show, so
-// media is centred and the navy shows at the edges instead of going blurry.
-$media-max: 120rem;
+// Public homepage.
+//
+// Every value here comes from src/app/styles/public-tokens.css — no raw hex, no
+// raw px, no one-off durations. If something needed is missing, add a token
+// rather than a literal, and record it in DESIGN.md.
 
 :host {
   display: block;
-  background: $navy-950;
-  color: $paper;
-  font-family: $sans;
+  background: var(--sx-bg);
+  color: var(--sx-text-primary);
+  font-family: var(--sx-font);
 }
 
-/* ---------- Shared type ---------- */
+/* ---------- Type ---------- */
 
-.eyebrow {
-  margin: 0 0 1.25rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: $slate-600;
-
-  &--onDark { color: $accent-500; }
-}
-
-/* Headlines: large, tight, and only medium weight. The scale does the work. */
 %headline {
   margin: 0;
-  font-weight: 500;
-  letter-spacing: -0.025em;
-  line-height: 1.02;
+  font-weight: var(--sx-hero-weight);
+  letter-spacing: var(--sx-hero-tracking);
+  line-height: var(--sx-hero-leading);
   text-wrap: balance;
+}
+
+.eyebrow {
+  margin: 0 0 var(--sx-space-4);
+  font-size: var(--sx-eyebrow-size);
+  font-weight: var(--sx-eyebrow-weight);
+  letter-spacing: var(--sx-eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--sx-text-muted-on-surface);
+
+  &--onDark { color: var(--sx-accent); }
 }
 
 /* ---------- Buttons and links ---------- */
@@ -54,85 +38,123 @@ $media-max: 120rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 3.25rem;
-  padding: 0 2.25rem;
-  border-radius: 0; // square corners, never pills
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  min-height: var(--sx-space-6);
+  padding: 0 var(--sx-space-5);
+  border: var(--sx-border-width-none);
+  border-radius: var(--sx-radius-none);
+  box-shadow: var(--sx-shadow-none);
+  font-size: var(--sx-button-size);
+  font-weight: var(--sx-button-weight);
+  letter-spacing: var(--sx-button-tracking);
   text-transform: uppercase;
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--sx-duration) var(--sx-ease),
+    color var(--sx-duration) var(--sx-ease);
 
   &--solid {
-    background: $paper;
-    color: $navy-900; // 19.2:1
-    &:hover { background: $slate-300; }
+    background: var(--sx-button-bg);
+    color: var(--sx-button-text);
+
+    &:hover { background: var(--sx-button-bg-hover); }
   }
 
-  &--lg { min-height: 3.75rem; padding: 0 3rem; }
+  &--lg {
+    min-height: var(--sx-space-7);
+    padding: 0 var(--sx-space-6);
+  }
 
-  &:focus-visible { outline: 3px solid $accent-500; outline-offset: 3px; }
+  &:focus-visible {
+    outline: var(--sx-focus-width) solid var(--sx-accent);
+    outline-offset: var(--sx-space-1);
+  }
 }
 
-/* Secondary actions are underlined text, not a second button. */
 .link {
   display: inline-block;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid currentColor;
-  color: $paper;
-  font-size: 0.9375rem;
+  padding-bottom: var(--sx-space-1);
+  border-bottom: var(--sx-border-width-hairline) solid currentColor;
+  color: var(--sx-text-primary);
+  font-size: var(--sx-small-size);
   font-weight: 500;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--sx-duration) var(--sx-ease);
 
-  &:hover { color: $accent-500; }
-  &:focus-visible { outline: 3px solid $accent-500; outline-offset: 4px; }
+  &:hover { color: var(--sx-accent); }
+
+  &:focus-visible {
+    outline: var(--sx-focus-width) solid var(--sx-accent);
+    outline-offset: var(--sx-space-1);
+  }
 
   &--dark {
-    color: $navy-900;
-    &:hover { color: $primary-700; }
-    &:focus-visible { outline-color: $primary-700; }
+    color: var(--sx-text-on-surface);
+
+    &:hover { color: var(--sx-button-blue); }
+    &:focus-visible { outline-color: var(--sx-button-blue); }
   }
 }
 
-/* ---------- Media treatment ----------
-   One consistent grade so bright, busy source photos read as a single set,
-   and so upscaling is less obvious. */
+/* ---------- Media ---------- */
 
 .media__img {
   position: absolute;
   inset: 0;
+  z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  // Moody, not murky: enough grade to pull bright pool shots with coloured lane
-  // ropes into one set, while leaving the subject clearly readable.
-  filter: brightness(0.72) saturate(0.74) contrast(1.06);
+  filter: brightness(var(--sx-img-brightness)) saturate(var(--sx-img-saturate))
+    contrast(var(--sx-img-contrast));
 
-  // For sources that are already dark (underwater, aqua gym) the same grade
-  // buries them, so they get less of it.
-  &--lift { filter: brightness(0.94) saturate(0.8) contrast(1.02); }
+  &--lift {
+    filter: brightness(var(--sx-img-brightness-lift))
+      saturate(var(--sx-img-saturate-lift)) contrast(var(--sx-img-contrast-lift));
+  }
 }
 
 .media__scrim {
   position: absolute;
   inset: 0;
-  // Phone: the photo stands on its own above the card, so this is atmosphere
-  // only — it is not holding up any text.
+  z-index: 1;
   background: linear-gradient(
     to bottom,
-    rgba(3, 8, 17, 0.12) 0%,
-    rgba(3, 8, 17, 0.45) 100%
+    rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-soft)) 0%,
+    rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-mid)) 100%
   );
 
   &--hero {
     background: linear-gradient(
       to top,
-      rgba(3, 8, 17, 0.94) 0%,
-      rgba(3, 8, 17, 0.6) 48%,
-      rgba(3, 8, 17, 0.42) 100%
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-max)) 0%,
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-strong)) 48%,
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-mid)) 100%
     );
+  }
+}
+
+/* Every photo melts into the canvas at both edges, so two photo sections never
+   meet on a hard cut. */
+%edge-fade {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: var(--sx-fade-size);
+  pointer-events: none;
+}
+
+.feature__media {
+  &::before {
+    @extend %edge-fade;
+    top: 0;
+    background: linear-gradient(to bottom, var(--sx-bg) 0%, transparent 100%);
+  }
+
+  &::after {
+    @extend %edge-fade;
+    bottom: 0;
+    background: linear-gradient(to top, var(--sx-bg) 0%, transparent 100%);
   }
 }
 
@@ -140,152 +162,163 @@ $media-max: 120rem;
 
 .hero {
   position: relative;
-  margin-top: -57px; // cancels the app shell's pt-[57px]
-  min-height: 100vh;
-  min-height: 100svh;
+  margin-top: calc(var(--sx-header-offset) * -1);
+  min-height: var(--sx-hero-min);
   display: flex;
   align-items: flex-end;
   overflow: hidden;
-  background: $navy-950;
+  background: var(--sx-bg);
 
   &__media {
     position: absolute;
     inset: 0;
-    max-width: $media-max;
+    max-width: var(--sx-media-max);
     margin: 0 auto;
   }
 
   &__inner {
     position: relative;
+    z-index: 2;
     width: 100%;
-    max-width: 82rem;
+    max-width: var(--sx-content-max);
     margin: 0 auto;
-    padding: 0 1.5rem 5rem;
+    padding: 0 var(--sx-gutter) var(--sx-space-7);
   }
 
   &__title {
     @extend %headline;
-    // Min is 2.625rem so "LEARN TO SWIM" holds one line at 390px instead of
-    // breaking into a ragged three.
-    font-size: clamp(2.625rem, 11vw, 8.5rem);
+    font-size: var(--sx-hero-size);
     text-transform: uppercase;
   }
 
   &__lede {
-    margin: 1.75rem 0 0;
-    max-width: 34ch;
-    font-size: clamp(1.0625rem, 2.6vw, 1.5rem);
-    line-height: 1.45;
-    color: $paper;
+    margin: var(--sx-space-4) 0 0;
+    max-width: var(--sx-measure-lede);
+    font-size: var(--sx-lede-size);
+    font-weight: var(--sx-lede-weight);
+    line-height: var(--sx-lede-leading);
+    color: var(--sx-text-primary);
   }
 
   &__actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.5rem;
-    margin-top: 2.5rem;
+    gap: var(--sx-space-4);
+    margin-top: var(--sx-space-5);
   }
 }
 
-/* ---------- Feature: full-bleed media + one white card ---------- */
+/* ---------- Feature: media + one white card ---------- */
 
-// Phone: the photo gets its own height and is actually looked at, then the card
-// overlaps its bottom edge. Desktop switches to the card-over-media overlay.
 .feature {
   position: relative;
-  background: $navy-950;
-  padding-bottom: 3.5rem;
+  background: var(--sx-bg);
+  padding-bottom: var(--sx-space-6);
 
   &__media {
     position: relative;
-    height: 56vh;
-    max-height: 30rem;
+    height: var(--sx-section-min-phone);
+    max-height: var(--sx-section-media-max-phone);
     overflow: hidden;
   }
 
   &__card {
     position: relative;
-    z-index: 2;
-    margin: -5rem 1.25rem 0;
-    padding: clamp(2rem, 6vw, 2.75rem);
-    background: $paper;
-    color: $navy-900;
+    z-index: 3;
+    margin: var(--sx-card-overlap) var(--sx-space-4) 0;
+    padding: var(--sx-space-5);
+    border: var(--sx-border-width-none);
+    border-radius: var(--sx-radius-none);
+    box-shadow: var(--sx-shadow-none);
+    background: var(--sx-surface);
+    color: var(--sx-text-on-surface);
   }
 
   &__title {
     @extend %headline;
-    font-size: clamp(1.9rem, 4.6vw, 3.25rem);
-    color: $navy-900;
+    font-size: var(--sx-h3-size);
+    font-weight: var(--sx-h3-weight);
+    line-height: var(--sx-h3-leading);
+    letter-spacing: var(--sx-h3-tracking);
+    color: var(--sx-text-on-surface);
   }
 
   &__body {
-    margin: 1.5rem 0 2.25rem;
-    font-size: 1.0625rem;
-    line-height: 1.6;
-    color: $slate-600; // 7.4:1 on white
+    margin: var(--sx-space-4) 0 var(--sx-space-5);
+    font-size: var(--sx-body-size);
+    line-height: var(--sx-body-leading);
+    color: var(--sx-text-muted-on-surface);
   }
 }
 
 /* ---------- Typographic band ---------- */
 
 .band {
-  padding: clamp(6rem, 15vw, 10rem) 1.5rem;
-  background: $navy-900;
+  padding: var(--sx-space-8) var(--sx-gutter);
+  background: var(--sx-bg-alt);
 
-  &__inner { max-width: 60rem; margin: 0 auto; }
+  &__inner {
+    max-width: var(--sx-band-max);
+    margin: 0 auto;
+  }
 
   &__title {
     @extend %headline;
-    font-size: clamp(2rem, 6vw, 4rem);
+    font-size: var(--sx-h2-size);
+    font-weight: var(--sx-h2-weight);
+    line-height: var(--sx-h2-leading);
+    letter-spacing: var(--sx-h2-tracking);
   }
 
   &__body {
-    margin: 1.75rem 0 2.25rem;
-    max-width: 46ch;
-    font-size: clamp(1rem, 2.4vw, 1.125rem);
-    line-height: 1.65;
-    color: $slate-300;
+    margin: var(--sx-space-4) 0 var(--sx-space-5);
+    max-width: var(--sx-measure-body);
+    font-size: var(--sx-body-size);
+    line-height: var(--sx-body-leading);
+    color: var(--sx-text-muted);
   }
 }
 
 /* ---------- Closing ---------- */
 
 .closing {
-  padding: clamp(6rem, 16vw, 11rem) 1.5rem;
-  background: $navy-950;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: var(--sx-space-8) var(--sx-gutter);
+  background: var(--sx-bg);
+  border-top: var(--sx-border-width-hairline) solid var(--sx-border-color);
   text-align: center;
 
-  &__inner { max-width: 48rem; margin: 0 auto; }
+  &__inner {
+    max-width: var(--sx-closing-max);
+    margin: 0 auto;
+  }
 
   &__title {
     @extend %headline;
-    font-size: clamp(2.5rem, 9vw, 6rem);
+    font-size: var(--sx-h1-size);
+    font-weight: var(--sx-h1-weight);
     text-transform: uppercase;
   }
 
   &__lede {
-    margin: 1.75rem auto 2.75rem;
-    max-width: 32ch;
-    font-size: clamp(1rem, 2.6vw, 1.25rem);
-    line-height: 1.5;
-    color: $slate-300;
+    margin: var(--sx-space-4) auto var(--sx-space-6);
+    max-width: var(--sx-measure-lede);
+    font-size: var(--sx-lede-size);
+    line-height: var(--sx-lede-leading);
+    color: var(--sx-text-muted);
   }
 }
 
 /* ---------- Desktop ---------- */
 
 @media (min-width: 900px) {
-  .hero__inner { padding-bottom: 7rem; }
+  .hero__inner { padding-bottom: var(--sx-space-8); }
 
-  // Near-full-viewport so each section reads as its own screen rather than a
-  // band you scroll past.
   .feature {
     display: flex;
     align-items: center;
-    min-height: min(92vh, 56rem);
-    padding: 7rem clamp(2rem, 6vw, 6rem);
+    min-height: var(--sx-section-min-desktop);
+    padding: var(--sx-space-8) var(--sx-gutter-lg);
     overflow: hidden;
 
     &--right { justify-content: flex-end; }
@@ -295,69 +328,76 @@ $media-max: 120rem;
       inset: 0;
       height: auto;
       max-height: none;
-      max-width: $media-max;
+      max-width: var(--sx-media-max);
       margin: 0 auto;
     }
 
     &__card {
       width: 100%;
-      max-width: 32rem;
+      max-width: var(--sx-card-max);
       margin: 0;
-      padding: clamp(2.25rem, 4.5vw, 4.25rem);
+      padding: var(--sx-space-6);
     }
   }
 
-  // Darken toward whichever edge the card sits on.
+  /* Darken toward whichever edge the card sits on. */
   .media__scrim {
     background: linear-gradient(
       to right,
-      rgba(3, 8, 17, 0.9) 0%,
-      rgba(3, 8, 17, 0.55) 52%,
-      rgba(3, 8, 17, 0.3) 100%
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-max)) 0%,
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-strong)) 52%,
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-mid)) 100%
     );
   }
 
   .feature--right .media__scrim {
     background: linear-gradient(
       to left,
-      rgba(3, 8, 17, 0.9) 0%,
-      rgba(3, 8, 17, 0.55) 52%,
-      rgba(3, 8, 17, 0.3) 100%
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-max)) 0%,
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-strong)) 52%,
+      rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-mid)) 100%
     );
   }
 }
 
-/* ---------- Floating WhatsApp (mobile only) ---------- */
+/* ---------- Floating WhatsApp (phone only, past the hero) ---------- */
 
 .wa-float {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
+  right: var(--sx-space-3);
+  bottom: var(--sx-space-3);
   z-index: 60;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 999px; // the one exception: a known affordance
-  background: $primary-700;
-  color: $paper; // 7.2:1
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
-  transition: background-color 0.2s ease, opacity 0.25s ease, transform 0.25s ease;
-
-  // Hidden over the hero, which already carries its own WhatsApp button.
-  opacity: 0;
-  transform: translateY(0.75rem);
+  width: var(--sx-space-6);
+  height: var(--sx-space-6);
+  border-radius: var(--sx-radius-round);
+  background: var(--sx-button-blue);
+  color: var(--sx-text-primary);
+  box-shadow: var(--sx-shadow-subtle);
+  opacity: var(--sx-opacity-hidden);
+  transform: translateY(var(--sx-space-2));
   pointer-events: none;
+  transition: background-color var(--sx-duration) var(--sx-ease),
+    opacity var(--sx-duration) var(--sx-ease),
+    transform var(--sx-duration) var(--sx-ease);
 
   &--shown {
-    opacity: 1;
+    opacity: var(--sx-opacity-full);
     transform: none;
     pointer-events: auto;
   }
 
-  &:hover { background: $primary-500; color: $navy-900; }
-  &:focus-visible { outline: 3px solid $paper; outline-offset: 3px; }
+  &:hover {
+    background: var(--sx-button-blue-hover);
+    color: var(--sx-button-text);
+  }
+
+  &:focus-visible {
+    outline: var(--sx-focus-width) solid var(--sx-text-primary);
+    outline-offset: var(--sx-space-1);
+  }
 }
 
 @media (min-width: 900px) {
@@ -367,23 +407,22 @@ $media-max: 120rem;
 /* ---------- Reveal ---------- */
 
 [data-reveal] {
-  opacity: 0;
-  transform: translateY(1.25rem);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  opacity: var(--sx-opacity-hidden);
+  transform: translateY(var(--sx-reveal-shift));
+  transition: opacity var(--sx-duration-slow) var(--sx-ease-out),
+    transform var(--sx-duration-slow) var(--sx-ease-out);
 
   &.is-visible {
-    opacity: 1;
+    opacity: var(--sx-opacity-full);
     transform: none;
   }
 }
 
+/* The token block already zeroes the durations; this makes sure nothing is left
+   mid-transition if the preference flips after load. */
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] {
-    opacity: 1;
+    opacity: var(--sx-opacity-full);
     transform: none;
-    transition: none;
   }
-
-  .btn,
-  .link { transition: none; }
 }

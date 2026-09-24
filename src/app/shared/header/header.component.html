@@ -123,6 +123,7 @@
 @if (mobileMenuOpen) {
   <div id="mobile-nav-menu"
        class="fixed left-0 right-0 bottom-0 top-[57px] overflow-y-auto"
+       [class.sx-public]="isPublicRoute"
        role="dialog"
        aria-modal="true"
        aria-label="Mobile navigation menu"

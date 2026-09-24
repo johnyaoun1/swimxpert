@@ -78,72 +78,76 @@ footer {
 }
 
 /* ---------------------------------------------------------------------------
-   Public footer variant (see DESIGN.md)
-   Signed-in pages keep the original gradient and glow.
+   Public footer variant — tokens only. Signed-in pages keep the original
+   gradient and glow and never see these custom properties.
 --------------------------------------------------------------------------- */
 
 .site-footer--public {
   /* Overrides an inline gradient, hence !important. */
-  background: #030811 !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--sx-bg) !important;
+  border-top: var(--sx-border-width-hairline) solid var(--sx-border-color) !important;
 
-  /* The blurred blue orbs read as decoration from a different design. */
+  /* Blurred blue orbs belong to the old design. */
   .footer-decor { display: none; }
-
-  a:hover { color: #00c4ff; }
 }
 
-/* Public footer layout — typography matches DESIGN.md. */
 .footer-public {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2.75rem;
-  font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  gap: var(--sx-space-6);
+  font-family: var(--sx-font);
 
   &__wordmark {
     display: block;
-    margin-bottom: 1rem;
+    margin-bottom: var(--sx-space-3);
     font-size: 1.0625rem;
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #ffffff;
+    color: var(--sx-text-primary);
   }
 
   &__brand p {
-    max-width: 32ch;
-    font-size: 0.9375rem;
-    line-height: 1.65;
-    color: #94a3b8; // 7.8:1 on navy-950
+    max-width: var(--sx-measure-narrow);
+    font-size: var(--sx-small-size);
+    line-height: var(--sx-body-leading);
+    color: var(--sx-text-muted);
   }
 
   &__heading {
-    margin-bottom: 1.25rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.24em;
+    margin-bottom: var(--sx-space-4);
+    font-size: var(--sx-eyebrow-size);
+    font-weight: var(--sx-eyebrow-weight);
+    letter-spacing: var(--sx-eyebrow-tracking);
     text-transform: uppercase;
-    color: #00c4ff; // 9.9:1
+    color: var(--sx-accent);
   }
 
   ul {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    font-size: 0.9375rem;
-    color: #94a3b8;
+    gap: var(--sx-space-2);
+    font-size: var(--sx-small-size);
+    color: var(--sx-text-muted);
   }
 
   a {
-    color: #e2e8f0; // 14.6:1
+    color: var(--sx-text-muted);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color var(--sx-duration) var(--sx-ease);
 
-    &:hover { color: #00c4ff; }
-    &:focus-visible { outline: 2px solid #00c4ff; outline-offset: 3px; }
+    &:hover { color: var(--sx-accent); }
+
+    &:focus-visible {
+      outline: var(--sx-focus-width-sm) solid var(--sx-accent);
+      outline-offset: var(--sx-space-1);
+    }
   }
 }
 
 @media (min-width: 768px) {
-  .footer-public { grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 3rem; }
+  .footer-public {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: var(--sx-space-6);
+  }
 }

@@ -197,7 +197,8 @@ button[aria-label="Toggle menu"] {
 /* ---------------------------------------------------------------------------
    Header variants
    Base reproduces the inline style it replaced, so signed-in pages (dashboard,
-   admin, coach, auth) render exactly as before.
+   admin, coach, auth) render exactly as before and never see the tokens.
+   Everything under .site-header--public uses tokens only — see DESIGN.md.
 --------------------------------------------------------------------------- */
 
 .site-header {
@@ -205,153 +206,148 @@ button[aria-label="Toggle menu"] {
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-/* Public redesign: deeper navy, brand cyan accent, Archivo. See DESIGN.md. */
 .site-header--public {
-  background: rgba(3, 8, 17, 0.94); // navy-950
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-  font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: rgb(var(--sx-bg-rgb) / var(--sx-opacity-scrim-max));
+  border-bottom: var(--sx-border-width-hairline) solid var(--sx-border-color);
+  font-family: var(--sx-font);
 
   a {
-    color: #e2e8f0;
-    letter-spacing: 0.04em;
+    color: var(--sx-text-muted);
+    letter-spacing: var(--sx-nav-tracking);
   }
 
-  a:hover {
-    color: #00c4ff; // accent-500, 9.9:1 on navy-950
-  }
+  a:hover { color: var(--sx-accent); }
 
-  /* routerLinkActive applies Tailwind's `!text-primary-400`, which carries
-     !important — matching it is the only way to hold one accent colour. */
-  a.\!text-primary-400 {
-    color: #00c4ff !important;
-  }
+  /* routerLinkActive ships Tailwind's !important utility. */
+  a.\!text-primary-400 { color: var(--sx-accent) !important; }
 
-  img {
-    --tw-ring-color: rgba(0, 196, 255, 0.5);
-  }
+  img { --tw-ring-color: rgb(var(--sx-accent-rgb) / 0.5); }
 
-  /* The signup CTA ships an inline blue gradient behind white text — 3.0:1 on
-     #1d9bf0 and 2.0:1 on #00c4ff, both failing — in a rounded pill. Square it
-     and flip to white on navy (19.2:1). Inline styles need !important. */
+  /* The legacy signup CTA carries an inline blue gradient behind white text —
+     3.0:1 at best — in a rounded pill. Inline styles need !important. */
   a[href="/signup"],
   a[routerLink="/signup"] {
-    background: #ffffff !important;
+    background: var(--sx-button-bg) !important;
     background-image: none !important;
-    color: #060e24 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    color: var(--sx-button-text) !important;
+    border-radius: var(--sx-radius-none) !important;
+    box-shadow: var(--sx-shadow-none) !important;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--sx-nav-tracking);
   }
 
   a[href="/signup"]:hover,
   a[routerLink="/signup"]:hover {
-    background: #cbd5e1 !important;
-    color: #060e24 !important;
+    background: var(--sx-button-bg-hover) !important;
+    color: var(--sx-button-text) !important;
   }
 }
 
 /* ---------------------------------------------------------------------------
-   Public nav (see DESIGN.md). These sit at the top level rather than inside
-   .site-header--public because the mobile menu renders outside <header>.
+   Public nav. Top level rather than nested under .site-header--public because
+   the mobile menu renders outside <header>; it carries .sx-public for tokens.
 --------------------------------------------------------------------------- */
 
-$archivo: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-$accent: #00c4ff;
-$ink: #060e24;
-
 .wordmark {
-  font-family: $archivo;
+  font-family: var(--sx-font);
   font-weight: 700;
-  font-size: 1.0625rem;
-  letter-spacing: 0.2em;
+  font-size: var(--sx-wordmark-size);
+  letter-spacing: var(--sx-wordmark-tracking);
   text-transform: uppercase;
-  color: #ffffff;
+  color: var(--sx-text-primary);
   white-space: nowrap;
 
-  &--menu { font-size: 1.25rem; }
+  &--menu { font-size: var(--sx-wordmark-size-lg); }
 }
 
 .nav-public-link {
-  padding: 0.5rem 0.75rem;
-  font-family: $archivo;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: #e2e8f0; // 14.6:1 on navy-950
+  padding: var(--sx-space-2) var(--sx-space-2);
+  font-family: var(--sx-font);
+  font-size: var(--sx-nav-size);
+  font-weight: var(--sx-nav-weight);
+  letter-spacing: var(--sx-nav-tracking);
+  color: var(--sx-text-muted);
   background: none;
-  border: none;
+  border: var(--sx-border-width-none);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--sx-duration) var(--sx-ease);
 
-  &:hover { color: $accent; }
-  &:focus-visible { outline: 2px solid $accent; outline-offset: 2px; }
+  &:hover { color: var(--sx-accent); }
 
-  /* routerLinkActive ships Tailwind's !important utility. */
-  &.\!text-primary-400 { color: $accent !important; }
+  &:focus-visible {
+    outline: var(--sx-focus-width-sm) solid var(--sx-accent);
+    outline-offset: var(--sx-space-1);
+  }
+
+  &.\!text-primary-400 { color: var(--sx-accent) !important; }
 }
 
 .nav-public-cta {
-  margin-left: 0.75rem;
-  padding: 0.65rem 1.25rem;
-  background: #ffffff;
-  color: $ink; // 19.2:1
-  font-family: $archivo;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  margin-left: var(--sx-space-2);
+  padding: var(--sx-space-2) var(--sx-space-4);
+  background: var(--sx-button-bg);
+  color: var(--sx-button-text);
+  font-family: var(--sx-font);
+  font-size: var(--sx-cta-size);
+  font-weight: var(--sx-eyebrow-weight);
+  letter-spacing: var(--sx-cta-tracking);
   text-transform: uppercase;
-  border-radius: 0;
-  transition: background-color 0.2s ease;
+  border-radius: var(--sx-radius-none);
+  box-shadow: var(--sx-shadow-none);
+  transition: background-color var(--sx-duration) var(--sx-ease);
 
-  &:hover { background: #cbd5e1; }
-  &:focus-visible { outline: 3px solid $accent; outline-offset: 3px; }
+  &:hover { background: var(--sx-button-bg-hover); }
+
+  &:focus-visible {
+    outline: var(--sx-focus-width) solid var(--sx-accent);
+    outline-offset: var(--sx-space-1);
+  }
+}
+
+/* `.site-header--public a` (0,1,1) out-specifies `.nav-public-cta` (0,1,0),
+   which left near-white text on the white button at 1.2:1. */
+.site-header--public .nav-public-cta {
+  color: var(--sx-button-text);
+
+  &:hover { color: var(--sx-button-text); }
+}
+
+/* The legacy `nav > .hidden a::before` gradient underline would paint across
+   the solid button; specificity raised rather than !important. */
+nav > .hidden a.nav-public-cta::before {
+  content: none;
 }
 
 .nav-public-mobile {
   display: flex;
   flex-direction: column;
-  font-family: $archivo;
+  font-family: var(--sx-font);
 
   a,
   button {
-    padding: 0.95rem 0.25rem;
+    padding: var(--sx-space-3) var(--sx-space-1);
     font-family: inherit;
-    font-size: 1.0625rem;
+    font-size: var(--sx-body-size);
     font-weight: 500;
-    color: #e2e8f0;
+    color: var(--sx-text-muted);
     text-align: left;
     background: none;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border: var(--sx-border-width-none);
+    border-bottom: var(--sx-border-width-hairline) solid var(--sx-border-color);
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color var(--sx-duration) var(--sx-ease);
   }
 
   a:hover,
-  button:hover { color: $accent; }
+  button:hover { color: var(--sx-accent); }
 
-  /* Beats the `a` rule above on specificity alone — no !important needed. */
+  /* Beats the `a` rule above on specificity alone. */
   .nav-public-cta {
-    margin: 1.75rem 0 0;
-    padding: 1rem;
+    margin: var(--sx-space-4) 0 0;
+    padding: var(--sx-space-3);
     text-align: center;
-    border-bottom: none;
-    color: $ink;
-    font-size: 0.8125rem;
+    border-bottom: var(--sx-border-width-none);
+    color: var(--sx-button-text);
+    font-size: var(--sx-nav-size);
   }
-}
-
-/* The legacy `nav > .hidden a::before` gradient underline would paint across
-   the solid WhatsApp button; specificity raised rather than !important. */
-nav > .hidden a.nav-public-cta::before {
-  content: none;
-}
-
-/* `.site-header--public a` (0,1,1) out-specifies `.nav-public-cta` (0,1,0),
-   which left near-white text on the white button at 1.2:1. Raise it. */
-.site-header--public .nav-public-cta {
-  color: $ink;
-
-  &:hover { color: $ink; }
 }
