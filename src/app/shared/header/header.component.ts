@@ -14,6 +14,9 @@ import { isPublicUrl } from '../public-routes';
 export class HeaderComponent implements OnInit {
   mobileMenuOpen = false;
 
+  readonly whatsappUrl =
+    'https://wa.me/96176144927?text=Hi%2C%20I%27d%20like%20to%20book%20a%20swimming%20lesson%20for%20my%20child';
+
   private readonly router = inject(Router);
 
   constructor(public authService: AuthService) {}

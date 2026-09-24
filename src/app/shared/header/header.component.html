@@ -2,19 +2,48 @@
   <nav class="container mx-auto px-4 py-2.5" aria-label="Main navigation">
     <div class="flex items-center justify-between">
       <a routerLink="/" class="flex items-center group z-10" aria-label="SwimXpert home">
-        <img
-          src="assets/logo.webp"
-          alt="SwimXpert logo"
-          class="h-10 w-10 object-cover rounded-full ring-2 ring-primary-200 group-hover:scale-105 group-hover:ring-primary-400 transition-all duration-300 drop-shadow-sm"
-          width="40"
-          height="40"
-          decoding="async"
-        />
+        @if (isPublicRoute) {
+          <span class="wordmark">SwimXpert</span>
+        } @else {
+          <img
+            src="assets/logo.webp"
+            alt="SwimXpert logo"
+            class="h-10 w-10 object-cover rounded-full ring-2 ring-primary-200 group-hover:scale-105 group-hover:ring-primary-400 transition-all duration-300 drop-shadow-sm"
+            width="40"
+            height="40"
+            decoding="async"
+          />
+        }
       </a>
       
-      <!-- Desktop Navigation Links -->
+      <!-- Desktop nav — public routes: six links, one sign-in, one WhatsApp. -->
+      @if (isPublicRoute) {
+        <nav class="hidden lg:flex items-center gap-1" aria-label="Site links">
+          <a routerLink="/swim-lessons" routerLinkActive="!text-primary-400" class="nav-public-link">Lessons</a>
+          <a routerLink="/level-finder" routerLinkActive="!text-primary-400" class="nav-public-link">Level Finder</a>
+          <a routerLink="/locations" routerLinkActive="!text-primary-400" class="nav-public-link">Locations</a>
+          <a routerLink="/about" routerLinkActive="!text-primary-400" class="nav-public-link">About</a>
+          <a routerLink="/gallery" routerLinkActive="!text-primary-400" class="nav-public-link">Gallery</a>
+          <a routerLink="/faq" routerLinkActive="!text-primary-400" class="nav-public-link">FAQ</a>
+
+          @if (authService.isAuthenticatedSync()) {
+            @if (authService.isAdmin()) {
+              <a routerLink="/admin" class="nav-public-link">Admin</a>
+            } @else if (authService.isCoach()) {
+              <a routerLink="/coach/dashboard" class="nav-public-link">My Schedule</a>
+            } @else {
+              <a routerLink="/dashboard" class="nav-public-link">Dashboard</a>
+            }
+            <button (click)="logout()" class="nav-public-link">Log out</button>
+          } @else {
+            <a routerLink="/login" class="nav-public-link">Log in</a>
+          }
+
+          <a [href]="whatsappUrl" target="_blank" rel="noopener" class="nav-public-cta">WhatsApp</a>
+        </nav>
+      } @else {
       <nav class="hidden lg:flex items-center space-x-1" aria-label="Site links">
-        <a routerLink="/about" routerLinkActive="!text-primary-400" 
+        <a routerLink="/about" routerLinkActive="!text-primary-400"
            class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-primary-400 transition-all duration-300">About</a>
         <a routerLink="/locations" routerLinkActive="!text-primary-400"
            class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-primary-400 transition-all duration-300">Locations</a>
@@ -63,7 +92,8 @@
              class="px-3 py-1.5 rounded-lg text-sm font-bold text-white rounded-xl transition-all duration-300 shadow-md" style="background:linear-gradient(135deg,#1d9bf0,#00c4ff); padding:0.5rem 1.25rem;">Sign Up</a>
         }
       </nav>
-      
+      }
+
       <!-- Hamburger Menu Button (Mobile + Tablet) -->
       <button 
         (click)="toggleMobileMenu()" 
@@ -101,9 +131,41 @@
 
       <!-- Logo in mobile menu -->
       <div style="display:flex; justify-content:center; margin-bottom:1.25rem; padding-bottom:1rem; border-bottom:1px solid rgba(255,255,255,0.07);">
-        <img src="assets/logo.webp" alt="SwimXpert logo" width="48" height="48" decoding="async" style="height:3rem; width:3rem; object-fit:cover; border-radius:50%; box-shadow:0 0 0 3px rgba(13,148,178,0.25);" />
+        @if (isPublicRoute) {
+          <span class="wordmark wordmark--menu">SwimXpert</span>
+        } @else {
+          <img src="assets/logo.webp" alt="SwimXpert logo" width="48" height="48" decoding="async" style="height:3rem; width:3rem; object-fit:cover; border-radius:50%; box-shadow:0 0 0 3px rgba(13,148,178,0.25);" />
+        }
       </div>
 
+      @if (isPublicRoute) {
+        <!-- Public mobile menu: the same six links, plus one WhatsApp action. -->
+        <nav aria-label="Mobile site links" class="nav-public-mobile">
+          <a routerLink="/swim-lessons" (click)="toggleMobileMenu()">Lessons</a>
+          <a routerLink="/level-finder" (click)="toggleMobileMenu()">Level Finder</a>
+          <a routerLink="/locations" (click)="toggleMobileMenu()">Locations</a>
+          <a routerLink="/about" (click)="toggleMobileMenu()">About</a>
+          <a routerLink="/gallery" (click)="toggleMobileMenu()">Gallery</a>
+          <a routerLink="/faq" (click)="toggleMobileMenu()">FAQ</a>
+
+          @if (authService.isAuthenticatedSync()) {
+            @if (authService.isAdmin()) {
+              <a routerLink="/admin" (click)="toggleMobileMenu()">Admin</a>
+            } @else if (authService.isCoach()) {
+              <a routerLink="/coach/dashboard" (click)="toggleMobileMenu()">My Schedule</a>
+            } @else {
+              <a routerLink="/dashboard" (click)="toggleMobileMenu()">Dashboard</a>
+            }
+            <button type="button" (click)="logout(); toggleMobileMenu()">Log out</button>
+          } @else {
+            <a routerLink="/login" (click)="toggleMobileMenu()">Log in</a>
+          }
+
+          <a [href]="whatsappUrl" target="_blank" rel="noopener" class="nav-public-cta nav-public-cta--menu">
+            Message us on WhatsApp
+          </a>
+        </nav>
+      } @else {
       <!-- Nav links -->
       <nav aria-label="Mobile site links" style="display:flex; flex-direction:column; gap:0.25rem;">
         <a routerLink="/" (click)="toggleMobileMenu()" class="nav-mobile-link">
@@ -197,6 +259,7 @@
           </a>
         }
       </nav>
+      }
     </div>
   </div>
 }

@@ -106,28 +106,32 @@ $media-max: 120rem;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  // Heavy on purpose: the source photos are bright, saturated pool shots with
-  // coloured lane ropes. This pulls them into one moody set and hides upscaling.
-  filter: brightness(0.46) saturate(0.55) contrast(1.1);
+  // Moody, not murky: enough grade to pull bright pool shots with coloured lane
+  // ropes into one set, while leaving the subject clearly readable.
+  filter: brightness(0.72) saturate(0.74) contrast(1.06);
+
+  // For sources that are already dark (underwater, aqua gym) the same grade
+  // buries them, so they get less of it.
+  &--lift { filter: brightness(0.94) saturate(0.8) contrast(1.02); }
 }
 
 .media__scrim {
   position: absolute;
   inset: 0;
-  // Phone: the card sits centred over the image, so darken evenly rather than
-  // directionally.
+  // Phone: the photo stands on its own above the card, so this is atmosphere
+  // only — it is not holding up any text.
   background: linear-gradient(
     to bottom,
-    rgba(3, 8, 17, 0.55) 0%,
-    rgba(3, 8, 17, 0.74) 100%
+    rgba(3, 8, 17, 0.12) 0%,
+    rgba(3, 8, 17, 0.45) 100%
   );
 
   &--hero {
     background: linear-gradient(
       to top,
-      rgba(3, 8, 17, 0.95) 0%,
-      rgba(3, 8, 17, 0.66) 48%,
-      rgba(3, 8, 17, 0.5) 100%
+      rgba(3, 8, 17, 0.94) 0%,
+      rgba(3, 8, 17, 0.6) 48%,
+      rgba(3, 8, 17, 0.42) 100%
     );
   }
 }
@@ -186,27 +190,25 @@ $media-max: 120rem;
 
 /* ---------- Feature: full-bleed media + one white card ---------- */
 
+// Phone: the photo gets its own height and is actually looked at, then the card
+// overlaps its bottom edge. Desktop switches to the card-over-media overlay.
 .feature {
   position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 34rem;
-  padding: 5rem 1.5rem;
-  overflow: hidden;
   background: $navy-950;
+  padding-bottom: 3.5rem;
 
   &__media {
-    position: absolute;
-    inset: 0;
-    max-width: $media-max;
-    margin: 0 auto;
+    position: relative;
+    height: 56vh;
+    max-height: 30rem;
+    overflow: hidden;
   }
 
   &__card {
     position: relative;
-    width: 100%;
-    max-width: 32rem;
-    padding: clamp(2.25rem, 4.5vw, 4.25rem);
+    z-index: 2;
+    margin: -5rem 1.25rem 0;
+    padding: clamp(2rem, 6vw, 2.75rem);
     background: $paper;
     color: $navy-900;
   }
@@ -280,10 +282,29 @@ $media-max: 120rem;
   // Near-full-viewport so each section reads as its own screen rather than a
   // band you scroll past.
   .feature {
+    display: flex;
+    align-items: center;
     min-height: min(92vh, 56rem);
     padding: 7rem clamp(2rem, 6vw, 6rem);
+    overflow: hidden;
 
     &--right { justify-content: flex-end; }
+
+    &__media {
+      position: absolute;
+      inset: 0;
+      height: auto;
+      max-height: none;
+      max-width: $media-max;
+      margin: 0 auto;
+    }
+
+    &__card {
+      width: 100%;
+      max-width: 32rem;
+      margin: 0;
+      padding: clamp(2.25rem, 4.5vw, 4.25rem);
+    }
   }
 
   // Darken toward whichever edge the card sits on.
@@ -322,7 +343,18 @@ $media-max: 120rem;
   background: $primary-700;
   color: $paper; // 7.2:1
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, opacity 0.25s ease, transform 0.25s ease;
+
+  // Hidden over the hero, which already carries its own WhatsApp button.
+  opacity: 0;
+  transform: translateY(0.75rem);
+  pointer-events: none;
+
+  &--shown {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
 
   &:hover { background: $primary-500; color: $navy-900; }
   &:focus-visible { outline: 3px solid $paper; outline-offset: 3px; }

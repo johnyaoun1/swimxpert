@@ -86,7 +86,7 @@
     <img
       src="/assets/swimmer-underwater.webp"
       alt="A swimmer moving slowly underwater during an aqua therapy session"
-      class="media__img"
+      class="media__img media__img--lift"
       width="1024"
       height="642"
       loading="lazy"
@@ -109,7 +109,7 @@
     <img
       src="/assets/swimmer-dark.webp"
       alt="An adult training in the pool during an aqua gym session"
-      class="media__img"
+      class="media__img media__img--lift"
       width="1024"
       height="682"
       loading="lazy"
@@ -158,6 +158,9 @@
 <a
   [href]="whatsappUrl"
   class="wa-float"
+  [class.wa-float--shown]="pastHero"
+  [attr.aria-hidden]="pastHero ? null : 'true'"
+  [attr.tabindex]="pastHero ? null : -1"
   target="_blank"
   rel="noopener"
   aria-label="Message SwimXpert on WhatsApp"

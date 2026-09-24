@@ -91,7 +91,11 @@ WhatsApp is the goal, but repetition cheapens it:
 
 - **Hero** — one WhatsApp button
 - **Closing** — one WhatsApp button
-- **Floating button** — mobile only, hidden at `min-width: 900px`
+- **Floating button** — mobile only (hidden at `min-width: 900px`), and only
+  **once the hero has scrolled away**. Over the hero it is `opacity: 0`,
+  `pointer-events: none` and `aria-hidden` — the hero already has its own button,
+  so showing both stacks the same ask twice.
+- **Header** — one WhatsApp button, far right
 - **Every other section** — at most one quiet underlined link, never a WhatsApp button
 
 WhatsApp URL, always with the prefilled message:
@@ -102,14 +106,44 @@ https://wa.me/96176144927?text=Hi%2C%20I%27d%20like%20to%20book%20a%20swimming%2
 
 ---
 
+## Header and footer
+
+Both are shared with signed-in pages, so each renders a public variant keyed off
+`isPublicUrl()` in `src/app/shared/public-routes.ts`. Dashboard, admin, coach and
+the auth screens keep their original chrome — change that helper, not the markup,
+to bring a route into the system.
+
+**Header (public):** a `SwimXpert` wordmark in Archivo — 700, `letter-spacing:
+0.2em`, uppercase — not the round logo, which stays as the favicon and on
+signed-in pages.
+
+Six links only: **Lessons, Level Finder, Locations, About, Gallery, FAQ**, then
+**Log in** (or Dashboard/Admin plus Log out when signed in), then one white
+WhatsApp button. Certificates and Contact live in the footer. Sign Up is not in
+the nav at all — the login page carries "New here? Create an account".
+
+Resist adding links here. A long nav is the fastest way to make the page feel
+ordinary again.
+
+**Footer (public):** four columns — wordmark and one line, Lessons, More, Get in
+touch. No Login or Sign Up (the header has them), and none of the blurred blue
+orbs from the old design. Headings use the eyebrow style in `accent-500`; links
+are `#e2e8f0` at 14.6:1, body `#94a3b8` at 7.8:1.
+
 ## The card pattern
 
 The repeating unit: **full-bleed media, one solid white card.**
 
 - Card is **solid white**, `border-radius: 0`, **no shadow**, no blur, no transparency
-- `max-width: 30rem`, padding `clamp(2rem, 5vw, 3.25rem)`
-- Alternates left and right down the page (`.feature--right`)
 - Contains: eyebrow, heading, ≤2 lines of body, one underlined link
+
+**Desktop (≥900px):** the card overlays the media. `max-width: 32rem`, padding
+`clamp(2.25rem, 4.5vw, 4.25rem)`, alternating left and right (`.feature--right`),
+section `min-height: min(92vh, 56rem)`.
+
+**Phone:** the card must *not* sit on top of the photo — that hides the image.
+The media gets its own height (`56vh`, capped at `30rem`), then the card follows
+in flow with `margin-top: -5rem` so it overlaps only the photo's bottom edge.
 
 Repeat the same pattern rather than inventing per-section layouts. The rhythm is the point.
 
@@ -126,10 +160,16 @@ exists, two rules keep them coherent:
 **1. One grade, applied to every image:**
 
 ```css
-filter: brightness(0.62) saturate(0.78) contrast(1.05);
+filter: brightness(0.72) saturate(0.74) contrast(1.06);
 ```
 
-Plus a directional scrim over the top so card text never fights the photo.
+Moody, not murky — the subject must stay clearly readable. Sources that are
+already dark (underwater, aqua gym) get `.media__img--lift` instead, which backs
+the grade off to `brightness(0.94) saturate(0.8)`; the standard grade buries them.
+
+Scrim on top: a light vertical wash on phones (atmosphere only — it holds up no
+text there), and a directional gradient on desktop that darkens toward whichever
+edge the card sits on.
 
 **2. Cap the upscale.** Media containers are capped at `max-width: 120rem` and centred;
 past that the navy canvas shows at the edges rather than the image going soft.

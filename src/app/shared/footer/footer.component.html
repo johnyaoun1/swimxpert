@@ -4,6 +4,44 @@
     <div class="absolute bottom-0 right-0 w-80 h-80 bg-accent-500 rounded-full blur-3xl floating-element-delayed"></div>
   </div>
   <div class="container mx-auto px-4 py-12 relative z-10">
+    @if (isPublicRoute) {
+      <!-- Public footer: fewer links, no duplicate Login/Sign Up. See DESIGN.md. -->
+      <div class="footer-public">
+        <div class="footer-public__brand">
+          <span class="footer-public__wordmark">SwimXpert</span>
+          <p>Swimming lessons for all ages in Dekwaneh, Mar Roukoz.</p>
+        </div>
+
+        <div>
+          <h2 class="footer-public__heading">Lessons</h2>
+          <ul>
+            <li><a routerLink="/swim-lessons">Swim Lessons</a></li>
+            <li><a routerLink="/level-finder">Level Finder</a></li>
+            <li><a routerLink="/locations">Locations</a></li>
+            <li><a routerLink="/about">About</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 class="footer-public__heading">More</h2>
+          <ul>
+            <li><a routerLink="/gallery">Gallery</a></li>
+            <li><a routerLink="/certificates">Certificates</a></li>
+            <li><a routerLink="/contact">Contact</a></li>
+            <li><a routerLink="/faq">FAQ</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 class="footer-public__heading">Get in touch</h2>
+          <ul>
+            <li><a [href]="whatsappUrl" target="_blank" rel="noopener">WhatsApp</a></li>
+            <li>+961 76 144 927</li>
+            <li>Dekwaneh, Mar Roukoz</li>
+          </ul>
+        </div>
+      </div>
+    } @else {
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
         <img src="assets/logo.webp" alt="SwimXpert" class="h-12 w-12 object-cover rounded-full ring-2 ring-primary-500/30 mb-4" width="48" height="48" loading="lazy" decoding="async" />
@@ -44,7 +82,8 @@
         </ul>
       </div>
     </div>
-    
+    }
+
     <div class="mt-8 pt-8 text-center" style="border-top:1px solid rgba(255,255,255,0.06); color:#475569;">
       <p>&copy; {{ currentYear }} SwimXpert. All rights reserved.</p>
     </div>
