@@ -246,19 +246,60 @@ export class AdminScheduleComponent implements OnInit {
     });
   }
 
+  /* ---- Single-day view (screens under 768px) -----------------------------
+     The seven-column grid only fits about three days on a phone and the
+     horizontal scroll is unreliable, so narrow screens show one day with
+     explicit Previous/Next buttons. Desktop keeps the full week: the other
+     columns are hidden in CSS, so sessionsForDay(col) still receives the real
+     column index and nothing about the data model changes. */
+  selectedDayIndex = signal(0);
+
+  selectedDayHeader = computed(() => this.dayHeaders()[this.selectedDayIndex()] ?? null);
+
+  /** Index of today within the current week, or 0 if today is another week. */
+  private todayColumnIndex(): number {
+    const todayYmd = formatInTimeZone(new Date(), BEIRUT_TZ, 'yyyy-MM-dd');
+    const i = this.dayHeaders().findIndex((h) => h.ymd === todayYmd);
+    return i >= 0 ? i : 0;
+  }
+
+  previousDay(): void {
+    if (this.selectedDayIndex() > 0) {
+      this.selectedDayIndex.update((i) => i - 1);
+      return;
+    }
+    // Step back into the previous week, landing on its last day.
+    this.weekAnchor.set(addWeeks(this.weekAnchor(), -1));
+    this.selectedDayIndex.set(6);
+    this.loadWeek();
+  }
+
+  nextDay(): void {
+    if (this.selectedDayIndex() < 6) {
+      this.selectedDayIndex.update((i) => i + 1);
+      return;
+    }
+    this.weekAnchor.set(addWeeks(this.weekAnchor(), 1));
+    this.selectedDayIndex.set(0);
+    this.loadWeek();
+  }
+
   prevWeek(): void {
     this.weekAnchor.set(addWeeks(this.weekAnchor(), -1));
+    this.selectedDayIndex.set(0);
     this.loadWeek();
   }
 
   nextWeek(): void {
     this.weekAnchor.set(addWeeks(this.weekAnchor(), 1));
+    this.selectedDayIndex.set(0);
     this.loadWeek();
   }
 
   thisWeek(): void {
     this.weekAnchor.set(new Date());
     this.loadWeek();
+    this.selectedDayIndex.set(this.todayColumnIndex());
   }
 
   openAdd(ymd?: string): void {

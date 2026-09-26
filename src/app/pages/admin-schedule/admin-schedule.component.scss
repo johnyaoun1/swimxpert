@@ -208,3 +208,93 @@
   color: #6b7280;
   opacity: 0.95;
 }
+
+/* ---------------------------------------------------------------------------
+   Single-day view on phones (branch: mobile-fixes, item 8)
+   The seven-column grid fits about three days on a phone and the horizontal
+   scroll is unreliable, so under 768px one day shows at a time with explicit
+   buttons. Desktop is untouched.
+--------------------------------------------------------------------------- */
+
+/* Hidden by default; only narrow screens get the day switcher. */
+.schedule-day-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .schedule-day-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+  }
+
+  /* Sits on the white card, so it matches .btn-secondary rather than the
+     light-on-dark treatment used elsewhere on this page. */
+  .schedule-day-nav__btn {
+    min-height: 44px;
+    padding: 0 0.875rem;
+    border-radius: 0.5rem;
+    border: 2px solid #1d9bf0;
+    background: transparent;
+    color: #0d5a96;          /* 7.2:1 on white */
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .schedule-day-nav__btn:active {
+    background: rgba(29, 155, 240, 0.12);
+  }
+
+  .schedule-day-nav__label {
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .schedule-day-nav__dow {
+    display: block;
+    font-size: 0.75rem;
+    color: #475569;          /* 7.4:1 on white */
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .schedule-day-nav__date {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;          /* 16.9:1 on white */
+  }
+
+  /* Show one day. The others stay in the DOM so sessionsForDay(col) keeps
+     receiving the real week index. */
+  .schedule-day-cell--off {
+    display: none;
+  }
+
+  /* The 720px floor is what squeezed seven columns into the viewport. With one
+     day showing, drop it so the column fills the width and session labels stop
+     being clipped. */
+  /* .schedule-layout is a column flex with align-items:flex-start, so children
+     shrink-wrap horizontally. The week nav escapes that with width:100%; this
+     needs the same or it collapses to the width of one narrow column. */
+  .schedule-scroll-x {
+    overflow-x: visible;
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .schedule-grid-row {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .schedule-day-cell {
+    min-width: 0 !important;
+  }
+}

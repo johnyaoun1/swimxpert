@@ -65,12 +65,28 @@
             <button type="button" class="btn-secondary text-sm py-2 px-4 w-full" (click)="nextWeek()">Next week →</button>
           </div>
 
+          <!-- Single-day navigation. Only rendered visible under 768px; the
+               week grid stays as-is on desktop. -->
+          <div class="schedule-day-nav">
+            <button type="button" class="schedule-day-nav__btn" (click)="previousDay()"
+                    aria-label="Previous day">← Prev day</button>
+            <p class="schedule-day-nav__label" aria-live="polite">
+              @if (selectedDayHeader(); as d) {
+                <span class="schedule-day-nav__dow">{{ d.dow }}</span>
+                <span class="schedule-day-nav__date">{{ d.label }}</span>
+              }
+            </p>
+            <button type="button" class="schedule-day-nav__btn" (click)="nextDay()"
+                    aria-label="Next day">Next day →</button>
+          </div>
+
           <div class="schedule-scroll-x rounded-t-lg rounded-b-lg border border-gray-200 bg-white shadow-sm overflow-x-auto">
           <!-- Day headers -->
-          <div class="flex border-b border-gray-200 min-w-[720px]">
+          <div class="schedule-grid-row flex border-b border-gray-200 min-w-[720px]">
             <div class="schedule-gutter sticky left-0 z-20 shrink-0 w-16 border-r border-gray-200 bg-gray-50"></div>
-            @for (h of dayHeaders(); track h.ymd) {
-              <div class="flex-1 min-w-[100px] text-center py-3 px-1 border-l border-gray-200 first:border-l-0 bg-white">
+            @for (h of dayHeaders(); track h.ymd; let hCol = $index) {
+              <div class="flex-1 min-w-[100px] text-center py-3 px-1 border-l border-gray-200 first:border-l-0 bg-white schedule-day-cell"
+                   [class.schedule-day-cell--off]="hCol !== selectedDayIndex()">
                 <div class="text-xs font-semibold text-gray-600">{{ h.dow }}</div>
                 <div class="text-sm font-bold schedule-day-date">{{ h.label }}</div>
                 <button type="button" class="text-xs text-primary-600 hover:underline mt-1" (click)="openAdd(h.ymd)">+ Add</button>
@@ -79,7 +95,7 @@
           </div>
 
           <!-- Time + columns -->
-          <div class="flex min-w-[720px] border-t-0">
+          <div class="schedule-grid-row flex min-w-[720px] border-t-0">
             <div
               class="schedule-gutter schedule-gutter--labels sticky left-0 z-20 shrink-0 w-16 border-r border-gray-200 bg-gray-50 text-xs text-gray-700 font-medium text-right pr-2 select-none"
             >
@@ -88,7 +104,8 @@
               }
             </div>
             @for (h of dayHeaders(); track h.ymd; let col = $index) {
-              <div class="flex-1 min-w-[100px] border-l border-gray-100 first:border-l-0 relative schedule-day-track">
+              <div class="flex-1 min-w-[100px] border-l border-gray-100 first:border-l-0 relative schedule-day-track schedule-day-cell"
+                   [class.schedule-day-cell--off]="col !== selectedDayIndex()">
                 @for (s of sessionsForDay(col); track s.id) {
                   <button
                     type="button"
