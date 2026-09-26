@@ -3,7 +3,6 @@
   <!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
   <header class="lf-header" aria-label="Find your swimming level">
     <div class="lf-orb lf-orb-1" aria-hidden="true"></div>
-    <div class="lf-orb lf-orb-2" aria-hidden="true"></div>
     <div class="lf-header-inner">
       <div class="lf-swim-emoji" aria-hidden="true">🏊</div>
       <h1 class="lf-title">Find Your Swimming Level</h1>
@@ -48,6 +47,7 @@
         </div>
 
         <!-- AGE CARD -->
+        @if (stepIndex() === 0) {
         <div class="lf-card lf-age-card">
           <span class="lf-badge">Age</span>
           <p class="lf-q-text" role="heading" aria-level="3">What is your child's age?</p>
@@ -67,17 +67,15 @@
             <p class="lf-error" role="alert">Please enter a valid age between 3 and 18</p>
           }
         </div>
+        }
 
         <!-- QUESTION CARDS -->
-        @for (question of questions; track question.id) {
+        @for (question of visibleQuestions(); track question.id) {
           <div class="lf-card lf-q-card"
                [class.lf-answered]="levelFinderForm.get(question.key)?.value !== null"
                [class.lf-yes-state]="levelFinderForm.get(question.key)?.value === true"
                [class.lf-no-state]="levelFinderForm.get(question.key)?.value === false"
                [style.--q-delay]="(question.id * 0.04) + 's'">
-
-            <!-- Water ripple decoration -->
-            <div class="lf-ripple" aria-hidden="true"></div>
 
             <span class="lf-badge">Question {{ question.id }}</span>
             <p class="lf-q-text" role="heading" aria-level="3">{{ question.text }}</p>
@@ -120,7 +118,27 @@
           </div>
         }
 
+        <!-- STEP NAVIGATION -->
+        <div class="lf-step-nav">
+          <button type="button" class="lf-btn-back" (click)="previousStep()"
+                  [disabled]="stepIndex() === 0" aria-label="Previous question">
+            <span>Back</span>
+          </button>
+          <p class="lf-step-count" aria-live="polite">
+            Step {{ stepIndex() + 1 }} of {{ totalSteps }}
+          </p>
+          @if (!isLastStep()) {
+            <button type="button" class="lf-btn-next" (click)="nextStep()"
+                    [disabled]="!canAdvance()" aria-label="Next question">
+              <span>Next</span>
+            </button>
+          } @else {
+            <span class="lf-step-spacer" aria-hidden="true"></span>
+          }
+        </div>
+
         <!-- SUBMIT -->
+        @if (isLastStep()) {
         <div class="lf-submit-row">
           <button
             type="submit"
@@ -135,6 +153,7 @@
             </svg>
           </button>
         </div>
+        }
 
         <!-- ERROR -->
         @if (errorMessage()) {

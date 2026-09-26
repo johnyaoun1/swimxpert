@@ -14,7 +14,7 @@
   </div>
   <div class="container mx-auto px-4 relative z-10 text-center">
     <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm mb-4">
-      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
       </svg>
@@ -23,7 +23,7 @@
     <p class="text-lg animate-slide-up" style="color:#94a3b8">Choose a 45-minute slot (9 AM – 8 PM){{ isLoggedIn() ? ' — you’ll pay securely on the next step' : '' }}</p>
     @if (!isLoggedIn()) {
       <button class="hero-request-btn mt-4" (click)="openRequestModal()">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
@@ -366,7 +366,7 @@
       <!-- Header -->
       <div class="req-header">
         <div class="req-header-icon">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
@@ -398,7 +398,7 @@
         }
 
         <button class="req-close" (click)="closeRequestModal()" aria-label="Close">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
@@ -408,7 +408,7 @@
       @if (requestSubmitted()) {
         <div class="req-success">
           <div class="req-success-icon">
-            <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#4ade80">
+            <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#4ade80" width="36" height="36">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
             </svg>
           </div>
@@ -449,7 +449,7 @@
             <button class="req-cancel" (click)="closeRequestModal()">Cancel</button>
             <button class="req-submit" (click)="nextStep()">
               Next
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
@@ -487,7 +487,7 @@
             </div>
             @if (requestForm.childLevel) {
               <div class="req-level-badge">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                 </svg>
                 Level pre-filled: <strong>{{ requestForm.childLevel }}</strong>
@@ -496,14 +496,14 @@
           </div>
           <div class="req-footer">
             <button class="req-cancel" (click)="prevStep()">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
               Back
             </button>
             <button class="req-submit" (click)="nextStep()">
               Next
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
@@ -519,7 +519,7 @@
 
             @if (loading()) {
               <div style="text-align:center;padding:2rem;color:#94a3b8">
-                <svg class="w-6 h-6 animate-spin" style="margin:0 auto 0.5rem;display:block;color:#38bdf8" fill="none" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 animate-spin" style="margin:0 auto 0.5rem;display:block;color:#38bdf8" fill="none" viewBox="0 0 24 24" width="24" height="24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                 </svg>
@@ -556,7 +556,7 @@
 
             @if (requestSelectedSlot(); as picked) {
               <div class="req-picked-slot">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 Selected: <strong>{{ picked.date | slice:8 }} {{ picked.date | slice:5:7 | monthName }} · {{ picked.startLocal }}–{{ picked.endLocal }}</strong>
@@ -565,14 +565,14 @@
           </div>
           <div class="req-footer">
             <button class="req-cancel" (click)="prevStep()">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
               Back
             </button>
             <button class="req-submit" (click)="nextStep()" [disabled]="!requestSelectedSlot()">
               Next
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
@@ -628,20 +628,20 @@
           </div>
           <div class="req-footer">
             <button class="req-cancel" (click)="prevStep()" [disabled]="requestLoading()">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
               Back
             </button>
             <button class="req-submit req-submit-final" (click)="submitGuestRequest()" [disabled]="requestLoading()">
               @if (requestLoading()) {
-                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" width="16" height="16">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                 </svg>
                 Sending…
               } @else {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
                 Send Booking Request

@@ -1,0 +1,9 @@
+.nf-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #cbd5e1;
+  transition: color 0.2s ease;
+
+  &:hover { color: #47e5ff; }
+}

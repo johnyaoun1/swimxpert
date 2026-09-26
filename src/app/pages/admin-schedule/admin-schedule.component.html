@@ -211,7 +211,7 @@
       @if (coaches().length > 0) {
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-2">
           <h3 class="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
@@ -242,7 +242,7 @@
               style="background:linear-gradient(135deg,#10b981,#059669)"
             >
               @if (assigningCoach()) {
-                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24" width="16" height="16"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
               } @else {
                 Save
               }
@@ -262,7 +262,7 @@
       <!-- ── Record Payment ──────────────────────────────────────── -->
       <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-2">
         <h3 class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
           </svg>
@@ -270,7 +270,7 @@
         </h3>
         @if (paymentRecorded()) {
           <div class="flex items-center gap-2 text-green-800 bg-green-100 border border-green-200 rounded-lg px-3 py-2 text-sm font-semibold">
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
             </svg>
             Payment recorded successfully!
@@ -318,13 +318,13 @@
               style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"
             >
               @if (recordingPayment()) {
-                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" width="16" height="16">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                 </svg>
                 Recording…
               } @else {
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
                 </svg>

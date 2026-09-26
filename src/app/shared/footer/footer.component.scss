@@ -76,3 +76,40 @@ footer {
     gap: 1.5rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Mobile layout fixes (branch: mobile-fixes)
+   Footer links were 17px tall at 13px type — well under a 44px tap target.
+   Last in the file so it wins over the size overrides in the media queries above.
+--------------------------------------------------------------------------- */
+
+@media (max-width: 1023px) {
+  footer {
+    ul li a,
+    ul li {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      font-size: 0.9375rem; /* 15px — was 13px */
+      line-height: 1.4;
+    }
+
+    /* The list already spaces items; the taller rows supply the rhythm now. */
+    ul.space-y-2 > li + li {
+      margin-top: 0;
+    }
+
+    p,
+    h2,
+    h3,
+    h4 {
+      font-size: 0.9375rem;
+    }
+
+    h2,
+    h3,
+    h4 {
+      font-size: 1rem;
+    }
+  }
+}

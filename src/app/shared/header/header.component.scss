@@ -193,3 +193,37 @@ button[aria-label="Toggle menu"] {
     padding-right: 1.5rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Mobile layout fixes (branch: mobile-fixes)
+--------------------------------------------------------------------------- */
+
+/* Pin the header to the height the shell pads for, so content can never sit
+   underneath it. Overrides the ad-hoc min-heights in the media queries above. */
+header.site-header,
+header {
+  height: var(--app-header-h);
+  min-height: var(--app-header-h);
+
+  > nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-top: 0;
+    padding-bottom: 0;
+
+    > div { width: 100%; }
+  }
+}
+
+/* 44x44 minimum tap targets (were 40x44 and 36x44). */
+.site-logo,
+.menu-toggle {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.menu-toggle {
+  width: 44px;
+  height: 44px;
+}

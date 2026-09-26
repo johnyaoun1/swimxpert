@@ -110,5 +110,11 @@ export const routes: Routes = [
   { path: 'payments/record', loadComponent: () => import('./pages/record-payment/record-payment.component').then((m) => m.RecordPaymentComponent), title: 'Record Payment - SwimXpert', canActivate: [authGuard, roleGuard], data: { roles: ['Admin'] } },
   { path: 'payments/history', loadComponent: () => import('./pages/my-payments/my-payments.component').then((m) => m.MyPaymentsComponent), title: 'My Payments - SwimXpert', canActivate: [authGuard, blockCoachGuard] },
 
-  { path: '**', redirectTo: '' }
+  // Legacy/short path some links use.
+  { path: 'lessons', redirectTo: 'swim-lessons', pathMatch: 'full' },
+
+  // Unknown URLs get a real 404 page rather than silently landing on the home
+  // page, which hid broken links. Note: a static host still returns HTTP 200
+  // for these; the page itself is marked noindex.
+  { path: '**', loadComponent: () => import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent), title: 'Page Not Found - SwimXpert' }
 ];

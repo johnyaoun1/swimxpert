@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
@@ -40,6 +40,54 @@ export class LevelFinderComponent implements OnInit, OnDestroy {
     { id: 12, key: 'q12', text: 'Can your child perform flip turns or wall push-offs?' },
     { id: 13, key: 'q13', text: 'Can your child swim butterfly kick or full butterfly stroke?' }
   ];
+
+  /* ---- One-question-at-a-time stepper -------------------------------------
+     Step 0 is the age field; steps 1..N are the questions. This only controls
+     what is on screen — scoring in onSubmit() is untouched. */
+  stepIndex = signal(0);
+
+  get totalSteps(): number {
+    return this.questions.length + 1;
+  }
+
+  currentQuestion = computed(() =>
+    this.stepIndex() > 0 ? this.questions[this.stepIndex() - 1] ?? null : null
+  );
+
+  isLastStep = computed(() => this.stepIndex() === this.questions.length);
+
+  /* Rendered through @for tracked by id, not @if. With @if, Angular reuses the
+     same DOM node between questions: the native radio keeps the previous
+     answer's checked state, so tapping it fires no change event, the form
+     control stays null, and Next never enables. Tracking by id forces a fresh
+     node per question. */
+  visibleQuestions = computed(() => {
+    const q = this.currentQuestion();
+    return q ? [q] : [];
+  });
+
+  canAdvance(): boolean {
+    if (this.stepIndex() === 0) {
+      return !!this.levelFinderForm.get('age')?.valid;
+    }
+    const q = this.currentQuestion();
+    return q ? this.levelFinderForm.get(q.key)?.value !== null : false;
+  }
+
+  nextStep(): void {
+    if (this.stepIndex() === 0) {
+      this.levelFinderForm.get('age')?.markAsTouched();
+    }
+    if (this.canAdvance() && this.stepIndex() < this.questions.length) {
+      this.stepIndex.update((i) => i + 1);
+    }
+  }
+
+  previousStep(): void {
+    if (this.stepIndex() > 0) {
+      this.stepIndex.update((i) => i - 1);
+    }
+  }
 
   constructor(
     private fb: FormBuilder,

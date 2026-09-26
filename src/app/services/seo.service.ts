@@ -8,6 +8,8 @@ export interface SeoPageOptions {
   /** Site path, e.g. `/about` or `/` */
   path: string;
   keywords?: string;
+  /** Defaults to `index, follow`. The 404 page sets `noindex, follow`. */
+  robots?: string;
 }
 
 @Injectable({
@@ -81,6 +83,9 @@ export class SeoService {
     if (options.keywords) {
       this.updateKeywords(options.keywords);
     }
+    // Reset on every page, or a noindex set by the 404 would follow the
+    // visitor onto the next route they open.
+    this.meta.updateTag({ name: 'robots', content: options.robots ?? 'index, follow' });
   }
 
   /** @deprecated Prefer updatePage() */

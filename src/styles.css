@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Single source of truth for the fixed header's height. The shell's top padding
+   and the mobile menu's offset both read this, so they cannot drift apart —
+   previously the header measured 65px while the shell padded 57px and the top
+   8px of every page sat underneath it. */
+:root {
+  --app-header-h: 56px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-header-h: 64px;
+  }
+}
+
 @layer base {
   body {
     @apply font-sans antialiased;
@@ -47,7 +61,10 @@
   /* ── Buttons ── */
   .btn-primary {
     @apply font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 relative overflow-hidden;
-    background: linear-gradient(135deg, #1d9bf0 0%, #00c4ff 100%);
+    /* primary-700 -> accent-700. The old #1d9bf0 -> #00c4ff put white text at
+       3.0:1 / 2.0:1; these stops give 7.2:1 / 5.1:1 and keep the blue-to-cyan
+       direction. Do not lighten without re-checking white on both stops. */
+    background: linear-gradient(135deg, #0d5a96 0%, #0077a0 100%);
     color: #ffffff;
     letter-spacing: 0.5px;
     text-transform: uppercase;

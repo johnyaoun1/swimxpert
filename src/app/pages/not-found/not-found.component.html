@@ -1,0 +1,32 @@
+<section class="min-h-[70vh] flex items-center justify-center px-4 py-16" aria-labelledby="nf-title">
+  <div class="max-w-lg w-full text-center">
+    <p class="text-sm font-bold uppercase tracking-widest mb-4" style="color:#47e5ff;">Error 404</p>
+
+    <h1 id="nf-title" class="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+      We couldn&rsquo;t find that page
+    </h1>
+
+    <p class="text-base mb-2" style="color:#cbd5e1;">
+      The address may have changed, or it may never have existed.
+    </p>
+    <p class="text-sm mb-8 break-all" style="color:#94a3b8;">{{ attemptedUrl }}</p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+      <a routerLink="/" class="btn-primary inline-block text-center">Go to the homepage</a>
+      <a routerLink="/swim-lessons" class="btn-secondary inline-block text-center">
+        <span>View swim lessons</span>
+      </a>
+    </div>
+
+    <nav aria-label="Helpful links">
+      <h2 class="text-sm font-semibold text-white mb-3">Or try one of these</h2>
+      <ul class="flex flex-wrap gap-x-5 gap-y-1 justify-center text-sm">
+        <li><a routerLink="/locations" class="nf-link">Locations</a></li>
+        <li><a routerLink="/level-finder" class="nf-link">Level Finder</a></li>
+        <li><a routerLink="/about" class="nf-link">About</a></li>
+        <li><a routerLink="/contact" class="nf-link">Contact</a></li>
+        <li><a routerLink="/faq" class="nf-link">FAQ</a></li>
+      </ul>
+    </nav>
+  </div>
+</section>
